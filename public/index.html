@@ -179,6 +179,10 @@
   .top-card .r{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--amarillo)}
   .top-card .r small{color:var(--muted);font-weight:500;font-size:11px}
   .top-card .sel{font-size:10.5px;font-weight:600;color:var(--verde-txt);background:rgba(46,106,71,.28);border:1px solid rgba(46,106,71,.6);padding:3px 7px;border-radius:999px;white-space:nowrap}
+  .hist-card{width:116px;flex-shrink:0;scroll-snap-align:start;padding:10px;border-radius:18px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;color:var(--ink)}
+  .hist-card .stage{height:104px;border-radius:12px;background:var(--surface-3);display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
+  .hist-card .n{font-weight:600;font-size:13px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px}
+  .hist-card .t{font-size:11px;color:var(--muted)}
   .top-card .p{font-weight:700;font-size:14px;white-space:nowrap}
   .bcard .t{font-weight:600;font-size:15px}
   .bcard .s{font-size:13px;color:var(--muted);margin-top:2px}
@@ -340,6 +344,13 @@
         <select id="store1" class="store-select"><option>Mercadona</option><option>Carrefour</option><option>Lidl</option><option>Dia</option><option>Alcampo</option></select>
       </div>
     </div>
+    <section id="home-hist" aria-labelledby="hist-title" style="padding-top:30px" hidden>
+      <div class="top-head">
+        <div><h2 id="hist-title">Vistos hace poco</h2><p>Los últimos vinos que has buscado</p></div>
+        <button class="linkbtn" id="hist-borrar" style="min-height:40px;padding:0 4px">Borrar</button>
+      </div>
+      <div class="hscroll" id="hist-list"></div>
+    </section>
     <section id="home-top" aria-labelledby="top-title" style="padding-top:30px" hidden>
       <div class="top-head">
         <div><h2 id="top-title">Lo mejor de los Takers</h2><p id="top-sub">Los vinos mejor valorados de la comunidad</p></div>
@@ -636,6 +647,7 @@
     if (name === 'gustos' && typeof cargarGustosPantalla === 'function') cargarGustosPantalla();
     if (name === 'perfil' && typeof cargarPerfil === 'function') cargarPerfil();
     if (name === 'home' && el.id === 's-home' && state.superId) cargarTop();
+    if (name === 'home' && typeof pintarHistorial === 'function') pintarHistorial();
     if (name === 'takers') cargarTakers();
     el.classList.add('active');
     window.scrollTo(0, 0);
@@ -851,6 +863,7 @@
 
   function renderFicha(w, fromPhoto){
     state.ficha = w;
+    apuntarHistorial(w);
     var visual = (fromPhoto && state.photo)
       ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">'
       : '<div class="bottle" role="img" aria-label="Botella de ' + esc(w.nombre) + '">' + botellaSVG(w, 168) + '</div>';
@@ -1020,6 +1033,36 @@
       '<path d="' + forma + '" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1"/>' +
       '</svg>';
   }
+
+  // ---------- Inicio: vistos hace poco (se guarda en este móvil) ----------
+  var HIST_MAX = 12;
+  function leerHistorial(){
+    try { var h = JSON.parse(store('historial') || '[]'); return Array.isArray(h) ? h : []; } catch(e){ return []; }
+  }
+  function apuntarHistorial(w){
+    if (!w || !w.id) return;
+    var h = leerHistorial().filter(function(x){ return x.id !== w.id; });
+    h.unshift({ id: w.id, nombre: w.nombre, tipo: w.tipo || (w.etiquetas || [])[0] || '', color: w.color, imagen: w.imagen || null, t: Date.now() });
+    store('historial', JSON.stringify(h.slice(0, HIST_MAX)));
+    pintarHistorial();
+  }
+  function cuandoVisto(t){
+    var s = (Date.now() - t) / 1000;
+    if (s < 3600) return 'Hace un momento';
+    if (s < 86400) return 'Hace ' + Math.floor(s / 3600) + ' h';
+    var d = Math.floor(s / 86400);
+    return d === 1 ? 'Ayer' : 'Hace ' + d + ' días';
+  }
+  function pintarHistorial(){
+    var h = leerHistorial();
+    $('#home-hist').hidden = !h.length;
+    $('#hist-list').innerHTML = h.map(function(v){
+      return '<button class="hist-card" data-wine="' + esc(v.id) + '"><span class="stage">' + botellaSVG(v, 90) + '</span>' +
+        '<span class="n">' + esc(v.nombre) + '</span><span class="t">' + cuandoVisto(v.t) + '</span></button>';
+    }).join('');
+  }
+  $('#hist-borrar').addEventListener('click', function(){ store('historial', '[]'); pintarHistorial(); toast('Historial borrado'); });
+  pintarHistorial();
 
   // ---------- Inicio: lo mejor de los Takers ----------
   var topPedido = 0;
@@ -1192,6 +1235,7 @@
   }
 
   function renderRegalo(w, fromPhoto){
+    apuntarHistorial(w);
     var visual = (fromPhoto && state.photo)
       ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">'
       : '<div class="bottle" role="img" aria-label="Botella de ' + esc(w.nombre) + '">' + botellaSVG(w, 168) + '</div>';
@@ -1682,7 +1726,7 @@
   $('#btn-borrar-datos').addEventListener('click', function(){
     if (!window.confirm('Se borrarán tu bodega, tus gustos y tu perfil de este móvil. No se puede deshacer. ¿Seguro?')) return;
     api('/api/perfil/borrar', { dispositivo: state.dispositivo }).then(function(){
-      try { localStorage.removeItem('dispositivo'); localStorage.removeItem('super'); } catch(e){}
+      try { localStorage.removeItem('dispositivo'); localStorage.removeItem('super'); localStorage.removeItem('historial'); } catch(e){} pintarHistorial();
       toast('Datos borrados');
       setTimeout(function(){ location.replace(location.pathname + '#home'); location.reload(); }, 800);
     }).catch(function(err){ toast(err.message); });
