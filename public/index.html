@@ -269,9 +269,11 @@
   .estante{border-radius:24px;background:#171213;border:1px solid var(--border);padding:16px 12px 6px;display:flex;flex-direction:column}
   .estante-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px 12px}
   .estante-top h2{font-size:20px}
-  .estante .fila{display:flex;justify-content:space-around;align-items:flex-end;height:104px;padding:0 4px}
+  .estante .fila{display:flex;justify-content:center;gap:3px;align-items:flex-end;height:100px;padding:0 4px}
+  .slot-w{position:relative;display:flex}
+  .slot-x{position:absolute;top:-16px;right:-10px;width:32px;height:32px;border-radius:16px;border:2px solid #171213;background:var(--burdeos);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;box-shadow:0 4px 10px rgba(0,0,0,.5);animation:entra .2s ease}
   .estante .tabla{height:11px;border-radius:3px;background:#3A2E2A;border-top:2px solid #54443D;box-shadow:0 7px 12px rgba(0,0,0,.55);margin:0 0 14px}
-  .slot{width:42px;height:100px;display:flex;align-items:flex-end;justify-content:center;background:none;border:none;padding:0;cursor:pointer;transition:transform .2s ease;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+  .slot{width:35px;height:96px;display:flex;align-items:flex-end;justify-content:center;background:none;border:none;padding:0;cursor:pointer;transition:transform .2s ease;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
   .slot.vacio{cursor:default;filter:none}
   .slot.sel{transform:translateY(-10px)}
   .slot.sel svg{filter:drop-shadow(0 0 7px rgba(232,184,74,.75))}
@@ -1811,14 +1813,14 @@
     }).join('');
   }
 
-  // ---------- Mi bodega: la estantería ----------
+  // ---------- Mi bodega: tu vinoteka (estantería ilustrada) ----------
   var ORDEN_TIPOS = ['Tinto', 'Rosado', 'Blanco', 'Espumoso', 'Generoso'];
   var NOMBRE_TIPOS = { Tinto: ['tinto', 'tintos'], Rosado: ['rosado', 'rosados'], Blanco: ['blanco', 'blancos'], Espumoso: ['cava', 'cavas'], Generoso: ['fino', 'finos'] };
   var COLOR_TIPOS = { Tinto: '#6E1A2C', Rosado: '#C9767F', Blanco: '#D8CC8A', Espumoso: '#3B5E3F', Generoso: '#E8B84A' };
-  var POR_FILA = 6;
+  var POR_FILA = 8;
   state.bodSel = null;
   function siluetaSVG(mas){
-    return '<svg width="36" height="96" viewBox="0 0 60 160" aria-hidden="true"><path d="M24 6H36V48C36 57 50 58 50 70V150Q50 156 44 156H16Q10 156 10 150V70C10 58 24 57 24 48Z" fill="' + (mas ? 'rgba(232,184,74,.06)' : 'rgba(255,255,255,.025)') + '" stroke="' + (mas ? 'rgba(232,184,74,.7)' : 'rgba(255,255,255,.13)') + '" stroke-width="2" stroke-dasharray="6 5"/>' +
+    return '<svg width="34" height="92" viewBox="0 0 60 160" aria-hidden="true"><path d="M24 6H36V48C36 57 50 58 50 70V150Q50 156 44 156H16Q10 156 10 150V70C10 58 24 57 24 48Z" fill="' + (mas ? 'rgba(232,184,74,.06)' : 'rgba(255,255,255,.025)') + '" stroke="' + (mas ? 'rgba(232,184,74,.7)' : 'rgba(255,255,255,.13)') + '" stroke-width="2" stroke-dasharray="6 5"/>' +
       (mas ? '<circle cx="30" cy="108" r="13" fill="#E8B84A"/><path d="M30 101v14M23 108h14" stroke="#2A1E08" stroke-width="3" stroke-linecap="round"/>' : '') + '</svg>';
   }
   function consejoBodega(cuenta, total){
@@ -1827,7 +1829,7 @@
     if (total >= 3 && !cuenta.Espumoso) return 'Un cava en la nevera nunca sobra: para brindar o para un aperitivo improvisado.';
     if (total >= 4 && !cuenta.Generoso) return 'Prueba a tener un fino: con jamón, aceitunas y fritos es imbatible.';
     if (total < 3) return 'Ve sumando botellas: con unas pocas de cada tipo tendrás vino para cualquier comida.';
-    return '¡Bodega completa! Tienes vino para casi cualquier plato.';
+    return '¡Vinoteka completa! Tienes vino para casi cualquier plato.';
   }
   function pintarEstanteria(){
     var casa = Object.keys(state.bodega).map(function(k){ return state.bodega[k]; }).filter(function(v){ return v.cantidad > 0; });
@@ -1840,7 +1842,7 @@
       for (var i = 0; i < v.cantidad; i++) botellas.push(v);
       cuenta[v.tipo] = (cuenta[v.tipo] || 0) + v.cantidad;
     });
-    var total = botellas.length, MAX = 36;
+    var total = botellas.length, MAX = 48;
     var visibles = botellas.slice(0, MAX);
     var huecos = Math.max(3 * POR_FILA, Math.ceil((visibles.length + 1) / POR_FILA) * POR_FILA);
     if (huecos > MAX) huecos = MAX;
@@ -1849,7 +1851,10 @@
       var v = visibles[i];
       if (v){
         var primera = i === 0 || visibles[i - 1].id !== v.id;
-        slots.push('<button class="slot' + (state.bodSel === v.id ? ' sel' : '') + '" data-shelf="' + esc(v.id) + '"' + (primera ? '' : ' tabindex="-1"') + ' aria-label="' + esc(v.nombre) + (primera ? ', ' + v.cantidad + (v.cantidad === 1 ? ' botella' : ' botellas') : '') + '">' + botellaSVG(v, 96) + '</button>');
+        var ultima = !visibles[i + 1] || visibles[i + 1].id !== v.id;
+        var sel = state.bodSel === v.id;
+        slots.push('<span class="slot-w"><button class="slot' + (sel ? ' sel' : '') + '" data-shelf="' + esc(v.id) + '"' + (primera ? '' : ' tabindex="-1"') + ' aria-label="' + esc(v.nombre) + (primera ? ', ' + v.cantidad + (v.cantidad === 1 ? ' botella' : ' botellas') : '') + '">' + botellaSVG(v, 92) + '</button>' +
+          (sel && ultima ? '<button class="slot-x" data-quitar="' + esc(v.id) + '" aria-label="Quitar una botella de ' + esc(v.nombre) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' : '') + '</span>');
       } else if (i === visibles.length) {
         slots.push('<button class="slot mas" id="bod-anadir" aria-label="Añadir una botella">' + siluetaSVG(true) + '</button>');
       } else slots.push('<span class="slot vacio" aria-hidden="true">' + siluetaSVG(false) + '</span>');
@@ -1860,12 +1865,12 @@
       return '<span><i style="background:' + COLOR_TIPOS[t] + '"></i>' + cuenta[t] + ' ' + NOMBRE_TIPOS[t][cuenta[t] === 1 ? 0 : 1] + '</span>';
     }).join('');
     var tip = consejoBodega(cuenta, total);
-    $('#bod-estante').innerHTML = '<div class="estante" role="group" aria-label="Tu estantería de vinos">' +
-      '<div class="estante-top"><h2>Tu estantería</h2><span class="badge-n" style="background:var(--surface-3)">' + total + (total === 1 ? ' botella' : ' botellas') + '</span></div>' +
+    $('#bod-estante').innerHTML = '<div class="estante" role="group" aria-label="Tu vinoteka: las botellas que tienes en casa">' +
+      '<div class="estante-top"><h2>Tu vinoteka</h2><span class="badge-n" style="background:var(--surface-3)">' + total + (total === 1 ? ' botella' : ' botellas') + '</span></div>' +
       filas +
-      (total > MAX ? '<div class="note" style="text-align:center;padding-bottom:10px">Y ' + (total - MAX) + ' botellas más que no caben en la estantería</div>' : '') +
+      (total > MAX ? '<div class="note" style="text-align:center;padding-bottom:10px">Y ' + (total - MAX) + ' botellas más que no caben en la vinoteka</div>' : '') +
       (leyenda ? '<div class="estante-leyenda">' + leyenda + '</div>' : '') +
-      (total ? '' : '<p class="note" style="text-align:center;margin:0 8px 12px;font-size:13px">Tu estantería está vacía. Pulsa el <b style="color:var(--amarillo)">+</b> para añadir las botellas que tienes en casa.</p>') +
+      (total ? '' : '<p class="note" style="text-align:center;margin:0 8px 12px;font-size:13px">Tu vinoteka está vacía. Pulsa el <b style="color:var(--amarillo)">+</b> para añadir las botellas que tienes en casa.</p>') +
       (tip ? '<div class="estante-tip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;margin-top:1px"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg><span>' + esc(tip) + '</span></div>' : '') +
     '</div>';
     pintarDetalleBodega();
@@ -1898,6 +1903,14 @@
       if (state.bodSel) setTimeout(function(){ var d = $('#bod-detalle .bod-det'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
       return;
     }
+    var q = e.target.closest('[data-quitar]');
+    if (q){
+      var vq = state.bodega[q.getAttribute('data-quitar')]; if (!vq) return;
+      guardarBodega(vq.id, { cantidad: Math.max(0, vq.cantidad - 1) }).then(function(r){
+        if (r) toast(r.cantidad ? 'Botella quitada · te quedan ' + r.cantidad : 'Quitada de tu vinoteka');
+      });
+      return;
+    }
     if (e.target.closest('#bod-det-x')){ state.bodSel = null; pintarEstanteria(); return; }
     if (e.target.closest('#bod-mas') || e.target.closest('#bod-menos')){
       var v = state.bodega[state.bodSel]; if (!v) return;
@@ -1912,7 +1925,7 @@
         cerrarHoja();
         var it = state.bodega[w.id];
         return guardarBodega(w.id, { cantidad: (it ? it.cantidad : 0) + 1 }, { nombre: w.nombre, tipo: w.tipo, denominacion: w.denominacion, color: w.color, precio: w.precio, va_con: [] })
-          .then(function(r){ if (r){ state.bodSel = w.id; toast('Añadida a tu estantería'); cargarBodega(); } });
+          .then(function(r){ if (r){ state.bodSel = w.id; toast('Añadida a tu vinoteka'); cargarBodega(); } });
       });
     }
   });
