@@ -214,6 +214,58 @@
   .tag-ideal{font-size:11px;font-weight:700;color:#fff;background:var(--verde);padding:3px 8px;border-radius:999px}
   .avatar{width:66px;height:66px;border-radius:33px;background:var(--burdeos);color:#fff;display:flex;align-items:center;justify-content:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:26px;flex-shrink:0;border:1px solid var(--burdeos-line)}
   .avatar-btn.has-name{background:var(--burdeos);border-color:var(--burdeos-line);color:#fff;font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:17px}
+  .hoja .sheet{max-height:90dvh;overflow-y:auto;position:relative;gap:14px}
+  .hoja-x{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:20px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .hoja h2{padding-right:44px}
+  .tk-yo{padding:18px;border-radius:22px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:14px}
+  .tk-av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;border:1px solid rgba(255,255,255,.16);letter-spacing:.02em}
+  .tk-lvl{font-size:11px;font-weight:700;color:#2A1E08;background:var(--amarillo);padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .tk-pill{font-size:11px;font-weight:700;color:#2A1E08;background:var(--amarillo);padding:4px 10px;border-radius:999px;white-space:nowrap;align-self:flex-start}
+  .tk-bar{height:8px;border-radius:4px;background:var(--surface-3);overflow:hidden}
+  .tk-bar span{display:block;height:100%;background:var(--amarillo);border-radius:4px}
+  .tk-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .tk-stats div{padding:10px 6px;border-radius:14px;background:var(--surface-2);text-align:center}
+  .tk-stats b{display:block;font-size:18px}
+  .tk-stats span{font-size:11px;color:var(--muted)}
+  .tk-reto{padding:18px;border-radius:22px;background:var(--surface);border:1.5px solid var(--amarillo-line);display:flex;flex-direction:column;gap:14px}
+  .tk-prop{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 8px;border-radius:16px;background:var(--surface-2)}
+  .tk-prop .rk{width:24px;height:24px;border-radius:12px;background:var(--surface-3);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .tk-prop .rk.top{background:var(--amarillo);color:#2A1E08}
+  .tk-prop-v{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:none;padding:0;text-align:left;color:var(--ink);cursor:pointer}
+  .tk-prop-v .t{display:block;font-weight:600;font-size:14px;line-height:1.25}
+  .tk-prop-v .s{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .tk-prop-v .q{display:block;font-size:12px;color:var(--ink2);margin-top:3px;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tk-vote{min-width:52px;min-height:40px;padding:0 12px;border-radius:999px;border:1px solid var(--border-hi);background:transparent;color:var(--ink);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;gap:5px;flex-shrink:0;cursor:pointer}
+  .tk-vote.on{background:var(--amarillo);color:#2A1E08;border-color:var(--amarillo)}
+  .tk-votos{font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+  .linkbtn{background:none;border:none;color:var(--amarillo);font-weight:600;font-size:14px;min-height:40px;cursor:pointer;align-self:center}
+  .tk-card{padding:16px;border-radius:20px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:12px;text-align:left;color:var(--ink);width:100%}
+  .tk-card.tk-mejor{border-color:var(--amarillo-line)}
+  .tk-q{cursor:pointer}
+  .tk-qt{font-weight:600;font-size:16px;line-height:1.4}
+  .tk-qbots{display:flex;gap:2px;align-items:flex-end;height:40px}
+  .tk-qbots span{display:flex;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+  .tk-autor{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+  .tk-autor .n{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tk-autor .lv{font-size:11px;color:var(--amarillo);font-weight:600;margin-left:6px}
+  .tk-autor .t{display:block;font-size:12px;color:var(--muted)}
+  .tk-menu{width:40px;height:40px;border-radius:20px;border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .tk-vino{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);text-align:left;color:var(--ink);cursor:pointer;width:100%}
+  .tk-vino .mini-bot,.tk-prop-v .mini-bot{width:26px;height:56px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,.45))}
+  .tk-prop-v .mini-bot{height:48px}
+  .tk-txt{margin:0;font-size:15px;line-height:1.5;color:var(--ink2);white-space:pre-line}
+  .tk-brindis{align-self:flex-start;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--border-hi);background:transparent;color:var(--ink);display:flex;align-items:center;gap:7px;font-weight:600;font-size:13px;cursor:pointer}
+  .tk-brindis.on{background:var(--burdeos);border-color:var(--burdeos-line);color:#fff}
+  .tk-stars{display:inline-flex;gap:1px;align-items:center;flex-shrink:0}
+  .tk-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}
+  .tk-row.yo{border-color:var(--amarillo-line)}
+  .tk-pos{width:22px;font-weight:800;text-align:center;color:var(--muted)}
+  .tk-pos.top{color:var(--amarillo)}
+  .tk-pts{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:var(--ink2)}
+  .tk-pts b{color:var(--amarillo)}
+  .tk-sinresp{font-size:11px;font-weight:700;color:var(--verde-txt);background:var(--verde-soft);border:1px solid var(--verde-line);padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .star-pick{display:flex;gap:2px}
+  .star-pick button{width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
   .takers-hero{padding:24px;border-radius:24px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:14px}
   .takers-ic{width:56px;height:56px;border-radius:16px;background:var(--verde);display:flex;align-items:center;justify-content:center}
   .feat{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45;color:var(--ink2)}
@@ -396,19 +448,16 @@
   <section class="screen" id="s-takers" aria-label="Takers, la comunidad de Vinotake">
     <div class="px" style="padding-top:28px">
       <h1 style="font-size:30px;line-height:1.1">Takers</h1>
-      <p class="lead" style="margin-top:6px">La comunidad de Vinotake: gente que comparte lo que se lleva y lo que bebe.</p>
+      <p class="lead" style="margin-top:6px">La comunidad de Vinotake: lo que se lleva y lo que bebe la gente.</p>
     </div>
-    <div class="px" style="padding-top:20px"><div class="takers-hero">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <span class="takers-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2"/><circle cx="17" cy="9" r="2.6"/><path d="M16.2 14.3c2.4.2 4.2 1.9 4.8 4.7"/></svg></span>
-        <span class="soon" style="align-self:center">Muy pronto</span>
-      </div>
-      <div class="feat"><span class="dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span><span>Comparte los vinos que te llevas y qué te han parecido.</span></div>
-      <div class="feat"><span class="dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/></svg></span><span>Descubre qué se lleva la gente en tu súper y en tu zona.</span></div>
-      <div class="feat"><span class="dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><span>Sigue a Takers con tus mismos gustos y guarda sus recomendaciones.</span></div>
-      <div class="feat"><span class="dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span><span>Rankings de los vinos mejor valorados de cada súper.</span></div>
+    <div class="px" style="padding-top:18px" id="tk-yo"></div>
+    <div class="px" style="padding-top:14px" id="tk-reto"></div>
+    <div class="px" style="padding-top:22px"><div class="seg" id="tk-seg" role="tablist" aria-label="Secciones de la comunidad">
+      <button data-tk="opiniones" role="tab" class="on" aria-selected="true">Opiniones</button>
+      <button data-tk="preguntas" role="tab" aria-selected="false">Preguntas</button>
+      <button data-tk="ranking" role="tab" aria-selected="false">Ranking</button>
     </div></div>
-    <div class="px" style="padding-top:18px"><button class="cta" id="btn-takers-aviso">Avísame cuando esté</button></div>
+    <div id="tk-panel" style="padding-top:14px"><div class="px"><div class="empty">Cargando la comunidad…</div></div></div>
     <div class="spacer"></div>
     <nav class="tabbar" aria-label="Navegación principal">
       <button class="tab" data-go="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
@@ -416,6 +465,14 @@
       <button class="tab on" aria-current="page" data-go="takers"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2"/><circle cx="17" cy="9" r="2.6"/><path d="M16.2 14.3c2.4.2 4.2 1.9 4.8 4.7"/></svg>Takers</button>
       <button class="tab" data-go="gustos"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Mis gustos</button>
     </nav>
+  </section>
+
+  <!-- PREGUNTA DE LA COMUNIDAD -->
+  <section class="screen" id="s-pregunta" aria-label="Pregunta de la comunidad">
+    <div class="topbar"><button class="iconbtn plain" data-back aria-label="Volver"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
+    <div id="preg-body"></div>
+    <div class="spacer"></div>
+    <div class="bottom-actions" style="padding-top:20px"><button class="cta" id="btn-responder">Recomendar un vino</button></div>
   </section>
 
   <!-- 9 · PERFIL -->
@@ -501,6 +558,8 @@
 <div class="loading" id="loading" role="status" aria-live="polite"><div class="spin"></div><div id="loading-text">Leyendo etiquetas…</div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<div class="gate hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-t"><div class="sheet" id="hoja-body"></div></div>
+
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-t">
   <div class="sheet">
     <h2 id="gate-t" style="font-size:24px">¿Eres mayor de 18 años?</h2>
@@ -554,6 +613,7 @@
     if (name === 'gustos' && typeof cargarGustosPantalla === 'function') cargarGustosPantalla();
     if (name === 'perfil' && typeof cargarPerfil === 'function') cargarPerfil();
     if (name === 'home' && el.id === 's-home' && state.superId) cargarTop();
+    if (name === 'takers') cargarTakers();
     el.classList.add('active');
     window.scrollTo(0, 0);
     if (push !== false) history.pushState({s:name}, '', '#' + name);
@@ -561,7 +621,7 @@
   window.addEventListener('popstate', function(e){
     var s = (e.state && e.state.s) || 'home';
     if ((s === 'resultado' && !state.last) || (s === 'ficha' && !$('#ficha-body').innerHTML) ||
-        (s === 'cocinar-res' && !$('#coc-casa').innerHTML) || (s === 'regalo-vino' && !$('#regalo-body').innerHTML)) s = 'home';
+        (s === 'cocinar-res' && !$('#coc-casa').innerHTML) || (s === 'regalo-vino' && !$('#regalo-body').innerHTML) || (s === 'pregunta' && !$('#preg-body').innerHTML)) s = 'home';
     show(s, false);
   });
   document.addEventListener('click', function(e){
@@ -797,12 +857,14 @@
       sugRow('De la misma bodega', s.misma) +
       sugRow('Parecidos y más baratos', s.parecidos, true) +
       sugRow('Para descubrir', s.descubrir) +
+      '<div id="ficha-ops"></div>' +
       '<div class="px" style="padding-top:28px"><h2 style="font-size:22px">En mi bodega</h2></div>' +
       '<div class="px" style="padding-top:12px"><div class="box" id="bodbox"></div></div>' +
       '<div class="bottom-actions" style="padding-top:20px">' +
         '<p class="note" style="text-align:center;margin:8px 0 0">Consumo responsable. Solo para mayores de 18 años.</p>' +
       '</div>';
     pintarBodBox();
+    cargarOpinionesFicha(w.id);
   }
   function renderFueraCatalogo(d){
     state.ficha = null; pintarBotonGuardar();
@@ -941,6 +1003,7 @@
     var n = ++topPedido;
     return api('/api/top' + (state.superId ? '?super=' + encodeURIComponent(state.superId) : '')).then(function(d){
       if (n !== topPedido || !d || !d.vinos || !d.vinos.length){ return; }
+      state.topVinos = d.vinos;
       $('#top-sub').textContent = d.comunidad
         ? 'Los vinos mejor valorados por la comunidad'
         : 'Aún hay pocas valoraciones: te enseñamos nuestra selección. Puntúa en Mi bodega y entra en el ranking.';
@@ -1145,14 +1208,409 @@
     });
   });
 
-  // ---------- Takers ----------
-  function pintarAvisoTakers(){
-    var b = $('#btn-takers-aviso'), ok = store('takers_aviso') === '1';
-    b.textContent = ok ? 'Te avisaremos cuando esté' : 'Avísame cuando esté';
-    b.disabled = ok; b.style.opacity = ok ? '.7' : '1';
+  // ---------- Takers: la comunidad ----------
+  state.tk = { tab: 'opiniones', datos: null, verTodas: false };
+  var AV_COLORES = ['#7B1E34', '#2E6A47', '#8A6A1F', '#5A2A3A', '#2F4F5A', '#6B3A1E'];
+  var ICON_BRINDIS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-14 7 9)"><path d="M4 3h6l-.6 5.5a2.4 2.4 0 0 1-4.8 0z"/><path d="M7 11v7"/><path d="M4.5 18h5"/></g><g transform="rotate(14 17 9)"><path d="M14 3h6l-.6 5.5a2.4 2.4 0 0 1-4.8 0z"/><path d="M17 11v7"/><path d="M14.5 18h5"/></g></svg>';
+  var ICON_MAS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+  var ICON_OK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+
+  function haceTiempo(f){
+    var t = Date.parse(String(f || '').replace(' ', 'T') + 'Z'); if (isNaN(t)) return '';
+    var s = (Date.now() - t) / 1000;
+    if (s < 60) return 'ahora';
+    if (s < 3600) return 'hace ' + Math.floor(s / 60) + ' min';
+    if (s < 86400) return 'hace ' + Math.floor(s / 3600) + ' h';
+    var d = Math.floor(s / 86400);
+    if (d < 7) return 'hace ' + d + (d === 1 ? ' día' : ' días');
+    return new Date(t).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
   }
-  $('#btn-takers-aviso').addEventListener('click', function(){ store('takers_aviso', '1'); pintarAvisoTakers(); toast('Hecho. Serás de los primeros Takers'); });
-  pintarAvisoTakers();
+  function avatarTk(a, size){
+    var n = a.nombre || '?', h = 0;
+    for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0;
+    return '<span class="tk-av" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.38) + 'px;background:' + AV_COLORES[h % AV_COLORES.length] + '" aria-hidden="true">' + esc(a.iniciales || '?') + '</span>';
+  }
+  function autorTk(a, f){
+    return '<span class="tk-autor">' + avatarTk(a, 36) + '<span style="min-width:0"><span class="n">' + esc(a.nombre) + '<span class="lv">' + esc(a.nivel) + '</span></span><span class="t">' + haceTiempo(f) + '</span></span></span>';
+  }
+  function estrellasTk(n, size){
+    var s = ''; for (var i = 1; i <= 5; i++) s += estrellaSVG(i <= n, size || 14);
+    return '<span class="tk-stars" role="img" aria-label="' + n + ' de 5 estrellas">' + s + '</span>';
+  }
+  function plural(n, uno, varios){ return n + ' ' + (n === 1 ? uno : varios); }
+
+  // ----- Hoja inferior genérica -----
+  function abrirHoja(html){
+    $('#hoja-body').innerHTML = '<button class="hoja-x" data-hoja-cerrar aria-label="Cerrar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' + html;
+    $('#hoja').classList.add('show');
+    var f = $('#hoja-body').querySelector('input,textarea'); if (f) setTimeout(function(){ f.focus(); }, 150);
+  }
+  function cerrarHoja(){ $('#hoja').classList.remove('show'); $('#hoja-body').innerHTML = ''; }
+  $('#hoja').addEventListener('click', function(e){ if (e.target.id === 'hoja' || e.target.closest('[data-hoja-cerrar]')) cerrarHoja(); });
+
+  // Para publicar hace falta un nombre de Taker.
+  function asegurarNombre(){
+    if (state.nombre) return Promise.resolve(state.nombre);
+    return new Promise(function(resolve){
+      abrirHoja('<h2 id="hoja-t" style="font-size:24px">Ponte un nombre de Taker</h2>' +
+        '<p class="lead" style="margin:0">Es lo que verán los demás junto a lo que publiques. Puedes cambiarlo en tu perfil.</p>' +
+        '<div class="field"><input id="tk-nombre" type="text" maxlength="40" placeholder="Ej.: Lucía M." autocomplete="nickname" enterkeyhint="done"></div>' +
+        '<p class="note" id="tk-nombre-err" style="color:var(--amarillo);min-height:18px;margin:0"></p>' +
+        '<button class="cta" id="tk-nombre-ok">Continuar</button>');
+      function guardar(){
+        var n = $('#tk-nombre').value.trim();
+        if (n.length < 2){ $('#tk-nombre-err').textContent = 'Escribe al menos 2 letras.'; return; }
+        api('/api/perfil', { dispositivo: state.dispositivo, nombre: n }).then(function(){
+          state.nombre = n; pintarAvatar(); cerrarHoja(); resolve(n);
+        }).catch(function(err){ $('#tk-nombre-err').textContent = err.message; });
+      }
+      $('#tk-nombre-ok').addEventListener('click', guardar);
+      $('#tk-nombre').addEventListener('keydown', function(e){ if (e.key === 'Enter') guardar(); });
+    });
+  }
+
+  // Buscador de vinos del catálogo dentro de la hoja.
+  function elegirVino(titulo, ayuda){
+    return new Promise(function(resolve){
+      abrirHoja('<h2 id="hoja-t" style="font-size:24px">' + esc(titulo) + '</h2>' +
+        (ayuda ? '<p class="lead" style="margin:0">' + esc(ayuda) + '</p>' : '') +
+        '<div class="field"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>' +
+        '<input id="tk-buscar" type="search" placeholder="Busca por nombre o bodega" autocomplete="off" enterkeyhint="search"></div>' +
+        '<div class="stack" id="tk-buscar-res"></div>');
+      var vinos = [];
+      function pintar(lista, vacio){
+        vinos = lista;
+        $('#tk-buscar-res').innerHTML = lista.length ? lista.map(function(v, i){
+          return '<button class="bcard" data-pick="' + i + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(v, 56) + '</span>' +
+            '<span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span><span class="s" style="display:block">' + esc([v.tipo, v.denominacion].filter(Boolean).join(' · ')) + '</span></span>' +
+            (v.precio ? '<span class="meta"><span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span></span>' : '') + '</button>';
+        }).join('') : '<div class="note" style="text-align:center;padding:14px 0">' + vacio + '</div>';
+      }
+      var sugeridos = (state.topVinos || []).slice(0, 5);
+      pintar(sugeridos, 'Escribe el nombre del vino.');
+      var tmr;
+      $('#tk-buscar').addEventListener('input', function(){
+        var q = this.value.trim(); clearTimeout(tmr);
+        if (q.length < 2){ pintar(sugeridos, 'Escribe el nombre del vino.'); return; }
+        tmr = setTimeout(function(){
+          api('/api/buscar?q=' + encodeURIComponent(q) + '&super=' + encodeURIComponent(state.superId || '')).then(function(d){
+            pintar(d.vinos || [], 'No lo tenemos todavía en el catálogo.');
+          }).catch(function(){});
+        }, 250);
+      });
+      $('#tk-buscar-res').addEventListener('click', function(e){
+        var b = e.target.closest('[data-pick]'); if (!b) return;
+        resolve(vinos[+b.getAttribute('data-pick')]);
+      });
+    });
+  }
+
+  function cabeceraVino(v){
+    return '<div class="tk-vino" style="cursor:default"><span class="mini-bot" aria-hidden="true">' + botellaSVG(v, 56) + '</span><span style="min-width:0"><span style="display:block;font-weight:600">' + esc(v.nombre) + '</span><span class="note" style="display:block">' + esc([v.tipo, v.denominacion].filter(Boolean).join(' · ')) + '</span></span></div>';
+  }
+
+  // Escribir un texto corto (opinión, respuesta, propuesta).
+  function hojaTexto(o){
+    return new Promise(function(resolve){
+      var punt = o.puntuacion || 0;
+      abrirHoja('<h2 id="hoja-t" style="font-size:24px">' + esc(o.titulo) + '</h2>' + cabeceraVino(o.vino) +
+        (o.estrellas ? '<div><span class="label" style="margin-bottom:4px">¿Qué nota le das?</span><div class="star-pick" id="tk-stars" role="radiogroup" aria-label="Puntuación"></div></div>' : '') +
+        '<div><label class="label" for="tk-txt" style="margin-bottom:8px">' + esc(o.etiqueta) + '</label>' +
+        '<textarea id="tk-txt" class="bodnota" maxlength="' + o.max + '" placeholder="' + esc(o.placeholder) + '">' + esc(o.texto || '') + '</textarea>' +
+        '<div class="note" style="text-align:right" id="tk-cnt"></div></div>' +
+        '<p class="note" id="tk-err" style="color:var(--amarillo);min-height:18px;margin:0"></p>' +
+        '<button class="cta" id="tk-pub">' + esc(o.boton) + '</button>' +
+        '<p class="note" style="text-align:center;margin:0">Sé amable. Nada de enlaces ni datos personales.</p>');
+      function pintarStars(){
+        if (!o.estrellas) return;
+        var h = ''; for (var i = 1; i <= 5; i++) h += '<button role="radio" aria-checked="' + (i === punt) + '" aria-label="' + i + ' estrella' + (i > 1 ? 's' : '') + '" data-st="' + i + '">' + estrellaSVG(i <= punt, 34) + '</button>';
+        $('#tk-stars').innerHTML = h;
+      }
+      function contar(){ $('#tk-cnt').textContent = $('#tk-txt').value.length + ' / ' + o.max; }
+      pintarStars(); contar();
+      if (o.estrellas) $('#tk-stars').addEventListener('click', function(e){ var b = e.target.closest('[data-st]'); if (b){ punt = +b.getAttribute('data-st'); pintarStars(); } });
+      $('#tk-txt').addEventListener('input', contar);
+      $('#tk-pub').addEventListener('click', function(){
+        var t = $('#tk-txt').value.trim();
+        if (o.estrellas && !punt){ $('#tk-err').textContent = 'Elige de 1 a 5 estrellas.'; return; }
+        if (o.obligatorio && t.length < 3){ $('#tk-err').textContent = 'Escribe algo, aunque sea corto.'; return; }
+        var btn = $('#tk-pub'); btn.disabled = true;
+        o.enviar(t, punt).then(function(r){ cerrarHoja(); resolve(r); })
+          .catch(function(err){ btn.disabled = false; $('#tk-err').textContent = err.message; });
+      });
+    });
+  }
+
+  function trasPublicar(puntos, msg){
+    toast((puntos ? '+' + puntos + ' puntos · ' : '') + msg);
+    cargarTakers();
+  }
+
+  // ----- Acciones -----
+  function escribirOpinion(vino){
+    return asegurarNombre().then(function(){
+      return (vino ? Promise.resolve(vino) : elegirVino('¿Qué vino has probado?', 'Búscalo y cuéntanos qué te ha parecido.'));
+    }).then(function(v){
+      return api('/api/takers/opiniones/' + encodeURIComponent(v.id) + '?d=' + encodeURIComponent(state.dispositivo)).catch(function(){ return {}; }).then(function(d){
+        var mia = d.mia || {};
+        return hojaTexto({
+          titulo: mia.puntuacion ? 'Edita tu opinión' : 'Tu opinión', vino: v, estrellas: true, puntuacion: mia.puntuacion,
+          etiqueta: '¿Qué te ha parecido? (opcional)', placeholder: 'Ej.: con unas chuletillas, perfecto. Repetiré.', texto: mia.texto, max: 280,
+          boton: mia.puntuacion ? 'Guardar cambios' : 'Publicar opinión',
+          enviar: function(t, p){ return api('/api/takers/opinion', { dispositivo: state.dispositivo, vino_id: v.id, puntuacion: p, texto: t }); }
+        }).then(function(r){
+          trasPublicar(mia.puntuacion ? 0 : r.puntos, '¡Gracias por compartirlo!');
+          cargarBodega().then(function(){ if (state.ficha && state.ficha.id === v.id){ pintarBodBox(); cargarOpinionesFicha(v.id); } });
+        });
+      });
+    }).catch(function(err){ if (err) toast(err.message); });
+  }
+
+  function proponerReto(){
+    var r = state.tk.datos && state.tk.datos.reto; if (!r) return;
+    var reglas = [r.tipo ? 'Solo ' + r.tipo.toLowerCase() + 's' : '', r.precio_max ? 'hasta ' + eur(r.precio_max) : ''].filter(Boolean).join(', ');
+    asegurarNombre().then(function(){ return elegirVino('Propón tu vino', r.titulo + (reglas ? ' · ' + reglas : '')); }).then(function(v){
+      return hojaTexto({
+        titulo: 'Tu propuesta', vino: v, etiqueta: '¿Por qué este? (opcional)', placeholder: 'Ej.: por 4 € no hay nada mejor', max: 160, boton: 'Proponer',
+        enviar: function(t){ return api('/api/takers/propuesta', { dispositivo: state.dispositivo, reto_id: r.id, vino_id: v.id, texto: t }); }
+      });
+    }).then(function(res){ trasPublicar(res.puntos, 'Propuesta enviada. ¡Que te voten!'); })
+      .catch(function(err){ if (err) toast(err.message); });
+  }
+
+  function hacerPregunta(){
+    var t = $('#tk-preg-txt').value.trim();
+    if (t.length < 10){ toast('Cuéntalo un poco más'); $('#tk-preg-txt').focus(); return; }
+    asegurarNombre().then(function(){ return api('/api/takers/pregunta', { dispositivo: state.dispositivo, texto: t }); })
+      .then(function(r){ $('#tk-preg-txt').value = ''; toast('Pregunta publicada. Te avisaremos aquí con las respuestas'); cargarTakers(); abrirPregunta(r.id); })
+      .catch(function(err){ toast(err.message); });
+  }
+
+  function responderPregunta(){
+    var q = state.tk.pregunta; if (!q) return;
+    asegurarNombre().then(function(){ return elegirVino('¿Qué vino le recomiendas?', q.texto); }).then(function(v){
+      return hojaTexto({
+        titulo: 'Tu recomendación', vino: v, etiqueta: '¿Por qué este? (opcional)', placeholder: 'Ej.: con cordero asado es lo mejor que he probado', max: 200, boton: 'Recomendar',
+        enviar: function(t){ return api('/api/takers/respuesta', { dispositivo: state.dispositivo, pregunta_id: q.id, vino_id: v.id, texto: t }); }
+      });
+    }).then(function(res){ toast('+' + res.puntos + ' puntos · ¡Gracias por ayudar!'); abrirPregunta(q.id, true); state.tk.datos = null; })
+      .catch(function(err){ if (err) toast(err.message); });
+  }
+
+  function menuItem(tipo, id, mia){
+    abrirHoja('<h2 id="hoja-t" style="font-size:22px">' + (mia ? '¿Borrar lo que has publicado?' : '¿Algo no está bien?') + '</h2>' +
+      '<p class="lead" style="margin:0">' + (mia ? 'Se borrará para todos y no se puede deshacer.' : 'Si varios Takers lo denuncian, lo ocultamos mientras lo revisamos.') + '</p>' +
+      '<button class="cta" id="tk-menu-ok">' + (mia ? 'Borrar' : 'Denunciar') + '</button><button class="ghost" data-hoja-cerrar>Cancelar</button>');
+    $('#tk-menu-ok').addEventListener('click', function(){
+      api('/api/takers/' + (mia ? 'borrar' : 'denunciar'), { dispositivo: state.dispositivo, tipo: tipo, id: id }).then(function(){
+        cerrarHoja(); toast(mia ? 'Borrado' : 'Gracias, lo revisaremos');
+        if (tipo === 'pregunta' && mia){ show('takers'); }
+        else if ($('#s-pregunta').classList.contains('active') && state.tk.pregunta) abrirPregunta(state.tk.pregunta.id, true);
+        cargarTakers();
+        if (state.ficha && $('#s-ficha').classList.contains('active')) cargarOpinionesFicha(state.ficha.id);
+      }).catch(function(err){ toast(err.message); });
+    });
+  }
+
+  // ----- Pintar -----
+  function cargarTakers(){
+    return api('/api/takers?d=' + encodeURIComponent(state.dispositivo) + '&super=' + encodeURIComponent(state.superId || '')).then(function(d){
+      state.tk.datos = d; pintarTakers();
+    }).catch(function(err){
+      if (!state.tk.datos) $('#tk-panel').innerHTML = '<div class="px"><div class="empty">No hemos podido cargar la comunidad. ' + esc(err.message) + '</div></div>';
+    });
+  }
+
+  function pintarTakers(){
+    var d = state.tk.datos; if (!d) return;
+    // Tu tarjeta
+    var y = d.yo;
+    if (!y || !y.nombre){
+      $('#tk-yo').innerHTML = '<div class="tk-yo"><div style="display:flex;gap:14px;align-items:center">' + avatarTk({ nombre: '?', iniciales: '?' }, 52) +
+        '<div><div style="font-weight:700;font-size:18px">Únete a los Takers</div><div class="note" style="font-size:13px">Comparte, vota, pregunta y sube de nivel.</div></div></div>' +
+        '<button class="cta" id="tk-unirme" style="min-height:50px">Ponerme un nombre</button></div>';
+    } else {
+      var sig = y.siguiente, pct = sig ? Math.round((y.puntos - sig.desde) / (sig.hasta - sig.desde) * 100) : 100;
+      $('#tk-yo').innerHTML = '<div class="tk-yo">' +
+        '<div style="display:flex;gap:14px;align-items:center">' + avatarTk(y, 52) +
+          '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(y.nombre) + '</div>' +
+          '<div style="display:flex;gap:8px;align-items:center;margin-top:4px"><span class="tk-lvl">' + esc(y.nivel) + '</span><span class="note" style="font-size:13px">' + y.puntos + ' puntos' + (y.posicion_mes ? ' · #' + y.posicion_mes + ' este mes' : '') + '</span></div></div></div>' +
+        '<div><div class="tk-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>' +
+          '<div class="note" style="margin-top:6px">' + (sig ? 'Te faltan ' + sig.faltan + ' puntos para ' + esc(sig.nombre) : '¡Nivel máximo! Eres leyenda') + '</div></div>' +
+        '<div class="tk-stats"><div><b>' + y.stats.opiniones + '</b><span>Opiniones</span></div><div><b>' + y.stats.respuestas + '</b><span>Respuestas</span></div><div><b>' + y.stats.brindis + '</b><span>Brindis recibidos</span></div></div>' +
+      '</div>';
+    }
+    // Reto
+    var r = d.reto;
+    if (r){
+      var mia = r.propuestas.filter(function(p){ return p.mia; })[0];
+      var lista = state.tk.verTodas ? r.propuestas : r.propuestas.slice(0, 4);
+      var reglas = [r.tipo ? r.tipo : '', r.precio_max ? 'Hasta ' + eur(r.precio_max) : ''].filter(Boolean);
+      $('#tk-reto').innerHTML = '<div class="tk-reto">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="tk-pill">Reto de la semana</span><span class="note" style="font-size:12px">' + (r.abierto ? (r.dias_restantes === 0 ? 'Termina hoy' : 'Quedan ' + plural(r.dias_restantes, 'día', 'días')) : 'Terminado') + '</span></div>' +
+        '<div><h2 style="font-size:22px;line-height:1.2">' + esc(r.titulo).replace(/ €/g, '\u00a0€') + '</h2><p class="lead" style="font-size:14px;margin-top:6px">' + esc(r.descripcion || '') + '</p></div>' +
+        (reglas.length ? '<div class="tags">' + reglas.map(function(t){ return '<span class="tg">' + esc(t) + '</span>'; }).join('') + '<span class="tg">' + plural(r.participantes, 'participación', 'participaciones') + '</span></div>' : '') +
+        (r.propuestas.length ? '<div class="stack" style="gap:8px">' + lista.map(function(p, i){
+          var votado = r.mi_voto === p.id;
+          return '<div class="tk-prop">' +
+            '<span class="rk' + (i === 0 && p.votos ? ' top' : '') + '">' + (i + 1) + '</span>' +
+            '<button class="tk-prop-v" data-wine="' + esc(p.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(p.vino, 48) + '</span>' +
+              '<span style="min-width:0"><span class="t">' + esc(p.vino.nombre) + '</span><span class="s">' + (p.vino.precio ? eur(p.vino.precio) + ' · ' : '') + 'por ' + esc(p.mia ? 'ti' : p.autor.nombre) + '</span>' +
+              (p.texto ? '<span class="q">«' + esc(p.texto) + '»</span>' : '') + '</span></button>' +
+            (p.mia ? '<span class="tk-votos">' + plural(p.votos, 'voto', 'votos') + '</span>'
+              : '<button class="tk-vote' + (votado ? ' on' : '') + '" data-voto="' + p.id + '" aria-pressed="' + votado + '" ' + (r.abierto ? '' : 'disabled') + '>' + (votado ? ICON_OK : '') + p.votos + '</button>') +
+          '</div>';
+        }).join('') + '</div>' : '<div class="note" style="font-size:14px">Nadie ha propuesto nada todavía. ¡Sé el primero!</div>') +
+        (r.propuestas.length > 4 ? '<button class="linkbtn" id="tk-ver-todas">' + (state.tk.verTodas ? 'Ver menos' : 'Ver las ' + r.propuestas.length + ' propuestas') + '</button>' : '') +
+        (r.abierto ? (mia ? '<button class="ghost" id="tk-proponer" style="min-height:48px">Cambiar mi propuesta</button>' : '<button class="cta" id="tk-proponer" style="min-height:50px">Proponer mi vino</button>') : '') +
+        (r.propuestas.length && !r.mi_voto && r.abierto ? '<p class="note" style="text-align:center;margin:0">Vota tu favorito tocando el número de votos.</p>' : '') +
+      '</div>';
+    } else $('#tk-reto').innerHTML = '';
+    document.querySelectorAll('#tk-seg [data-tk]').forEach(function(b){ var on = b.getAttribute('data-tk') === state.tk.tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+    pintarPanelTk();
+  }
+
+  function tarjetaOpinion(o, conVino){
+    return '<article class="tk-card">' +
+      '<div style="display:flex;align-items:center;gap:8px">' + autorTk(o.autor, o.creado) +
+        '<button class="tk-menu" data-tk-menu="opinion" data-id="' + o.id + '"' + (o.mia ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button></div>' +
+      (conVino ? '<button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span>' +
+        '<span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span>' + estrellasTk(o.puntuacion, 13) + '</button>'
+        : '<div>' + estrellasTk(o.puntuacion, 16) + '</div>') +
+      (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        (o.mia ? '<span class="note">' + ICON_BRINDIS.replace('width="18" height="18"', 'width="16" height="16" style="vertical-align:-3px"') + ' ' + plural(o.brindis, 'brindis', 'brindis') + '</span>'
+          : '<button class="tk-brindis' + (o.brindado ? ' on' : '') + '" data-brindis="' + o.id + '" aria-pressed="' + o.brindado + '">' + ICON_BRINDIS + (o.brindado ? 'Brindado' : 'Brindar') + (o.brindis ? ' · ' + o.brindis : '') + '</button>') +
+      '</div></article>';
+  }
+
+  function pintarPanelTk(){
+    var d = state.tk.datos, h = '';
+    if (state.tk.tab === 'opiniones'){
+      h = '<div class="px stack">' +
+        '<button class="row-card" id="tk-opinar"><span class="ic">' + estrellaSVG(true, 24) + '</span><span style="flex:1"><span class="t" style="display:block">¿Qué has probado?</span><span class="s" style="display:block">Puntúa un vino y cuenta qué tal · +' + d.puntos.opinion + ' puntos</span></span></button>' +
+        (d.opiniones.length ? d.opiniones.map(function(o){ return tarjetaOpinion(o, true); }).join('') : '<div class="empty">Aún no hay opiniones. ¡Estrena la comunidad con la tuya!</div>') +
+      '</div>';
+    } else if (state.tk.tab === 'preguntas'){
+      h = '<div class="px stack">' +
+        '<div class="box" style="gap:12px"><label class="label" for="tk-preg-txt" style="margin:0">¿Dudas con qué vino coger? Pregunta a los Takers</label>' +
+          '<textarea id="tk-preg-txt" class="bodnota" maxlength="200" placeholder="Ej.: barbacoa con amigos el sábado, ¿qué tinto llevo por menos de 10 €?"></textarea>' +
+          '<button class="cta" id="tk-preguntar" style="min-height:50px">Preguntar</button></div>' +
+        (d.preguntas.length ? d.preguntas.map(function(q){
+          return '<button class="tk-card tk-q" data-preg="' + q.id + '">' +
+            '<span style="display:flex;align-items:center;gap:8px;width:100%">' + autorTk(q.autor, q.creado) + '</span>' +
+            '<span class="tk-qt">' + esc(q.texto) + '</span>' +
+            '<span style="display:flex;align-items:center;gap:10px;width:100%">' +
+              (q.vinos.length ? '<span class="tk-qbots" aria-hidden="true">' + q.vinos.map(function(v){ return '<span>' + botellaSVG(v, 40) + '</span>'; }).join('') + '</span>' : '') +
+              (q.respuestas ? '<span class="note" style="flex:1">' + plural(q.respuestas, 'recomendación', 'recomendaciones') + '</span>' : '<span style="flex:1"><span class="tk-sinresp">Sin respuesta · ¡ayuda!</span></span>') +
+              '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A89CA0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>' +
+            '</span></button>';
+        }).join('') : '<div class="empty">Todavía no hay preguntas. Haz la primera.</div>') +
+      '</div>';
+    } else {
+      var rk = d.ranking;
+      h = '<div class="px stack">' +
+        '<div style="font-weight:600;font-size:15px">Los Takers más activos del mes</div>' +
+        (rk.length ? rk.map(function(t){
+          return '<div class="tk-row' + (t.yo ? ' yo' : '') + '"><span class="tk-pos' + (t.posicion <= 3 ? ' top' : '') + '">' + t.posicion + '</span>' + avatarTk(t, 36) +
+            '<span style="flex:1;min-width:0"><span style="display:block;font-weight:600">' + esc(t.nombre) + (t.yo ? ' <span class="note">(tú)</span>' : '') + '</span><span class="note">' + esc(t.nivel) + '</span></span>' +
+            '<span style="font-weight:700">' + t.puntos + ' <span class="note">pts</span></span></div>';
+        }).join('') : '<div class="empty">Aún no hay nadie en el ranking este mes. ¡Tu primera opinión te pone arriba!</div>') +
+        (d.ganador_anterior ? '<div class="box" style="gap:10px"><span class="tk-pill">Ganador del último reto</span><div style="font-weight:600">' + esc(d.ganador_anterior.reto) + '</div>' +
+          '<button class="tk-vino" data-wine="' + esc(d.ganador_anterior.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(d.ganador_anterior.vino, 56) + '</span><span><span style="display:block;font-weight:600">' + esc(d.ganador_anterior.vino.nombre) + '</span><span class="note">Propuesto por ' + esc(d.ganador_anterior.autor.nombre) + ' · ' + plural(d.ganador_anterior.votos, 'voto', 'votos') + '</span></span></button></div>' : '') +
+        '<div class="box" style="gap:10px"><div style="font-weight:600">Cómo sumar puntos</div>' +
+          [['Publicar una opinión', d.puntos.opinion], ['Recomendar un vino en una pregunta', d.puntos.respuesta], ['Proponer un vino en el reto', d.puntos.propuesta],
+           ['Cada voto que recibe tu propuesta', d.puntos.voto], ['Cada vez que marcan útil tu respuesta', d.puntos.util], ['Cada brindis por tu opinión', d.puntos.brindis]].map(function(x){
+            return '<div class="tk-pts"><span>' + x[0] + '</span><b>+' + x[1] + '</b></div>';
+          }).join('') +
+          '<div class="note" style="margin-top:4px">Niveles: ' + d.niveles.map(function(n){ return esc(n.nombre) + (n.min ? ' (' + n.min + ')' : ''); }).join(' · ') + '</div></div>' +
+      '</div>';
+    }
+    $('#tk-panel').innerHTML = h;
+  }
+
+  // ----- Detalle de una pregunta -----
+  function abrirPregunta(id, sinNavegar){
+    if (!sinNavegar) loading(true, 'Abriendo…');
+    return api('/api/takers/pregunta/' + id + '?d=' + encodeURIComponent(state.dispositivo) + '&super=' + encodeURIComponent(state.superId || '')).then(function(q){
+      loading(false); state.tk.pregunta = q;
+      $('#preg-body').innerHTML =
+        '<div class="px" style="padding-top:8px;display:flex;flex-direction:column;gap:14px">' +
+          '<div style="display:flex;align-items:center;gap:8px">' + autorTk(q.autor, q.creado) + '<button class="tk-menu" data-tk-menu="pregunta" data-id="' + q.id + '"' + (q.mia ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button></div>' +
+          '<h1 style="font-size:24px;line-height:1.25">' + esc(q.texto).replace(/ €/g, '\u00a0€') + '</h1>' +
+        '</div>' +
+        '<div class="px" style="padding-top:24px"><h2 style="font-size:19px">' + (q.respuestas.length ? plural(q.respuestas.length, 'recomendación', 'recomendaciones') : 'Aún sin recomendaciones') + '</h2></div>' +
+        '<div class="px stack" style="padding-top:12px">' + (q.respuestas.length ? q.respuestas.map(function(a, i){
+          return '<article class="tk-card' + (i === 0 && a.utiles ? ' tk-mejor' : '') + '">' +
+            (i === 0 && a.utiles ? '<span class="tk-pill" style="align-self:flex-start">La más útil</span>' : '') +
+            '<div style="display:flex;align-items:center;gap:8px">' + autorTk(a.autor, a.creado) + '<button class="tk-menu" data-tk-menu="respuesta" data-id="' + a.id + '"' + (a.mia ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button></div>' +
+            '<button class="tk-vino" data-wine="' + esc(a.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(a.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(a.vino.nombre) + '</span><span class="note" style="display:block">' + esc([a.vino.tipo, a.vino.denominacion].filter(Boolean).join(' · ')) + '</span></span>' + (a.vino.precio ? '<span style="font-weight:700">' + eur(a.vino.precio) + '</span>' : '') + '</button>' +
+            (a.texto ? '<p class="tk-txt">' + esc(a.texto) + '</p>' : '') +
+            (a.mia ? (a.utiles ? '<span class="note">' + plural(a.utiles, 'persona lo ha encontrado útil', 'personas lo han encontrado útil') + '</span>' : '')
+              : '<button class="tk-brindis' + (a.util_mio ? ' on' : '') + '" data-util="' + a.id + '" aria-pressed="' + a.util_mio + '">' + ICON_OK + 'Útil' + (a.utiles ? ' · ' + a.utiles : '') + '</button>') +
+          '</article>';
+        }).join('') : '<div class="empty">Sé el primero en recomendarle un vino.</div>') + '</div>';
+      $('#btn-responder').style.display = q.mia ? 'none' : '';
+      if (!sinNavegar) show('pregunta');
+    }).catch(function(err){ loading(false); toast(err.message); });
+  }
+
+  // ----- Opiniones en la ficha del vino -----
+  function cargarOpinionesFicha(id){
+    var box = $('#ficha-ops'); if (!box) return;
+    api('/api/takers/opiniones/' + encodeURIComponent(id) + '?d=' + encodeURIComponent(state.dispositivo)).then(function(d){
+      if (!state.ficha || state.ficha.id !== id) return;
+      var mia = d.mia;
+      box.innerHTML = '<div class="px" style="padding-top:28px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px"><h2 style="font-size:22px">Opiniones de los Takers</h2>' +
+          (d.total ? '<span style="display:flex;align-items:center;gap:4px;font-weight:700;color:var(--amarillo)">' + estrellaSVG(true, 16) + String(d.media).replace('.', ',') + ' <span class="note">(' + d.total + ')</span></span>' : '') + '</div>' +
+        '<div class="px stack" style="padding-top:12px">' +
+          (d.opiniones.length ? d.opiniones.slice(0, 3).map(function(o){ return tarjetaOpinion(o, false); }).join('') : '<div class="empty" style="padding:20px">Nadie ha opinado todavía sobre este vino.</div>') +
+          '<button class="ghost" id="ficha-opinar">' + (mia ? 'Editar mi opinión' : 'Escribir mi opinión') + '</button>' +
+        '</div>';
+    }).catch(function(){ box.innerHTML = ''; });
+  }
+
+  // ----- Clics -----
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    var b;
+    if ((b = t.closest('#tk-seg [data-tk]'))){ state.tk.tab = b.getAttribute('data-tk'); pintarTakers(); return; }
+    if (t.closest('#tk-unirme')){ asegurarNombre().then(function(){ toast('¡Bienvenido a los Takers!'); cargarTakers(); }); return; }
+    if (t.closest('#tk-opinar')){ escribirOpinion(); return; }
+    if (t.closest('#ficha-opinar')){ if (state.ficha) escribirOpinion({ id: state.ficha.id, nombre: state.ficha.nombre, tipo: state.ficha.tipo, color: state.ficha.color, denominacion: state.ficha.denominacion, imagen: state.ficha.imagen }); return; }
+    if (t.closest('#tk-proponer')){ proponerReto(); return; }
+    if (t.closest('#tk-ver-todas')){ state.tk.verTodas = !state.tk.verTodas; pintarTakers(); return; }
+    if (t.closest('#tk-preguntar')){ hacerPregunta(); return; }
+    if (t.closest('#btn-responder')){ responderPregunta(); return; }
+    if ((b = t.closest('[data-preg]'))){ abrirPregunta(+b.getAttribute('data-preg')); return; }
+    if ((b = t.closest('[data-tk-menu]'))){ menuItem(b.getAttribute('data-tk-menu'), +b.getAttribute('data-id'), b.hasAttribute('data-mia')); return; }
+    if ((b = t.closest('[data-brindis]'))){
+      var rid = +b.getAttribute('data-brindis');
+      api('/api/takers/brindis', { dispositivo: state.dispositivo, resena_id: rid }).then(function(r){
+        document.querySelectorAll('[data-brindis="' + rid + '"]').forEach(function(x){
+          x.classList.toggle('on', r.activo); x.setAttribute('aria-pressed', r.activo);
+          x.innerHTML = ICON_BRINDIS + (r.activo ? 'Brindado' : 'Brindar') + (r.total ? ' · ' + r.total : '');
+        });
+        if (r.activo) toast('¡Chin chin!');
+        state.tk.datos && state.tk.datos.opiniones.forEach(function(o){ if (o.id === rid){ o.brindado = r.activo; o.brindis = r.total; } });
+      }).catch(function(err){ toast(err.message); });
+      return;
+    }
+    if ((b = t.closest('[data-util]'))){
+      var aid = +b.getAttribute('data-util');
+      api('/api/takers/util', { dispositivo: state.dispositivo, respuesta_id: aid }).then(function(r){
+        b.classList.toggle('on', r.activo); b.setAttribute('aria-pressed', r.activo);
+        b.innerHTML = ICON_OK + 'Útil' + (r.total ? ' · ' + r.total : '');
+      }).catch(function(err){ toast(err.message); });
+      return;
+    }
+    if ((b = t.closest('[data-voto]'))){
+      var pid = +b.getAttribute('data-voto');
+      api('/api/takers/voto', { dispositivo: state.dispositivo, propuesta_id: pid }).then(function(r){
+        toast(r.mi_voto ? 'Voto guardado' : 'Voto quitado'); cargarTakers();
+      }).catch(function(err){ toast(err.message); });
+    }
+  });
 
   // ---------- Perfil ----------
   state.nombre = '';
