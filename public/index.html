@@ -179,6 +179,43 @@
   .top-card .r{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:600;color:var(--amarillo)}
   .top-card .r small{color:var(--muted);font-weight:500;font-size:11px}
   .top-card .sel{font-size:10.5px;font-weight:600;color:var(--verde-txt);background:rgba(46,106,71,.28);border:1px solid rgba(46,106,71,.6);padding:3px 7px;border-radius:999px;white-space:nowrap}
+  .cata{padding:18px;border-radius:24px;background:var(--surface);border:1.5px solid var(--amarillo-line);display:flex;flex-direction:column;gap:14px}
+  .cata-dots{display:flex;gap:8px}
+  .cata-dot{flex:1;height:6px;border-radius:3px;background:var(--surface-3)}
+  .cata-dot.ok{background:var(--verde)}
+  .cata-dot.ko{background:var(--burdeos)}
+  .cata-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:10px}
+  .cata-col{padding:12px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);display:flex;flex-direction:column;gap:2px;min-width:0}
+  .cata-col .k{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .cata-col .v{font-weight:800;font-size:22px}
+  .cata-col .v small{font-size:12px;color:var(--muted);font-weight:600}
+  .cata-col .s{font-size:12px;color:var(--muted);line-height:1.35}
+  .cata-col.gan{border-color:var(--amarillo-line)}
+  .cata-col.gan .k{color:var(--amarillo);font-weight:600}
+  .cata-gan{display:flex;align-items:center;gap:8px;margin-top:6px;min-width:0}
+  .cata-gan .n{display:block;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cata-gan .s{display:block}
+  .cata-top{padding:12px;border-radius:16px;background:var(--surface-2)}
+  .cata-fila{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:14px}
+  .cata-fila .p{width:18px;text-align:center;font-weight:800;color:var(--muted);font-size:13px}
+  .cata-fila .p.top{color:var(--amarillo)}
+  .cata-fila .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cata-fila.yo .n{color:var(--amarillo);font-weight:600}
+  .cata-op{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;border-radius:16px;border:1px solid var(--border-hi);background:var(--surface-2);color:var(--ink);font-size:15px;font-weight:500;text-align:left;cursor:pointer;width:100%;transition:background .2s,border-color .2s}
+  .cata-op .l{width:30px;height:30px;border-radius:15px;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+  .cata-op:disabled{cursor:default}
+  .cata-op.elegida{border-color:var(--amarillo)}
+  .cata-op.ok{background:rgba(46,106,71,.35);border-color:var(--verde);color:#fff}
+  .cata-op.ok .l{background:var(--verde);color:#fff}
+  .cata-op.ko{background:rgba(123,30,52,.4);border-color:var(--burdeos);color:#fff}
+  .cata-op.ko .l{background:var(--burdeos);color:#fff}
+  .cata-exp{padding:12px 14px;border-radius:14px;font-size:14px;line-height:1.5;color:var(--ink2);background:var(--surface-2);border:1px solid var(--border);animation:entra .2s ease}
+  .cata-exp.ok b{color:var(--verde-txt)}
+  .cata-exp.ko b{color:var(--amarillo)}
+  .cata-rev{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:var(--surface-2)}
+  .cata-rev .i{width:24px;height:24px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;color:#fff}
+  .cata-rev.ok .i{background:var(--verde)}
+  .cata-rev.ko .i{background:var(--burdeos)}
   .hist-card{width:116px;flex-shrink:0;scroll-snap-align:start;padding:10px;border-radius:18px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;color:var(--ink)}
   .hist-card .stage{height:104px;border-radius:12px;background:var(--surface-3);display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
   .hist-card .n{font-weight:600;font-size:13px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px}
@@ -344,6 +381,9 @@
         <select id="store1" class="store-select"><option>Mercadona</option><option>Carrefour</option><option>Lidl</option><option>Dia</option><option>Alcampo</option></select>
       </div>
     </div>
+    <section id="home-cata" aria-labelledby="cata-title" style="padding-top:26px" hidden>
+      <div class="px"><div class="cata" id="cata-box"></div></div>
+    </section>
     <section id="home-hist" aria-labelledby="hist-title" style="padding-top:30px" hidden>
       <div class="top-head">
         <div><h2 id="hist-title">Vistos hace poco</h2><p>Los últimos vinos que has buscado</p></div>
@@ -648,6 +688,7 @@
     if (name === 'perfil' && typeof cargarPerfil === 'function') cargarPerfil();
     if (name === 'home' && el.id === 's-home' && state.superId) cargarTop();
     if (name === 'home' && typeof pintarHistorial === 'function') pintarHistorial();
+    if (name === 'home' && state.cata) cargarCata();
     if (name === 'takers') cargarTakers();
     el.classList.add('active');
     window.scrollTo(0, 0);
@@ -1033,6 +1074,119 @@
       '<path d="' + forma + '" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1"/>' +
       '</svg>';
   }
+
+  // ---------- La cata del día ----------
+  state.cata = null;
+  var ICON_COPA = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10l-.8 6.5a4.2 4.2 0 0 1-8.4 0z"/><path d="M12 14v6"/><path d="M8 21h8"/></svg>';
+  var ICON_COPA_GANADOR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4a3 3 0 0 0 3 4"/><path d="M17 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4"/><path d="M8 21h8l-1-4H9z"/></svg>';
+  function fechaBonita(f){
+    try { return new Date(f + 'T12:00:00Z').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' }); } catch(e){ return f; }
+  }
+  function cargarCata(){
+    return api('/api/cata?d=' + encodeURIComponent(state.dispositivo)).then(function(d){
+      state.cata = d; pintarCata();
+    }).catch(function(){});
+  }
+  function pintarCata(){
+    var d = state.cata;
+    if (!d || !d.preguntas.length){ $('#home-cata').hidden = true; return; }
+    $('#home-cata').hidden = false;
+    var hechas = d.preguntas.filter(function(p){ return p.respondida; }).length;
+    var puntos = d.preguntas.map(function(p){
+      return '<span class="cata-dot' + (p.respondida ? (p.acierto ? ' ok' : ' ko') : '') + '" aria-hidden="true"></span>';
+    }).join('');
+    var g = d.ganador_anterior;
+    var cabecera = d.terminado
+      ? '<h2 id="cata-title" style="font-size:22px;line-height:1.2">Hoy: ' + d.hoy.aciertos + ' de ' + d.preguntas.length + (d.hoy.aciertos === 1 ? ' acierto' : ' aciertos') + '</h2>' +
+        '<p class="lead" style="font-size:14px;margin-top:4px">' + (d.hoy.puntos ? '+' + d.hoy.puntos + ' puntos. ' : '') + 'Mañana, una cata nueva.</p>'
+      : '<h2 id="cata-title" style="font-size:22px;line-height:1.2">¿Cuánto sabes de vino?</h2>' +
+        '<p class="lead" style="font-size:14px;margin-top:4px">3 preguntas nuevas cada día. Suma puntos y gana la semana.</p>';
+    $('#cata-box').innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="tk-pill">' + ICON_COPA.replace('width="16" height="16"', 'width="12" height="12" style="vertical-align:-1px;margin-right:4px"') + 'La cata del día</span>' +
+        '<span class="note" style="font-size:12px;text-transform:capitalize">' + esc(fechaBonita(d.fecha)) + '</span></div>' +
+      '<div>' + cabecera + '</div>' +
+      '<div class="cata-dots" role="img" aria-label="' + hechas + ' de ' + d.preguntas.length + ' preguntas respondidas">' + puntos + '</div>' +
+      '<div class="cata-cols">' +
+        '<div class="cata-col"><span class="k">Tu semana</span><span class="v">' + d.semana.puntos + ' <small>pts</small></span>' +
+          '<span class="s">' + (d.semana.posicion ? '#' + d.semana.posicion + ' de ' + d.semana.jugadores : (state.nombre ? 'Juega para entrar en el ranking' : 'Sin nombre no sales en el ranking')) + '</span></div>' +
+        '<div class="cata-col gan"><span class="k">' + ICON_COPA_GANADOR + 'Ganador semana pasada</span>' +
+          (g ? '<span class="cata-gan">' + avatarTk(g, 28) + '<span style="min-width:0"><span class="n">' + esc(g.nombre) + '</span><span class="s">' + g.puntos + ' pts</span></span></span>'
+             : '<span class="s" style="margin-top:4px">Aún no hay ganador. ¡Puedes ser el primero!</span>') + '</div>' +
+      '</div>' +
+      (d.terminado
+        ? '<button class="ghost" id="cata-ver" style="min-height:50px">Ver las respuestas</button>'
+        : '<button class="cta" id="cata-jugar" style="min-height:52px">' + (hechas ? 'Seguir con la cata (' + hechas + '/' + d.preguntas.length + ')' : 'Empezar la cata') + '</button>') +
+      (d.top.length ? '<div class="cata-top"><div class="note" style="font-weight:600;color:var(--ink2);margin-bottom:6px">Ranking de la semana</div>' + d.top.map(function(t){
+          return '<div class="cata-fila' + (t.yo ? ' yo' : '') + '"><span class="p' + (t.posicion === 1 ? ' top' : '') + '">' + t.posicion + '</span>' + avatarTk(t, 24) + '<span class="n">' + esc(t.nombre) + (t.yo ? ' <span class="note">(tú)</span>' : '') + '</span><b>' + t.puntos + '</b></div>';
+        }).join('') + '</div>' : '') +
+      (!state.nombre && hechas ? '<button class="linkbtn" id="cata-nombre">Ponte un nombre para salir en el ranking</button>' : '') +
+      '<p class="note" style="margin:0;text-align:center">+' + d.reglas.acierto + ' por acierto · +' + d.reglas.pleno + ' extra si aciertas las 3 · La semana empieza el lunes</p>';
+  }
+
+  function preguntaCataHTML(p, total){
+    return '<span class="tk-pill">Pregunta ' + (p.idx + 1) + ' de ' + total + '</span>' +
+      '<h2 id="hoja-t" style="font-size:22px;line-height:1.3">' + esc(p.texto) + '</h2>' +
+      '<div class="stack" style="gap:10px" id="cata-ops">' + p.opciones.map(function(o, i){
+        var cls = '';
+        if (p.respondida){ if (i === p.correcta) cls = ' ok'; else if (i === p.opcion) cls = ' ko'; }
+        return '<button class="cata-op' + cls + '" data-op="' + i + '"' + (p.respondida ? ' disabled' : '') + '><span class="l">' + 'ABCD'.charAt(i) + '</span><span style="flex:1">' + esc(o) + '</span></button>';
+      }).join('') + '</div>' +
+      '<div id="cata-exp">' + (p.respondida ? explicacionCata(p) : '') + '</div>';
+  }
+  function explicacionCata(p){
+    return '<div class="cata-exp ' + (p.acierto ? 'ok' : 'ko') + '"><b>' + (p.acierto ? '¡Correcto!' : 'Casi…') + '</b> ' + esc(p.explicacion || '') + '</div>';
+  }
+  function jugarCata(){
+    var d = state.cata; if (!d) return;
+    var p = d.preguntas.filter(function(x){ return !x.respondida; })[0];
+    if (!p){ resultadoCata(); return; }
+    abrirHoja(preguntaCataHTML(p, d.preguntas.length));
+    $('#cata-ops').addEventListener('click', function(e){
+      var b = e.target.closest('[data-op]'); if (!b || b.disabled) return;
+      var op = +b.getAttribute('data-op');
+      document.querySelectorAll('#cata-ops .cata-op').forEach(function(x){ x.disabled = true; });
+      b.classList.add('elegida');
+      api('/api/cata/responder', { dispositivo: state.dispositivo, idx: p.idx, opcion: op }).then(function(r){
+        p.respondida = true; p.opcion = op; p.acierto = r.acierto; p.correcta = r.correcta; p.explicacion = r.explicacion;
+        document.querySelectorAll('#cata-ops .cata-op').forEach(function(x){
+          var i = +x.getAttribute('data-op');
+          if (i === r.correcta) x.classList.add('ok'); else if (i === op) x.classList.add('ko');
+        });
+        d.hoy.aciertos = r.aciertos; d.hoy.puntos = r.puntos; d.terminado = r.terminado;
+        $('#cata-exp').innerHTML = explicacionCata(p) +
+          '<button class="cta" id="cata-sig" style="margin-top:14px">' + (r.terminado ? 'Ver mi resultado' : 'Siguiente pregunta') + '</button>';
+        $('#cata-sig').addEventListener('click', function(){ if (r.terminado) resultadoCata(); else jugarCata(); });
+        pintarCata();
+      }).catch(function(err){
+        toast(err.message);
+        document.querySelectorAll('#cata-ops .cata-op').forEach(function(x){ x.disabled = false; });
+        b.classList.remove('elegida');
+      });
+    });
+  }
+  function resultadoCata(){
+    var d = state.cata, a = d.hoy.aciertos, n = d.preguntas.length;
+    var frase = a === n ? '¡Pleno! Eres un sumiller de los buenos.' : a === 2 ? '¡Muy bien! Casi pleno.' : a === 1 ? 'No está mal. Mañana, más.' : 'Hoy no ha sido tu día. ¡Mañana te desquitas!';
+    abrirHoja('<div style="text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;padding-top:8px">' +
+      '<span class="tk-pill">La cata del día</span>' +
+      '<div id="hoja-t" class="display" style="font-size:56px;line-height:1">' + a + '<span style="font-size:28px;color:var(--muted)">/' + n + '</span></div>' +
+      '<div style="font-weight:700;font-size:18px">' + esc(frase) + '</div>' +
+      (d.hoy.puntos ? '<div class="badge-n" style="background:var(--amarillo);color:#2A1E08;font-size:14px;padding:6px 14px">+' + d.hoy.puntos + ' puntos' + (a === n ? ' (incluye +' + d.reglas.pleno + ' por pleno)' : '') + '</div>' : '') +
+      '</div>' +
+      '<div class="stack" style="gap:8px">' + d.preguntas.map(function(p){
+        return '<div class="cata-rev ' + (p.acierto ? 'ok' : 'ko') + '"><span class="i">' + (p.acierto ? '✓' : '✕') + '</span><span><span style="display:block;font-weight:600;font-size:14px">' + esc(p.texto) + '</span><span class="note" style="display:block;margin-top:2px">' + esc(p.opciones[p.correcta]) + '</span></span></div>';
+      }).join('') + '</div>' +
+      (!state.nombre ? '<button class="cta" id="cata-nombre2">Ponerme un nombre para el ranking</button>' : '') +
+      '<button class="ghost" data-hoja-cerrar>Cerrar</button>');
+    var bn = $('#cata-nombre2');
+    if (bn) bn.addEventListener('click', function(){ cerrarHoja(); asegurarNombre().then(function(){ toast('¡Ya estás en el ranking!'); cargarCata(); }); });
+    cargarCata();
+  }
+  document.addEventListener('click', function(e){
+    if (e.target.closest('#cata-jugar')){ jugarCata(); return; }
+    if (e.target.closest('#cata-ver')){ resultadoCata(); return; }
+    if (e.target.closest('#cata-nombre')){ asegurarNombre().then(function(){ toast('¡Ya estás en el ranking!'); cargarCata(); }); }
+  });
 
   // ---------- Inicio: vistos hace poco (se guarda en este móvil) ----------
   var HIST_MAX = 12;
@@ -1982,7 +2136,7 @@
   // ---------- Inicio ----------
   history.replaceState({s:'home'}, '', '#home');
   show('home', false);
-  cargarInicio().then(function(){ return Promise.all([cargarBodega(), cargarPrefsInicio(), cargarPerfilInicio()]); }).then(function(){ return cargarTop(); }).catch(function(err){ toast(err.message); });
+  cargarInicio().then(function(){ return Promise.all([cargarBodega(), cargarPrefsInicio(), cargarPerfilInicio()]); }).then(function(){ cargarCata(); return cargarTop(); }).catch(function(err){ toast(err.message); });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });

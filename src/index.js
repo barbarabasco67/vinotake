@@ -43,6 +43,8 @@ async function api(request, env, url) {
   if (method === 'GET' && path === '/api/bodega') return bodegaListar(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/bodega') return bodegaGuardar(env, await body(request));
 
+  if (method === 'GET' && path === '/api/cata') return cataVer(env, url.searchParams.get('d'));
+  if (method === 'POST' && path === '/api/cata/responder') return cataResponder(env, await body(request));
   if (method === 'GET' && path === '/api/takers') return takersInicio(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/takers/opinion') return opinionGuardar(env, await body(request));
   if (method === 'POST' && path === '/api/takers/brindis') return alternar(env, await body(request),
@@ -760,6 +762,7 @@ async function perfilBorrar(env, b) {
     'DELETE FROM reto_propuestas WHERE dispositivo = ?1',
     'DELETE FROM denuncias WHERE dispositivo = ?1'
   ].map(sql => env.DB.prepare(sql).bind(d))).catch(e => console.error('borrar takers', e));
+  await env.DB.prepare('DELETE FROM cata_respuestas WHERE dispositivo = ?').bind(d).run().catch(() => {});
   return json({ ok: true });
 }
 
@@ -1212,4 +1215,102 @@ async function borrarPropio(env, b) {
   }[b.tipo];
   await env.DB.batch(extra.map(sql => env.DB.prepare(sql).bind(id)));
   return json({ ok: true });
+}
+
+// ---------- La cata del día: 3 preguntas diarias y ranking semanal ----------
+const CATA_PUNTOS = 10;      // por acierto
+const CATA_PLENO = 5;        // extra por acertar las 3
+const CATA_N = 3;
+
+function fechaMadrid(d = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+}
+function sumarDias(fecha, n) {
+  const t = Date.UTC(+fecha.slice(0, 4), +fecha.slice(5, 7) - 1, +fecha.slice(8, 10)) + n * 86400000;
+  return new Date(t).toISOString().slice(0, 10);
+}
+function lunesDe(fecha) {
+  const dia = new Date(fecha + 'T00:00:00Z').getUTCDay(); // 0 = domingo
+  return sumarDias(fecha, -((dia + 6) % 7));
+}
+
+async function preguntasDelDia(env, fecha) {
+  const ids = (await env.DB.prepare('SELECT id FROM cata_preguntas ORDER BY id').all()).results.map(r => r.id);
+  if (!ids.length) return [];
+  const dia = Math.floor(Date.parse(fecha + 'T00:00:00Z') / 86400000);
+  const elegidos = [];
+  for (let k = 0; k < CATA_N; k++) elegidos.push(ids[(dia * CATA_N + k) % ids.length]);
+  const { results } = await env.DB.prepare(
+    `SELECT id, texto, opciones, correcta, explicacion FROM cata_preguntas WHERE id IN (${elegidos.map(() => '?').join(',')})`
+  ).bind(...elegidos).all();
+  return elegidos.map(id => results.find(r => r.id === id)).filter(Boolean);
+}
+
+async function rankingCata(env, desde, hasta) {
+  const { results } = await env.DB.prepare(
+    `SELECT x.dispositivo, SUM(x.p) AS puntos, MIN(x.ultimo) AS primero, pf.nombre
+       FROM (SELECT dispositivo, fecha, MAX(creado) AS ultimo,
+                    SUM(acierto) * ${CATA_PUNTOS} + CASE WHEN SUM(acierto) = ${CATA_N} THEN ${CATA_PLENO} ELSE 0 END AS p
+               FROM cata_respuestas WHERE fecha BETWEEN ? AND ? GROUP BY dispositivo, fecha) x
+       LEFT JOIN perfiles pf ON pf.dispositivo = x.dispositivo
+      GROUP BY x.dispositivo
+      ORDER BY puntos DESC, primero ASC`
+  ).bind(desde, hasta).all();
+  return results;
+}
+
+async function cataVer(env, dispositivo) {
+  const d = dispositivoValido(dispositivo);
+  const hoy = fechaMadrid();
+  const lunes = lunesDe(hoy);
+  const preguntas = await preguntasDelDia(env, hoy);
+  const mias = d ? (await env.DB.prepare('SELECT idx, opcion, acierto FROM cata_respuestas WHERE fecha = ? AND dispositivo = ? ORDER BY idx').bind(hoy, d).all()).results : [];
+
+  const semana = await rankingCata(env, lunes, sumarDias(lunes, 6));
+  const conNombre = semana.filter(r => r.nombre);
+  const yoIdx = conNombre.findIndex(r => r.dispositivo === d);
+  const yoFila = semana.find(r => r.dispositivo === d);
+  const anterior = await rankingCata(env, sumarDias(lunes, -7), sumarDias(lunes, -1));
+  const g = anterior.find(r => r.nombre);
+
+  const aciertos = mias.reduce((a, r) => a + r.acierto, 0);
+  return json({
+    fecha: hoy,
+    preguntas: preguntas.map((p, i) => {
+      const r = mias.find(m => m.idx === i);
+      return Object.assign({ idx: i, texto: p.texto, opciones: JSON.parse(p.opciones) },
+        r ? { respondida: true, opcion: r.opcion, acierto: !!r.acierto, correcta: p.correcta, explicacion: p.explicacion } : { respondida: false });
+    }),
+    terminado: mias.length >= preguntas.length && preguntas.length > 0,
+    hoy: { aciertos, puntos: aciertos * CATA_PUNTOS + (aciertos === CATA_N ? CATA_PLENO : 0) },
+    semana: { puntos: yoFila ? yoFila.puntos : 0, posicion: yoIdx > -1 ? yoIdx + 1 : null, jugadores: conNombre.length },
+    top: conNombre.slice(0, 5).map((r, i) => ({ posicion: i + 1, nombre: r.nombre, iniciales: iniciales(r.nombre), puntos: r.puntos, yo: r.dispositivo === d })),
+    ganador_anterior: g ? { nombre: g.nombre, iniciales: iniciales(g.nombre), puntos: g.puntos } : null,
+    reglas: { acierto: CATA_PUNTOS, pleno: CATA_PLENO }
+  });
+}
+
+async function cataResponder(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const hoy = fechaMadrid();
+  const preguntas = await preguntasDelDia(env, hoy);
+  const idx = parseInt(b.idx, 10);
+  const opcion = parseInt(b.opcion, 10);
+  const p = preguntas[idx];
+  if (!p) return json({ error: 'Esa pregunta no es de hoy. Recarga la página.' }, 400);
+  const n = JSON.parse(p.opciones).length;
+  if (!(opcion >= 0 && opcion < n)) return json({ error: 'Elige una respuesta.' }, 400);
+  const hechas = (await env.DB.prepare('SELECT idx FROM cata_respuestas WHERE fecha = ? AND dispositivo = ?').bind(hoy, d).all()).results.map(r => r.idx);
+  if (hechas.includes(idx)) return json({ error: 'Ya has respondido esta pregunta.' }, 409);
+  if (idx !== hechas.length) return json({ error: 'Responde las preguntas en orden.' }, 400);
+  const acierto = opcion === p.correcta ? 1 : 0;
+  await env.DB.prepare('INSERT INTO cata_respuestas (fecha, dispositivo, idx, pregunta_id, opcion, acierto) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(hoy, d, idx, p.id, opcion, acierto).run();
+  const total = (await env.DB.prepare('SELECT SUM(acierto) AS a, COUNT(*) AS n FROM cata_respuestas WHERE fecha = ? AND dispositivo = ?').bind(hoy, d).first());
+  const terminado = total.n >= preguntas.length;
+  return json({
+    acierto: !!acierto, correcta: p.correcta, explicacion: p.explicacion, terminado,
+    aciertos: total.a, puntos: total.a * CATA_PUNTOS + (terminado && total.a === CATA_N ? CATA_PLENO : 0)
+  });
 }
