@@ -1,5 +1,11 @@
 {
   "name": "vinotake",
+  "main": "src/index.js",
   "compatibility_date": "2025-10-01",
-  "assets": { "directory": "./public" }
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "vinotake", "database_id": "5ce5b466-54cb-4e77-bbca-042411f8bed2" }
+  ],
+  "keep_vars": true,
+  "observability": { "enabled": true }
 }

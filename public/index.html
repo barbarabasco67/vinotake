@@ -128,7 +128,7 @@
 
   <!-- 1 · INICIO -->
   <section class="screen" id="s-home" aria-label="Inicio">
-    <div class="proto">Prototipo de prueba · los vinos y precios son de ejemplo</div>
+    <div class="proto">Versión en pruebas · los vinos y precios son de ejemplo</div>
     <div class="topbar">
       <div class="brand">
         <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FAF7F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8l-1 7a3 3 0 0 1-6 0z"/><path d="M12 12v8"/><path d="M8 22h8"/></svg></div>
@@ -254,89 +254,40 @@
 
 <script>
 (function(){
-  // ---------- Datos de ejemplo (todo inventado) ----------
-  var WINES = {
-    ribera: {
-      name:'Ribera Alta Roble 2023', bodega:'Bodegas Ribera Alta', do:'D.O. Ribera del Duero',
-      tags:['Tinto','Tempranillo','Roble · 4 meses','14 % vol.'],
-      sabe:'Fruta roja madura y un toque tostado suave. Fácil de beber, ni ligero ni pesado.',
-      temp:'15–16 °C', abrir:'Al momento', va:['Guisos','Embutido','Carne a la plancha','Pizza'],
-      precio:6.49, otro:{super:'Carrefour', precio:5.99}, color:'#3A2226',
-      misma:[['Ribera Alta Crianza','Más madera, más cuerpo',9.95],['Ribera Alta Verdejo','Su blanco, fresco',5.75],['Ribera Alta Rosado','Para el verano',5.20]],
-      parecidos:[['Valle Rojo Tempranillo','D.O. La Mancha',3.90],['Cerro Viejo Roble','D.O. Toro',4.85]],
-      descubrir:[['Altos del Bierzo Mencía','Igual de afrutado, más fresco',7.40,true],['Sierra Garnacha','Más suave, D.O. Calatayud',5.60]]
-    },
-    garnacha: {
-      name:'Valle Rojo Garnacha 2024', bodega:'Bodegas Valle Rojo', do:'D.O. Campo de Borja',
-      tags:['Tinto','Garnacha','Joven','13,5 % vol.'],
-      sabe:'Muy afrutado y suave, con poca acidez. Entra fácil y no necesita comida pesada.',
-      temp:'14–15 °C', abrir:'Al momento', va:['Pizza','Pasta','Tapas','Arroces de carne'],
-      precio:5.20, otro:{super:'Dia', precio:4.95}, color:'#4A2530',
-      misma:[['Valle Rojo Rosado','Fresco y frutal',4.60],['Valle Rojo Crianza','Más estructura',7.20]],
-      parecidos:[['Sierra Garnacha','D.O. Calatayud',5.60],['Campos del Sur Tinto','Vino de la Tierra',3.40]],
-      descubrir:[['Altos del Bierzo Mencía','Fresco y afrutado',7.40,true],['Ribera Alta Roble','Un punto más de cuerpo',6.49]]
-    },
-    crianza: {
-      name:'Monte Sereno Crianza 2021', bodega:'Bodegas Monte Sereno', do:'D.O.Ca. Rioja',
-      tags:['Tinto','Tempranillo','Crianza · 12 meses','14 % vol.'],
-      sabe:'Intenso, con vainilla y fruta negra. Pide comida con fuerza.',
-      temp:'16–17 °C', abrir:'10 minutos antes', va:['Carne a la brasa','Cordero','Quesos curados','Guisos'],
-      precio:8.90, otro:{super:'Alcampo', precio:8.45}, color:'#2A1B1E',
-      misma:[['Monte Sereno Reserva','Más elegante',14.50],['Monte Sereno Joven','Más ligero',5.10]],
-      parecidos:[['Cerro Viejo Roble','D.O. Toro',4.85],['Ribera Alta Crianza','D.O. Ribera del Duero',9.95]],
-      descubrir:[['Altos del Bierzo Mencía','Más fresco',7.40,true],['Sierra Garnacha','Más suave',5.60]]
-    },
-    blanco: {
-      name:'Brisa Atlántica Albariño 2024', bodega:'Adega Brisa', do:'D.O. Rías Baixas',
-      tags:['Blanco','Albariño','Joven','12,5 % vol.'],
-      sabe:'Fresco, con limón y fruta blanca. Limpia la boca entre bocado y bocado.',
-      temp:'8–10 °C', abrir:'Bien frío', va:['Pescado','Marisco','Arroces de mar','Ensaladas'],
-      precio:7.95, otro:{super:'Carrefour', precio:7.49}, color:'#C9B66A',
-      misma:[['Brisa Atlántica Barrica','Más cremoso',11.90]],
-      parecidos:[['Campos del Sur Verdejo','D.O. Rueda',4.20],['Costa Blanca Macabeo','Vino de la Tierra',3.10]],
-      descubrir:[['Ribera Alta Verdejo','Más aromático',5.75,true],['Brut Natural del Penedès','Cava, para picar',6.30]]
-    },
-    cava: {
-      name:'Penedès Brut Nature', bodega:'Caves Font Clara', do:'D.O. Cava',
-      tags:['Espumoso','Macabeo · Xarel·lo','Brut Nature','11,5 % vol.'],
-      sabe:'Burbuja fina, seco y fresco. Funciona con casi todo lo que sea para picar.',
-      temp:'6–8 °C', abrir:'Muy frío', va:['Quesos','Fritos','Pescado','Aperitivos'],
-      precio:6.30, otro:{super:'Lidl', precio:5.79}, color:'#3E4A33',
-      misma:[['Font Clara Rosé','Más afrutado',7.10]],
-      parecidos:[['Burbuja Seca Brut','D.O. Cava',3.95]],
-      descubrir:[['Brisa Atlántica Albariño','Blanco fresco',7.95,true]]
-    }
-  };
-
-  var RECS = {
-    'Lentejas':        {best:'ribera', why:'Afrutado y con poca madera: aguanta el chorizo sin taparlo y no pesa con un guiso.', alts:[['garnacha','Tinto joven · también va bien'],['crianza','Más cuerpo · si te gusta intenso']]},
-    'Paella':          {best:'blanco', why:'Fresco y con acidez: acompaña el marisco y el arroz sin competir con el sabor.', alts:[['cava','Burbuja fresca · muy buena opción'],['garnacha','Si es paella de carne']]},
-    'Pizza':           {best:'garnacha', why:'Suave y muy frutal: va con el tomate y el queso sin endurecerse.', alts:[['ribera','Un poco más de cuerpo'],['cava','Si quieres algo distinto']]},
-    'Pescado':         {best:'blanco', why:'Ligero y con limón: realza el pescado sin taparlo.', alts:[['cava','Si el pescado es frito'],['garnacha','Solo si es pescado azul a la brasa']]},
-    'Carne a la brasa':{best:'crianza', why:'Con cuerpo y madera: la grasa y el humo de la brasa le sientan de maravilla.', alts:[['ribera','Más ligero y más barato'],['garnacha','Si buscas algo suave']]},
-    'Quesos':          {best:'crianza', why:'Intenso: aguanta los quesos curados sin quedarse corto.', alts:[['cava','Para quesos frescos o cremosos'],['blanco','Para quesos de cabra']]}
-  };
-
   // ---------- Estado ----------
-  var state = { plato:'Lentejas', precio:'De 5 a 10 €', store:'Mercadona', photo:null, current:'ribera' };
-  var PLATOS = Object.keys(RECS);
-  var PRECIOS = ['Hasta 5 €','De 5 a 10 €','Más de 10 €'];
+  var state = {
+    platos: [], supers: [], presupuestos: [],
+    platoId: null, presupuesto: '5a10', superId: null,
+    photo: null, consultaId: null, last: null
+  };
   var camMode = 'shelf';
 
   // ---------- Utilidades ----------
   function $(s){ return document.querySelector(s); }
-  function eur(n){ return n.toFixed(2).replace('.', ',') + ' €'; }
-  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function eur(n){ return (n == null ? '' : Number(n).toFixed(2).replace('.', ',') + ' €'); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   var toastTimer;
   function toast(msg){
     var t = $('#toast'); t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+    clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
   }
   function loading(on, text){
     $('#loading-text').textContent = text || 'Leyendo etiquetas…';
     $('#loading').classList.toggle('show', !!on);
   }
   function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e) { return null; } }
+  function superNombre(id){ for (var i = 0; i < state.supers.length; i++) if (state.supers[i].id === id) return state.supers[i].nombre; return ''; }
+  function presuNombre(id){ for (var i = 0; i < state.presupuestos.length; i++) if (state.presupuestos[i].id === id) return state.presupuestos[i].nombre; return ''; }
+
+  function api(path, body){
+    var opts = body ? { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body) } : {};
+    return fetch(path, opts).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(d){
+        if (!r.ok) throw new Error(d.error || 'No hemos podido conectar. Inténtalo de nuevo.');
+        return d;
+      });
+    }, function(){ throw new Error('Sin conexión. Inténtalo de nuevo en un momento.'); });
+  }
 
   // ---------- Navegación (con botón atrás del móvil) ----------
   function show(name, push){
@@ -346,70 +297,112 @@
     window.scrollTo(0, 0);
     if (push !== false) history.pushState({s:name}, '', '#' + name);
   }
-  window.addEventListener('popstate', function(e){ show((e.state && e.state.s) || 'home', false); });
+  window.addEventListener('popstate', function(e){
+    var s = (e.state && e.state.s) || 'home';
+    if ((s === 'resultado' && !state.last) || s === 'ficha' && !$('#ficha-body').innerHTML) s = 'home';
+    show(s, false);
+  });
   document.addEventListener('click', function(e){
     var go = e.target.closest('[data-go]');
     if (go){ show(go.getAttribute('data-go')); return; }
     if (e.target.closest('[data-back]')){ if (history.length > 1) history.back(); else show('home'); return; }
     var soon = e.target.closest('[data-soon]');
-    if (soon){ toast(soon.getAttribute('data-soon') + ': llegará en la siguiente versión'); }
+    if (soon){ toast(soon.getAttribute('data-soon') + ': llegará en la siguiente versión'); return; }
+    var w = e.target.closest('[data-wine]');
+    if (w){ abrirFicha(w.getAttribute('data-wine'), false, w.hasAttribute('data-elegido')); }
+  });
+
+  // ---------- Carga inicial ----------
+  function cargarInicio(){
+    return api('/api/inicio').then(function(d){
+      state.platos = d.platos || [];
+      state.supers = d.supers || [];
+      state.presupuestos = d.presupuestos || [];
+      if (!state.platoId && state.platos[0]) state.platoId = state.platos[0].id;
+      var guardado = store('super');
+      state.superId = (guardado && superNombre(guardado)) ? guardado : (state.supers[0] ? state.supers[0].id : null);
+      pintarSupers();
+      renderChips();
+    });
+  }
+
+  function pintarSupers(){
+    document.querySelectorAll('.store-select').forEach(function(s){
+      s.innerHTML = state.supers.map(function(x){ return '<option value="' + esc(x.id) + '">' + esc(x.nombre) + '</option>'; }).join('');
+      s.value = state.superId;
+    });
+  }
+  document.querySelectorAll('.store-select').forEach(function(s){
+    s.addEventListener('change', function(){
+      state.superId = s.value; store('super', s.value);
+      document.querySelectorAll('.store-select').forEach(function(o){ o.value = state.superId; });
+    });
   });
 
   // ---------- Pantalla 2: chips ----------
   function renderChips(){
-    $('#chips-plato').innerHTML = PLATOS.map(function(p){
-      return '<button class="chip' + (p === state.plato ? ' on' : '') + '" aria-pressed="' + (p === state.plato) + '" data-plato="' + esc(p) + '">' + esc(p) + '</button>';
+    $('#chips-plato').innerHTML = state.platos.map(function(p){
+      var on = p.id === state.platoId;
+      return '<button class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-plato="' + esc(p.id) + '">' + esc(p.nombre) + '</button>';
     }).join('');
-    $('#chips-precio').innerHTML = PRECIOS.map(function(p){
-      return '<button class="budget' + (p === state.precio ? ' on' : '') + '" aria-pressed="' + (p === state.precio) + '" data-precio="' + esc(p) + '">' + esc(p) + '</button>';
+    $('#chips-precio').innerHTML = state.presupuestos.map(function(p){
+      var on = p.id === state.presupuesto;
+      return '<button class="budget' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-precio="' + esc(p.id) + '">' + esc(p.nombre) + '</button>';
     }).join('');
   }
   $('#chips-plato').addEventListener('click', function(e){
     var b = e.target.closest('[data-plato]'); if (!b) return;
-    state.plato = b.getAttribute('data-plato'); $('#plato').value = ''; renderChips();
+    state.platoId = b.getAttribute('data-plato'); $('#plato').value = ''; renderChips();
   });
   $('#chips-precio').addEventListener('click', function(e){
     var b = e.target.closest('[data-precio]'); if (!b) return;
-    state.precio = b.getAttribute('data-precio'); renderChips();
+    state.presupuesto = b.getAttribute('data-precio'); renderChips();
   });
-  function matchTyped(){
-    var v = ($('#plato').value || '').toLowerCase().trim();
-    if (!v) return;
-    var map = [['lentej','Lentejas'],['cocido','Lentejas'],['guiso','Lentejas'],['fabada','Lentejas'],['paella','Paella'],['arroz','Paella'],['marisc','Paella'],
-               ['pizza','Pizza'],['pasta','Pizza'],['hamburg','Pizza'],['pesca','Pescado'],['merluza','Pescado'],['salm','Pescado'],['bacalao','Pescado'],
-               ['carne','Carne a la brasa'],['chulet','Carne a la brasa'],['entrec','Carne a la brasa'],['barbac','Carne a la brasa'],['cordero','Carne a la brasa'],
-               ['queso','Quesos'],['jam','Quesos'],['embut','Quesos']];
-    for (var i = 0; i < map.length; i++){ if (v.indexOf(map[i][0]) !== -1){ state.plato = map[i][1]; renderChips(); return; } }
-  }
-  document.querySelectorAll('.store-select').forEach(function(s){
-    s.addEventListener('change', function(){ state.store = s.value; document.querySelectorAll('.store-select').forEach(function(o){ o.value = state.store; }); });
+  $('#plato').addEventListener('input', function(){
+    if ($('#plato').value.trim()){ state.platoId = null; renderChips(); }
   });
 
   // ---------- Cámara ----------
   var cam = $('#cam');
   function openCam(mode){ camMode = mode; cam.value = ''; cam.click(); }
-  $('#btn-shelf').addEventListener('click', function(){ matchTyped(); openCam('shelf'); });
+  $('#btn-shelf').addEventListener('click', function(){ openCam('shelf'); });
   $('#btn-retake').addEventListener('click', function(){ openCam('shelf'); });
   $('#btn-scan-bottle').addEventListener('click', function(){ openCam('bottle'); });
   $('#btn-nophoto').addEventListener('click', function(){
-    matchTyped(); state.photo = null;
-    loading(true, 'Buscando el mejor vino…');
-    setTimeout(function(){ loading(false); renderResult(); show('resultado'); }, 900);
+    if (state.photo){ try { URL.revokeObjectURL(state.photo); } catch(e){} }
+    state.photo = null; pedirRecomendacion('Buscando el mejor vino…');
   });
   cam.addEventListener('change', function(){
     var f = cam.files && cam.files[0]; if (!f) return;
-    if (state.photo) { try { URL.revokeObjectURL(state.photo); } catch(e){} }
+    if (state.photo){ try { URL.revokeObjectURL(state.photo); } catch(e){} }
     state.photo = URL.createObjectURL(f);
     if (camMode === 'bottle'){
       loading(true, 'Leyendo la etiqueta…');
-      setTimeout(function(){ loading(false); state.current = 'ribera'; renderFicha(true); show('ficha'); }, 1200);
+      api('/api/botella', { super_id: state.superId })
+        .then(function(d){ return abrirFicha(d.vino_id, true, false, true); })
+        .catch(function(err){ loading(false); toast(err.message); });
     } else {
-      loading(true, 'Leyendo etiquetas…');
-      setTimeout(function(){ loading(false); renderResult(); show('resultado'); }, 1400);
+      pedirRecomendacion('Leyendo etiquetas…');
     }
   });
 
   // ---------- Pantalla 3: resultado ----------
+  function pedirRecomendacion(texto){
+    loading(true, texto);
+    api('/api/recomendar', {
+      plato_texto: $('#plato').value.trim(),
+      plato_id: state.platoId,
+      presupuesto: state.presupuesto,
+      super_id: state.superId
+    }).then(function(d){
+      loading(false);
+      state.last = d; state.consultaId = d.consulta_id;
+      if (d.plato){ state.platoId = d.plato.id; renderChips(); }
+      renderResult(d);
+      show('resultado');
+    }).catch(function(err){ loading(false); toast(err.message); });
+  }
+
   function shelfHTML(){
     var r1 = [['#5C2A35',78],['#7A3A44',86,1],['#2E3B2F',74],['#4A2530',82],['#6E3F2D',80,2]];
     var r2 = [['#3F2A2E',80],['#5A3A3F',76],['#7B4A3A',84,3],['#2D3330',72],['#5C2A35',82]];
@@ -418,76 +411,86 @@
     }).join('') + '</div>'; }
     return '<div class="shelf" role="img" aria-label="Estantería con tres botellas señaladas">' + row(r1) + row(r2) + '<div class="cap">Te señalo las 3 mejores para tu plato</div></div>';
   }
-  function renderResult(){
-    var rec = RECS[state.plato] || RECS['Lentejas'];
-    var best = WINES[rec.best];
-    $('#res-summary').textContent = state.plato + ' · ' + state.precio + ' · ' + state.store;
+
+  function renderResult(d){
+    var best = d.mejor;
+    $('#res-summary').textContent = d.plato.nombre + ' · ' + d.presupuesto.nombre + ' · ' + superNombre(d.super_id);
     $('#res-visual').innerHTML = state.photo
-      ? '<div class="photo"><img src="' + state.photo + '" alt="Tu foto de la estantería"><div class="tag">Foto recibida. En el prototipo el resultado es de ejemplo.</div></div>'
+      ? '<div class="photo"><img src="' + state.photo + '" alt="Tu foto de la estantería"><div class="tag">Foto recibida. La lectura con IA llega en la siguiente versión.</div></div>'
       : shelfHTML();
-    $('#res-title').textContent = 'Para tu ' + state.plato.toLowerCase() + ', coge este';
-    $('#res-best').innerHTML =
-      '<button class="best" data-wine="' + rec.best + '">' +
+    $('#res-title').textContent = 'Para tu ' + d.plato.nombre.toLowerCase() + ', coge este';
+    var aviso = d.fuera_presupuesto
+      ? '<div class="note" style="margin-top:-4px;margin-bottom:10px">No hay ninguno en tu presupuesto; este es el más ajustado.</div>' : '';
+    $('#res-best').innerHTML = aviso +
+      '<button class="best" data-wine="' + esc(best.id) + '" data-elegido>' +
         '<span style="display:flex;justify-content:space-between;align-items:center;width:100%"><span class="badge">1 · La mejor opción</span><span class="price">' + eur(best.precio) + '</span></span>' +
-        '<span><span style="display:block;font-weight:600;font-size:18px">' + esc(best.name) + '</span><span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">' + esc(best.tags[0]) + ' · ' + esc(best.do) + '</span></span>' +
-        '<span style="font-size:14px;line-height:1.45;color:#3A3335">' + esc(rec.why) + '</span>' +
+        '<span><span style="display:block;font-weight:600;font-size:18px">' + esc(best.nombre) + '</span><span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">' + esc(best.tipo) + ' · ' + esc(best.denominacion) + '</span></span>' +
+        '<span style="font-size:14px;line-height:1.45;color:#3A3335">' + esc(best.motivo) + '</span>' +
         '<span style="display:flex;align-items:center;gap:6px;color:var(--wine);font-weight:600;font-size:14px">Ver ficha <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>' +
       '</button>';
-    $('#res-alts').innerHTML = rec.alts.map(function(a, i){
-      var w = WINES[a[0]];
-      return '<button class="alt" data-wine="' + a[0] + '"><span class="num">' + (i + 2) + '</span><span style="flex:1"><span style="display:block;font-weight:600;font-size:15px">' + esc(w.name) + '</span><span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">' + esc(a[1]) + '</span></span><span style="font-weight:600;font-size:15px">' + eur(w.precio) + '</span></button>';
+    $('#res-alts').innerHTML = (d.alternativas || []).map(function(a, i){
+      return '<button class="alt" data-wine="' + esc(a.id) + '" data-elegido><span class="num">' + (i + 2) + '</span><span style="flex:1"><span style="display:block;font-weight:600;font-size:15px">' + esc(a.nombre) + '</span><span style="display:block;font-size:13px;color:var(--muted);margin-top:2px">' + esc(a.nota) + '</span></span><span style="font-weight:600;font-size:15px">' + eur(a.precio) + '</span></button>';
     }).join('');
-    var cheaper = rec.alts.map(function(a){ return [a[0], WINES[a[0]].precio]; }).filter(function(x){ return x[1] < best.precio; }).sort(function(a, b){ return a[1] - b[1]; })[0];
-    $('#res-save').innerHTML = cheaper
-      ? '<div class="save"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg><span>' + esc(WINES[cheaper[0]].name) + ' también va bien y te ahorras <strong>' + eur(best.precio - cheaper[1]) + '</strong></span></div>'
+    $('#res-save').innerHTML = d.ahorro
+      ? '<div class="save"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg><span>' + esc(d.ahorro.nombre) + ' también va bien y te ahorras <strong>' + eur(d.ahorro.euros) + '</strong></span></div>'
       : '';
   }
-  document.addEventListener('click', function(e){
-    var w = e.target.closest('[data-wine]'); if (!w) return;
-    state.current = w.getAttribute('data-wine'); renderFicha(false); show('ficha');
-  });
 
   // ---------- Pantalla 4: ficha ----------
+  function abrirFicha(id, fromPhoto, elegido, yaCargando){
+    if (elegido && state.consultaId){
+      api('/api/consulta/' + state.consultaId + '/elegido', { vino_id: id }).catch(function(){});
+    }
+    if (!yaCargando) loading(true, 'Abriendo la ficha…');
+    return api('/api/vino/' + encodeURIComponent(id) + '?super=' + encodeURIComponent(state.superId || ''))
+      .then(function(v){ loading(false); renderFicha(v, fromPhoto); show('ficha'); })
+      .catch(function(err){ loading(false); toast(err.message); });
+  }
+
   function sugRow(title, list, green){
     if (!list || !list.length) return '';
     return '<div style="padding-top:18px"><div class="px" style="font-size:14px;font-weight:600;margin-bottom:10px">' + title + '</div><div class="hscroll">' +
       list.map(function(s){
-        return '<div class="sug">' + (s[3] ? '<span class="sponsor">Patrocinado</span>' : '') + '<span class="t">' + esc(s[0]) + '</span><span class="s">' + esc(s[1]) + '</span><span class="p"' + (green ? ' style="color:var(--green)"' : '') + '>' + eur(s[2]) + '</span></div>';
+        return '<button class="sug" data-wine="' + esc(s.id) + '">' + (s.patrocinado ? '<span class="sponsor">Patrocinado</span>' : '') + '<span class="t">' + esc(s.nombre) + '</span><span class="s">' + esc(s.nota) + '</span><span class="p"' + (green ? ' style="color:var(--green)"' : '') + '>' + eur(s.precio) + '</span></button>';
       }).join('') + '</div></div>';
   }
-  function renderFicha(fromPhoto){
-    var w = WINES[state.current] || WINES.ribera;
+
+  function renderFicha(w, fromPhoto){
     var visual = (fromPhoto && state.photo)
       ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">'
-      : '<div class="bottle" role="img" aria-label="Botella"><div style="width:18px;height:34px;background:#2A1B1E;border-radius:4px 4px 0 0"></div><div style="width:60px;height:22px;background:' + w.color + ';border-radius:30px 30px 0 0"></div><div style="width:60px;height:112px;background:' + w.color + ';border-radius:0 0 8px 8px;display:flex;align-items:center;justify-content:center"><div style="width:46px;height:52px;background:#F4EDE4;border-radius:3px"></div></div></div>';
-    var priceBlock = '<div class="box" style="margin-top:12px;gap:10px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;color:var(--muted)">En ' + esc(state.store) + '</span><span class="price">' + eur(w.precio) + '</span></div>' +
-      (w.otro && w.otro.super !== state.store ? '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #EFE8E0"><span style="font-size:14px;color:var(--green);font-weight:600">Más barato en ' + esc(w.otro.super) + '</span><span style="font-size:15px;font-weight:600;color:var(--green)">' + eur(w.otro.precio) + '</span></div>' : '') +
-      '<div class="note">Precios orientativos</div></div>';
+      : '<div class="bottle" role="img" aria-label="Botella"><div style="width:18px;height:34px;background:#2A1B1E;border-radius:4px 4px 0 0"></div><div style="width:60px;height:22px;background:' + esc(w.color) + ';border-radius:30px 30px 0 0"></div><div style="width:60px;height:112px;background:' + esc(w.color) + ';border-radius:0 0 8px 8px;display:flex;align-items:center;justify-content:center"><div style="width:46px;height:52px;background:#F4EDE4;border-radius:3px"></div></div></div>';
+    var badge = fromPhoto ? 'Ejemplo de lectura' : (w.ejemplo ? 'Vino de ejemplo' : 'Ficha');
+    var priceBlock = w.precio ? ('<div class="box" style="margin-top:12px;gap:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;color:var(--muted)">' + (w.precio.super ? 'En ' + esc(w.precio.super) : 'Precio orientativo') + '</span><span class="price">' + eur(w.precio.precio) + '</span></div>' +
+      (w.mas_barato ? '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #EFE8E0"><span style="font-size:14px;color:var(--green);font-weight:600">Más barato en ' + esc(w.mas_barato.super) + '</span><span style="font-size:15px;font-weight:600;color:var(--green)">' + eur(w.mas_barato.precio) + '</span></div>' : '') +
+      '<div class="note">Precios orientativos</div></div>') : '';
+    var sab = (w.sabor || w.temperatura || w.va_con.length) ? ('<div class="box">' +
+        (w.sabor ? '<div><div class="label" style="margin-bottom:6px">Cómo sabe</div><div style="font-size:15px;line-height:1.5">' + esc(w.sabor) + '</div></div>' : '') +
+        ((w.temperatura || w.apertura) ? '<div class="grid2" style="gap:10px"><div class="stat"><div class="k">Sírvelo a</div><div class="v">' + esc(w.temperatura || '—') + '</div></div><div class="stat"><div class="k">Ábrelo</div><div class="v">' + esc(w.apertura || '—') + '</div></div></div>' : '') +
+        (w.va_con.length ? '<div><div class="label" style="margin-bottom:8px">Va bien con</div><div class="tags">' + w.va_con.map(function(t){ return '<span class="tg w">' + esc(t) + '</span>'; }).join('') + '</div></div>' : '') +
+      '</div>') : '';
+    var s = w.sugerencias || {};
+    var haySug = (s.misma && s.misma.length) || (s.parecidos && s.parecidos.length) || (s.descubrir && s.descubrir.length);
     $('#ficha-body').innerHTML =
       '<div class="px" style="padding-top:8px;display:flex;gap:18px;align-items:center">' + visual +
         '<div style="display:flex;flex-direction:column;gap:6px">' +
-          (fromPhoto ? '<span class="soon" style="font-size:12px">Ejemplo de lectura</span>' : '<span class="soon" style="font-size:12px">Leído de la etiqueta</span>') +
-          '<h1 style="font-size:26px;line-height:1.1">' + esc(w.name) + '</h1>' +
-          '<div style="font-size:14px;color:var(--muted)">' + esc(w.bodega) + ' · ' + esc(w.do) + '</div>' +
+          '<span class="soon" style="font-size:12px">' + badge + '</span>' +
+          '<h1 style="font-size:26px;line-height:1.1">' + esc(w.nombre) + '</h1>' +
+          '<div style="font-size:14px;color:var(--muted)">' + esc([w.bodega, w.denominacion].filter(Boolean).join(' · ')) + '</div>' +
         '</div></div>' +
-      '<div class="px tags" style="padding-top:18px">' + w.tags.map(function(t){ return '<span class="tg">' + esc(t) + '</span>'; }).join('') + '</div>' +
-      '<div class="px" style="padding-top:20px"><div class="box">' +
-        '<div><div class="label" style="margin-bottom:6px">Cómo sabe</div><div style="font-size:15px;line-height:1.5">' + esc(w.sabe) + '</div></div>' +
-        '<div class="grid2" style="gap:10px"><div class="stat"><div class="k">Sírvelo a</div><div class="v">' + esc(w.temp) + '</div></div><div class="stat"><div class="k">Ábrelo</div><div class="v">' + esc(w.abrir) + '</div></div></div>' +
-        '<div><div class="label" style="margin-bottom:8px">Va bien con</div><div class="tags">' + w.va.map(function(t){ return '<span class="tg w">' + esc(t) + '</span>'; }).join('') + '</div></div>' +
-      '</div>' + priceBlock + '</div>' +
-      '<div class="px" style="padding-top:28px"><h2 style="font-size:22px">Si te gusta, mira también</h2></div>' +
-      sugRow('De la misma bodega', w.misma) +
-      sugRow('Parecidos y más baratos', w.parecidos, true) +
-      sugRow('Para descubrir', w.descubrir) +
+      '<div class="px tags" style="padding-top:18px">' + (w.etiquetas || []).map(function(t){ return '<span class="tg">' + esc(t) + '</span>'; }).join('') + '</div>' +
+      '<div class="px" style="padding-top:20px">' + sab + priceBlock + '</div>' +
+      (haySug ? '<div class="px" style="padding-top:28px"><h2 style="font-size:22px">Si te gusta, mira también</h2></div>' : '') +
+      sugRow('De la misma bodega', s.misma) +
+      sugRow('Parecidos y más baratos', s.parecidos, true) +
+      sugRow('Para descubrir', s.descubrir) +
       '<div class="bottom-actions" style="padding-top:28px">' +
         '<button class="cta" data-soon="Puntuar vinos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Lo he probado: puntuar</button>' +
         '<button class="ghost" data-soon="Comprar online">Comprar online</button>' +
         '<p class="note" style="text-align:center;margin:8px 0 0">Consumo responsable. Solo para mayores de 18 años.</p>' +
       '</div>';
   }
-  $('#btn-save').addEventListener('click', function(){ toast('Guardado en Mi bodega (de ejemplo)'); });
+  $('#btn-save').addEventListener('click', function(){ toast('Mi bodega llegará en la siguiente versión'); });
 
   // ---------- Control de edad ----------
   if (store('edad_ok') !== '1') $('#gate').classList.add('show');
@@ -495,13 +498,9 @@
   $('#gate-no').addEventListener('click', function(){ $('#gate .sheet').innerHTML = '<h2 style="font-size:22px">Vuelve cuando seas mayor de edad</h2><p class="lead" style="margin:0">Esta app es solo para mayores de 18 años.</p>'; });
 
   // ---------- Inicio ----------
-  renderChips();
-  renderResult();
-  renderFicha(false);
-  var start = (location.hash || '').replace('#', '');
   history.replaceState({s:'home'}, '', '#home');
   show('home', false);
-  if (start && start !== 'home' && document.getElementById('s-' + start)) show(start);
+  cargarInicio().catch(function(err){ toast(err.message); });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
