@@ -32,6 +32,8 @@ async function api(request, env, url) {
   let m = path.match(/^\/api\/vino\/([a-z0-9-]+)$/);
   if (method === 'GET' && m) return ficha(env, m[1], url.searchParams.get('super'));
 
+  if (method === 'POST' && path === '/api/cocinar') return cocinar(env, await body(request));
+  if (method === 'GET' && path === '/api/buscar') return buscar(env, url.searchParams.get('q'), url.searchParams.get('super'));
   if (method === 'GET' && path === '/api/gustos') return gustosVer(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/gustos') return gustosGuardar(env, await body(request));
   if (method === 'GET' && path === '/api/bodega') return bodegaListar(env, url.searchParams.get('d'), url.searchParams.get('super'));
@@ -314,6 +316,11 @@ async function ficha(env, id, superPedido) {
       ORDER BY r.orden`
   ).bind(superId, id).all()).results;
 
+  const platos = (await env.DB.prepare(
+    `SELECT pl.id, pl.nombre, m.motivo, m.orden FROM maridajes m JOIN platos pl ON pl.id = m.plato_id
+      WHERE m.vino_id = ? ORDER BY m.orden, pl.orden LIMIT 6`
+  ).bind(id).all()).results.map(r => ({ id: r.id, nombre: r.nombre, motivo: r.motivo, ideal: r.orden <= 2 }));
+
   const grupo = tipo => rel.filter(r => r.tipo === tipo).map(r => ({ id: r.id, nombre: r.nombre, nota: r.nota, precio: r.precio, patrocinado: !!r.patrocinado }));
   const sugerencias = { misma: grupo('misma'), parecidos: grupo('parecido'), descubrir: grupo('descubrir') };
 
@@ -355,6 +362,7 @@ async function ficha(env, id, superPedido) {
     temperatura: v.temperatura,
     apertura: v.apertura,
     va_con: v.va_con ? v.va_con.split('|').map(s => s.trim()).filter(Boolean) : [],
+    platos,
     color: v.color || '#3A2226',
     ejemplo: !!v.ejemplo,
     precio: aqui ? { super: aqui.super, precio: aqui.precio } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null),
@@ -373,6 +381,53 @@ async function elegido(env, consultaId, b) {
   if (!vinoId) return json({ ok: false }, 400);
   await env.DB.prepare('UPDATE consultas SET elegido = ? WHERE id = ? AND elegido IS NULL').bind(vinoId, consultaId).run();
   return json({ ok: true });
+}
+
+// ---------- Voy a cocinar: qué abrir de lo que tengo en casa ----------
+async function cocinar(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  const comprar = await recomendarCore(env, b, null, 'cocinar');
+  if (comprar instanceof Response) return comprar;
+
+  let enCasa = [];
+  if (d) {
+    const g = await cargarGustos(env, d);
+    const { results } = await env.DB.prepare(
+      `SELECT v.id, v.nombre, v.tipo, v.denominacion, v.uva, v.estilo, v.dulce, v.color, m.orden, m.motivo, b.cantidad
+         FROM bodega b
+         JOIN vinos v ON v.id = b.vino_id
+         JOIN maridajes m ON m.vino_id = v.id AND m.plato_id = ?
+        WHERE b.dispositivo = ? AND b.cantidad > 0
+        ORDER BY m.orden`
+    ).bind(comprar.plato.id, d).all();
+    enCasa = results
+      .map((v, i) => ({ v, k: i - 1.5 * afinidad(v, g) }))
+      .sort((a, b2) => a.k - b2.k)
+      .map(x => ({ id: x.v.id, nombre: x.v.nombre, color: x.v.color || '#3A2226', cantidad: x.v.cantidad, motivo: x.v.motivo,
+                   tipo: x.v.tipo, denominacion: x.v.denominacion }));
+  }
+  const totalCasa = d ? (await env.DB.prepare('SELECT COUNT(*) AS n FROM bodega WHERE dispositivo = ? AND cantidad > 0').bind(d).first()).n : 0;
+  return json({ plato: comprar.plato, en_casa: enCasa, botellas_en_casa: totalCasa, comprar });
+}
+
+// ---------- Buscar un vino del catálogo por nombre o bodega ----------
+async function buscar(env, q, superPedido) {
+  const t = normalizar(limpiar(q, 60));
+  if (t.length < 2) return json({ vinos: [] });
+  const superId = await superValido(env, superPedido);
+  const { results } = await env.DB.prepare(
+    `SELECT v.id, v.nombre, v.bodega, v.tipo, v.denominacion, v.color, COALESCE(p.precio, v.precio_ref) AS precio
+       FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+      WHERE v.activo = 1`
+  ).bind(superId).all();
+  const palabras = t.split(/\s+/).filter(Boolean);
+  const vinos = results
+    .map(v => ({ v, txt: normalizar([v.nombre, v.bodega, v.denominacion].join(' ')) }))
+    .filter(x => palabras.every(w => x.txt.includes(w)))
+    .sort((a, b) => (normalizar(a.v.nombre).startsWith(t) ? 0 : 1) - (normalizar(b.v.nombre).startsWith(t) ? 0 : 1) || a.v.nombre.localeCompare(b.v.nombre))
+    .slice(0, 10)
+    .map(x => ({ id: x.v.id, nombre: x.v.nombre, bodega: x.v.bodega, tipo: x.v.tipo, denominacion: x.v.denominacion, color: x.v.color || '#3A2226', precio: x.v.precio }));
+  return json({ vinos });
 }
 
 // ---------- Mi bodega (por dispositivo, anónimo) ----------
