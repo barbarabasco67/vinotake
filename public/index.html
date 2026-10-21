@@ -121,6 +121,30 @@
   .gate .sheet{background:var(--bg);width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:28px 20px calc(24px + var(--safe-b));display:flex;flex-direction:column;gap:14px}
   .hidden-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
   :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:var(--sand)}
+  .seg button{min-height:44px;border:none;border-radius:11px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 4px}
+  .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(30,26,27,.12)}
+  .cnt{font-size:11px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--line);color:var(--ink);display:inline-flex;align-items:center;justify-content:center}
+  .seg button.on .cnt{background:var(--wine);color:#fff}
+  .bcard{display:flex;align-items:center;gap:14px;padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--line);text-align:left;cursor:pointer;width:100%;color:var(--ink)}
+  .bcard .mini-bot{width:28px;height:56px;border-radius:8px 8px 4px 4px;flex-shrink:0}
+  .bcard .t{font-weight:600;font-size:15px}
+  .bcard .s{font-size:13px;color:var(--muted);margin-top:2px}
+  .bcard .meta{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+  .badge-n{font-size:12px;font-weight:700;background:var(--wine-soft);color:var(--wine-dark);padding:4px 9px;border-radius:999px}
+  .stars-mini{color:#B07A12;font-size:13px;letter-spacing:1px}
+  .empty{padding:28px 20px;border-radius:20px;border:1.5px dashed var(--line);text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
+  .bodbox{display:flex;flex-direction:column;gap:14px}
+  .bodrow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .stepper{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:14px;padding:3px}
+  .stepper button{width:44px;height:40px;border:none;border-radius:11px;background:var(--bg);color:var(--ink);font-size:20px;font-weight:600;cursor:pointer}
+  .stepper span{min-width:28px;text-align:center;font-weight:700;font-size:16px}
+  .toggle{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .toggle.on{background:var(--wine-soft);border-color:var(--wine);color:var(--wine-dark)}
+  .stars{display:flex;gap:2px}
+  .stars button{width:44px;height:44px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+  .bodnota{width:100%;min-height:72px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:15px;color:var(--ink);background:var(--card);resize:vertical}
+  .iconbtn.on{background:var(--wine-soft);border-color:var(--wine);color:var(--wine)}
 </style>
 </head>
 <body>
@@ -172,8 +196,8 @@
     </div>
     <div class="spacer"></div>
     <nav class="tabbar" aria-label="Navegación principal">
-      <button class="tab on" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
-      <button class="tab" data-soon="Mi bodega"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg>Mi bodega</button>
+      <button class="tab on" aria-current="page" data-go="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+      <button class="tab" data-go="bodega"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg>Mi bodega</button>
       <button class="tab" data-soon="Mis gustos"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Mis gustos</button>
     </nav>
   </section>
@@ -235,6 +259,28 @@
       <button class="iconbtn" aria-label="Guardar en mi bodega" id="btn-save"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
     </div>
     <div id="ficha-body"></div>
+  </section>
+
+  <!-- 5 · MI BODEGA -->
+  <section class="screen" id="s-bodega" aria-label="Mi bodega">
+    <div class="px" style="padding-top:28px">
+      <h1 style="font-size:30px;line-height:1.1">Mi bodega</h1>
+      <p class="lead" style="margin-top:6px">Tus vinos en casa, los que quieres probar y los que ya has probado.</p>
+    </div>
+    <div class="px" style="padding-top:18px">
+      <div class="seg" role="tablist" aria-label="Apartados de Mi bodega" id="bod-tabs">
+        <button role="tab" class="on" aria-selected="true" data-bodtab="casa">En casa <span class="cnt" id="cnt-casa">0</span></button>
+        <button role="tab" aria-selected="false" data-bodtab="deseo">Quiero probar <span class="cnt" id="cnt-deseo">0</span></button>
+        <button role="tab" aria-selected="false" data-bodtab="probado">Probados <span class="cnt" id="cnt-probado">0</span></button>
+      </div>
+    </div>
+    <div class="px stack" style="padding-top:16px;gap:10px" id="bod-lista"></div>
+    <div class="spacer"></div>
+    <nav class="tabbar" aria-label="Navegación principal">
+      <button class="tab" data-go="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+      <button class="tab on" aria-current="page" data-go="bodega"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg>Mi bodega</button>
+      <button class="tab" data-soon="Mis gustos"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Mis gustos</button>
+    </nav>
   </section>
 
 </div>
@@ -485,6 +531,7 @@
   }
 
   function renderFicha(w, fromPhoto){
+    state.ficha = w;
     var visual = (fromPhoto && state.photo)
       ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">'
       : '<div class="bottle" role="img" aria-label="Botella"><div style="width:18px;height:34px;background:#2A1B1E;border-radius:4px 4px 0 0"></div><div style="width:60px;height:22px;background:' + esc(w.color) + ';border-radius:30px 30px 0 0"></div><div style="width:60px;height:112px;background:' + esc(w.color) + ';border-radius:0 0 8px 8px;display:flex;align-items:center;justify-content:center"><div style="width:46px;height:52px;background:#F4EDE4;border-radius:3px"></div></div></div>';
@@ -513,12 +560,15 @@
       sugRow('De la misma bodega', s.misma) +
       sugRow('Parecidos y más baratos', s.parecidos, true) +
       sugRow('Para descubrir', s.descubrir) +
-      '<div class="bottom-actions" style="padding-top:28px">' +
-        '<button class="cta" data-soon="Puntuar vinos"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Lo he probado: puntuar</button>' +
+      '<div class="px" style="padding-top:28px"><h2 style="font-size:22px">En mi bodega</h2></div>' +
+      '<div class="px" style="padding-top:12px"><div class="box" id="bodbox"></div></div>' +
+      '<div class="bottom-actions" style="padding-top:20px">' +
         '<p class="note" style="text-align:center;margin:8px 0 0">Consumo responsable. Solo para mayores de 18 años.</p>' +
       '</div>';
+    pintarBodBox();
   }
   function renderFueraCatalogo(d){
+    state.ficha = null; pintarBotonGuardar();
     var f = d.fuera_catalogo || {};
     var visual = state.photo ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">' : '';
     var datos = [f.tipo, f.uva, f.anada].filter(Boolean);
@@ -536,7 +586,139 @@
     var b = $('#btn-otra-botella'); if (b) b.addEventListener('click', function(){ openCam('bottle'); });
   }
 
-  $('#btn-save').addEventListener('click', function(){ toast('Mi bodega llegará en la siguiente versión'); });
+  $('#btn-save').addEventListener('click', function(){
+    if (!state.ficha) return;
+    var it = state.bodega[state.ficha.id] || {};
+    guardarBodega(state.ficha.id, { deseo: !it.deseo }).then(function(r){
+      if (r) toast(r.deseo ? 'Guardado en "Quiero probar"' : 'Quitado de "Quiero probar"');
+    });
+  });
+
+  // ---------- Mi bodega ----------
+  state.bodega = {}; state.bodTab = 'casa';
+  state.dispositivo = store('dispositivo');
+  if (!state.dispositivo){
+    state.dispositivo = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){ var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
+    store('dispositivo', state.dispositivo);
+  }
+
+  function cargarBodega(){
+    return api('/api/bodega?d=' + encodeURIComponent(state.dispositivo) + '&super=' + encodeURIComponent(state.superId || '')).then(function(d){
+      state.bodega = {};
+      (d.vinos || []).forEach(function(v){ state.bodega[v.id] = v; });
+      renderBodega();
+    });
+  }
+
+  function guardarBodega(id, cambios){
+    var datos = { dispositivo: state.dispositivo, vino_id: id };
+    for (var k in cambios) datos[k] = cambios[k];
+    return api('/api/bodega', datos).then(function(r){
+      var base = state.bodega[id] || (state.ficha && state.ficha.id === id ? {
+        id: id, nombre: state.ficha.nombre, tipo: (state.ficha.etiquetas || [])[0] || '', denominacion: state.ficha.denominacion,
+        color: state.ficha.color, precio: state.ficha.precio ? state.ficha.precio.precio : null, va_con: (state.ficha.va_con || []).slice(0, 3)
+      } : { id: id });
+      base.cantidad = r.cantidad; base.deseo = r.deseo; base.puntuacion = r.puntuacion; base.nota = r.nota;
+      if (!r.cantidad && !r.deseo && r.puntuacion == null && !r.nota) delete state.bodega[id];
+      else state.bodega[id] = base;
+      pintarBodBox(); renderBodega();
+      return r;
+    }).catch(function(err){ toast(err.message); return null; });
+  }
+
+  function estrellaSVG(llena, size){
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="' + (llena ? '#D4A017' : 'none') + '" stroke="' + (llena ? '#B07A12' : '#8A8183') + '" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
+  }
+
+  function pintarBotonGuardar(){
+    var b = $('#btn-save'); var it = state.ficha ? state.bodega[state.ficha.id] : null;
+    var on = !!(it && it.deseo);
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+    b.setAttribute('aria-label', on ? 'Quitar de Quiero probar' : 'Guardar en Quiero probar');
+    b.style.visibility = state.ficha ? 'visible' : 'hidden';
+  }
+
+  function pintarBodBox(){
+    pintarBotonGuardar();
+    var box = $('#bodbox'); if (!box || !state.ficha) return;
+    var it = state.bodega[state.ficha.id] || { cantidad: 0, deseo: false, puntuacion: null, nota: '' };
+    var estrellas = '';
+    for (var i = 1; i <= 5; i++) estrellas += '<button type="button" data-bod="estrella" data-n="' + i + '" aria-label="' + i + (i === 1 ? ' estrella' : ' estrellas') + '" aria-pressed="' + (it.puntuacion >= i) + '">' + estrellaSVG(it.puntuacion >= i, 28) + '</button>';
+    box.innerHTML = '<div class="bodbox">' +
+      '<div class="bodrow"><span style="font-weight:600">Botellas en casa</span>' +
+        '<div class="stepper"><button type="button" data-bod="menos" aria-label="Una botella menos">−</button><span aria-live="polite">' + (it.cantidad || 0) + '</span><button type="button" data-bod="mas" aria-label="Una botella más">+</button></div></div>' +
+      '<div class="bodrow"><span style="font-weight:600">¿Lo quieres probar?</span>' +
+        '<button type="button" class="toggle' + (it.deseo ? ' on' : '') + '" data-bod="deseo" aria-pressed="' + !!it.deseo + '">' + (it.deseo ? 'En la lista' : 'Añadir a la lista') + '</button></div>' +
+      '<div><div style="font-weight:600;margin-bottom:6px">¿Lo has probado? Puntúalo</div>' +
+        '<div class="bodrow"><div class="stars">' + estrellas + '</div>' +
+        (it.puntuacion ? '<button type="button" class="toggle" data-bod="quitar-nota" style="min-height:36px;padding:0 10px;font-size:13px">Quitar</button>' : '') + '</div></div>' +
+      '<div><label for="bodnota" style="font-weight:600;display:block;margin-bottom:6px">Tu nota</label>' +
+        '<textarea id="bodnota" class="bodnota" maxlength="500" placeholder="Ej.: perfecto con el cordero de la abuela">' + esc(it.nota || '') + '</textarea></div>' +
+    '</div>';
+  }
+
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-bod]'); if (!b || !state.ficha) return;
+    var id = state.ficha.id, it = state.bodega[id] || { cantidad: 0, deseo: false, puntuacion: null };
+    var acc = b.getAttribute('data-bod');
+    if (acc === 'mas') guardarBodega(id, { cantidad: (it.cantidad || 0) + 1 });
+    else if (acc === 'menos' && it.cantidad > 0) guardarBodega(id, { cantidad: it.cantidad - 1 });
+    else if (acc === 'deseo') guardarBodega(id, { deseo: !it.deseo });
+    else if (acc === 'estrella'){
+      var n = parseInt(b.getAttribute('data-n'), 10);
+      var cambios = { puntuacion: n };
+      if (it.deseo) cambios.deseo = false; // ya lo ha probado
+      guardarBodega(id, cambios).then(function(r){ if (r) toast('Puntuado con ' + n + (n === 1 ? ' estrella' : ' estrellas')); });
+    }
+    else if (acc === 'quitar-nota') guardarBodega(id, { puntuacion: null });
+  });
+  document.addEventListener('change', function(e){
+    if (e.target && e.target.id === 'bodnota' && state.ficha){
+      guardarBodega(state.ficha.id, { nota: e.target.value.trim() }).then(function(r){ if (r) toast('Nota guardada'); });
+    }
+  });
+
+  $('#bod-tabs').addEventListener('click', function(e){
+    var b = e.target.closest('[data-bodtab]'); if (!b) return;
+    state.bodTab = b.getAttribute('data-bodtab'); renderBodega();
+  });
+
+  function renderBodega(){
+    var todos = Object.keys(state.bodega).map(function(k){ return state.bodega[k]; });
+    var grupos = {
+      casa: todos.filter(function(v){ return v.cantidad > 0; }),
+      deseo: todos.filter(function(v){ return v.deseo; }),
+      probado: todos.filter(function(v){ return v.puntuacion; }).sort(function(a, b){ return b.puntuacion - a.puntuacion; })
+    };
+    ['casa', 'deseo', 'probado'].forEach(function(k){ $('#cnt-' + k).textContent = grupos[k].length; });
+    document.querySelectorAll('#bod-tabs [data-bodtab]').forEach(function(b){
+      var on = b.getAttribute('data-bodtab') === state.bodTab;
+      b.classList.toggle('on', on); b.setAttribute('aria-selected', on);
+    });
+    var lista = grupos[state.bodTab];
+    var vacio = {
+      casa: 'Aún no tienes botellas apuntadas. Abre la ficha de un vino y suma las que tengas en casa.',
+      deseo: 'Guarda aquí los vinos que quieras comprar. Pulsa el marcador en la ficha de cualquier vino.',
+      probado: 'Puntúa los vinos que pruebes y aquí tendrás tu ranking personal.'
+    };
+    if (!lista.length){ $('#bod-lista').innerHTML = '<div class="empty">' + vacio[state.bodTab] + '</div>'; return; }
+    $('#bod-lista').innerHTML = lista.map(function(v){
+      var estrellas = '';
+      if (v.puntuacion){ for (var i = 1; i <= 5; i++) estrellas += i <= v.puntuacion ? '★' : '☆'; }
+      var extra = state.bodTab === 'casa' ? (v.va_con && v.va_con.length ? 'Va con: ' + v.va_con.join(', ') : '')
+        : state.bodTab === 'probado' ? (v.nota || '') : [v.tipo, v.denominacion].filter(Boolean).join(' · ');
+      return '<button class="bcard" data-wine="' + esc(v.id) + '">' +
+        '<span class="mini-bot" style="background:' + esc(v.color || '#3A2226') + '" aria-hidden="true"></span>' +
+        '<span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span>' +
+          '<span class="s" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(extra) + '</span></span>' +
+        '<span class="meta">' +
+          (state.bodTab === 'casa' ? '<span class="badge-n">' + v.cantidad + (v.cantidad === 1 ? ' botella' : ' botellas') + '</span>' : '') +
+          (state.bodTab === 'probado' ? '<span class="stars-mini" aria-label="' + v.puntuacion + ' de 5">' + estrellas + '</span>' : '') +
+          (v.precio != null ? '<span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span>' : '') +
+        '</span></button>';
+    }).join('');
+  }
 
   // ---------- Control de edad ----------
   if (store('edad_ok') !== '1') $('#gate').classList.add('show');
@@ -546,7 +728,7 @@
   // ---------- Inicio ----------
   history.replaceState({s:'home'}, '', '#home');
   show('home', false);
-  cargarInicio().catch(function(err){ toast(err.message); });
+  cargarInicio().then(cargarBodega).catch(function(err){ toast(err.message); });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });

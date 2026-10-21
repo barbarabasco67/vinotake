@@ -32,6 +32,9 @@ async function api(request, env, url) {
   let m = path.match(/^\/api\/vino\/([a-z0-9-]+)$/);
   if (method === 'GET' && m) return ficha(env, m[1], url.searchParams.get('super'));
 
+  if (method === 'GET' && path === '/api/bodega') return bodegaListar(env, url.searchParams.get('d'), url.searchParams.get('super'));
+  if (method === 'POST' && path === '/api/bodega') return bodegaGuardar(env, await body(request));
+
   m = path.match(/^\/api\/consulta\/(\d+)\/elegido$/);
   if (method === 'POST' && m) return elegido(env, Number(m[1]), await body(request));
 
@@ -357,6 +360,65 @@ async function elegido(env, consultaId, b) {
   if (!vinoId) return json({ ok: false }, 400);
   await env.DB.prepare('UPDATE consultas SET elegido = ? WHERE id = ? AND elegido IS NULL').bind(vinoId, consultaId).run();
   return json({ ok: true });
+}
+
+// ---------- Mi bodega (por dispositivo, anónimo) ----------
+function dispositivoValido(d) {
+  return typeof d === 'string' && /^[a-f0-9-]{20,40}$/i.test(d) ? d.toLowerCase() : null;
+}
+
+async function bodegaListar(env, dispositivo, superPedido) {
+  const d = dispositivoValido(dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const superId = await superValido(env, superPedido);
+  const { results } = await env.DB.prepare(
+    `SELECT b.vino_id AS id, b.cantidad, b.deseo, b.puntuacion, b.nota, b.actualizado,
+            v.nombre, v.tipo, v.denominacion, v.color, v.va_con,
+            COALESCE(p.precio, v.precio_ref) AS precio
+       FROM bodega b
+       JOIN vinos v ON v.id = b.vino_id
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+      WHERE b.dispositivo = ?
+      ORDER BY b.actualizado DESC`
+  ).bind(superId, d).all();
+  return json({
+    vinos: results.map(r => ({
+      id: r.id, nombre: r.nombre, tipo: r.tipo, denominacion: r.denominacion, color: r.color || '#3A2226',
+      precio: r.precio, cantidad: r.cantidad || 0, deseo: !!r.deseo, puntuacion: r.puntuacion, nota: r.nota || '',
+      va_con: r.va_con ? r.va_con.split('|').slice(0, 3) : []
+    }))
+  });
+}
+
+async function bodegaGuardar(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  const vinoId = limpiar(b.vino_id, 80);
+  if (!d || !vinoId) return json({ error: 'Faltan datos.' }, 400);
+  const existe = await env.DB.prepare('SELECT id FROM vinos WHERE id = ?').bind(vinoId).first();
+  if (!existe) return json({ error: 'Ese vino no está en el catálogo.' }, 404);
+
+  const actual = await env.DB.prepare('SELECT cantidad, deseo, puntuacion, nota FROM bodega WHERE dispositivo = ? AND vino_id = ?')
+    .bind(d, vinoId).first() || { cantidad: 0, deseo: 0, puntuacion: null, nota: '' };
+
+  const nuevo = {
+    cantidad: 'cantidad' in b ? Math.max(0, Math.min(99, parseInt(b.cantidad, 10) || 0)) : actual.cantidad,
+    deseo: 'deseo' in b ? (b.deseo ? 1 : 0) : actual.deseo,
+    puntuacion: 'puntuacion' in b ? (b.puntuacion === null ? null : Math.max(1, Math.min(5, parseInt(b.puntuacion, 10) || 1))) : actual.puntuacion,
+    nota: 'nota' in b ? limpiar(b.nota, 500) : (actual.nota || '')
+  };
+
+  if (!nuevo.cantidad && !nuevo.deseo && nuevo.puntuacion === null && !nuevo.nota) {
+    await env.DB.prepare('DELETE FROM bodega WHERE dispositivo = ? AND vino_id = ?').bind(d, vinoId).run();
+  } else {
+    await env.DB.prepare(
+      `INSERT INTO bodega (dispositivo, vino_id, cantidad, deseo, puntuacion, nota)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT (dispositivo, vino_id) DO UPDATE SET
+         cantidad = excluded.cantidad, deseo = excluded.deseo, puntuacion = excluded.puntuacion,
+         nota = excluded.nota, actualizado = CURRENT_TIMESTAMP`
+    ).bind(d, vinoId, nuevo.cantidad, nuevo.deseo, nuevo.puntuacion, nuevo.nota || null).run();
+  }
+  return json({ ok: true, vino_id: vinoId, cantidad: nuevo.cantidad, deseo: !!nuevo.deseo, puntuacion: nuevo.puntuacion, nota: nuevo.nota || '' });
 }
 
 // ---------- Utilidades ----------
