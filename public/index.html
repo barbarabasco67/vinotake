@@ -376,25 +376,47 @@
     var f = cam.files && cam.files[0]; if (!f) return;
     if (state.photo){ try { URL.revokeObjectURL(state.photo); } catch(e){} }
     state.photo = URL.createObjectURL(f);
-    if (camMode === 'bottle'){
-      loading(true, 'Leyendo la etiqueta…');
-      api('/api/botella', { super_id: state.superId })
-        .then(function(d){ return abrirFicha(d.vino_id, true, false, true); })
-        .catch(function(err){ loading(false); toast(err.message); });
-    } else {
-      pedirRecomendacion('Leyendo etiquetas…');
-    }
+    loading(true, camMode === 'bottle' ? 'Leyendo la etiqueta…' : 'Leyendo etiquetas…');
+    comprimir(f).then(function(img){
+      if (camMode === 'bottle'){
+        return api('/api/botella', { super_id: state.superId, imagen: img }).then(function(d){
+          state.leidoIA = !!d.leido_por_ia;
+          if (d.vino_id) return abrirFicha(d.vino_id, true, false, true);
+          loading(false); renderFueraCatalogo(d); show('ficha');
+        });
+      }
+      return pedirRecomendacion('Leyendo etiquetas…', img);
+    }).catch(function(err){ loading(false); toast(err.message || 'No hemos podido leer la foto.'); });
   });
 
+  // Reduce la foto en el móvil antes de enviarla (más rápido y más barato).
+  function comprimir(file){
+    return new Promise(function(resolve, reject){
+      var img = new Image(); var url = URL.createObjectURL(file);
+      img.onload = function(){
+        var max = 1280, w = img.naturalWidth, h = img.naturalHeight;
+        var k = Math.min(1, max / Math.max(w, h));
+        var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('No hemos podido abrir la foto. Prueba con otra.')); };
+      img.src = url;
+    });
+  }
+
   // ---------- Pantalla 3: resultado ----------
-  function pedirRecomendacion(texto){
+  function pedirRecomendacion(texto, imagen){
     loading(true, texto);
-    api('/api/recomendar', {
+    var datos = {
       plato_texto: $('#plato').value.trim(),
       plato_id: state.platoId,
       presupuesto: state.presupuesto,
       super_id: state.superId
-    }).then(function(d){
+    };
+    if (imagen) datos.imagen = imagen;
+    return api(imagen ? '/api/estanteria' : '/api/recomendar', datos).then(function(d){
       loading(false);
       state.last = d; state.consultaId = d.consulta_id;
       if (d.plato){ state.platoId = d.plato.id; renderChips(); }
@@ -412,11 +434,18 @@
     return '<div class="shelf" role="img" aria-label="Estantería con tres botellas señaladas">' + row(r1) + row(r2) + '<div class="cap">Te señalo las 3 mejores para tu plato</div></div>';
   }
 
+  function textoFoto(d){
+    if (!d.leido_por_ia) return 'Foto recibida. La lectura con IA aún no está activada; te recomendamos de nuestro catálogo.';
+    if (!d.reconocidos) return 'No hemos reconocido vinos de nuestro catálogo en la foto. Te recomendamos estos.';
+    if (d.en_foto) return 'Hemos reconocido ' + d.reconocidos + (d.reconocidos === 1 ? ' vino' : ' vinos') + ' en tu foto. Te recomendamos de los que tienes delante.';
+    return 'Hemos reconocido ' + d.reconocidos + (d.reconocidos === 1 ? ' vino' : ' vinos') + ', pero ninguno va bien con tu plato. Te sugerimos estos.';
+  }
+
   function renderResult(d){
     var best = d.mejor;
     $('#res-summary').textContent = d.plato.nombre + ' · ' + d.presupuesto.nombre + ' · ' + superNombre(d.super_id);
     $('#res-visual').innerHTML = state.photo
-      ? '<div class="photo"><img src="' + state.photo + '" alt="Tu foto de la estantería"><div class="tag">Foto recibida. La lectura con IA llega en la siguiente versión.</div></div>'
+      ? '<div class="photo"><img src="' + state.photo + '" alt="Tu foto de la estantería"><div class="tag">' + esc(textoFoto(d)) + '</div></div>'
       : shelfHTML();
     $('#res-title').textContent = 'Para tu ' + d.plato.nombre.toLowerCase() + ', coge este';
     var aviso = d.fuera_presupuesto
@@ -459,7 +488,7 @@
     var visual = (fromPhoto && state.photo)
       ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">'
       : '<div class="bottle" role="img" aria-label="Botella"><div style="width:18px;height:34px;background:#2A1B1E;border-radius:4px 4px 0 0"></div><div style="width:60px;height:22px;background:' + esc(w.color) + ';border-radius:30px 30px 0 0"></div><div style="width:60px;height:112px;background:' + esc(w.color) + ';border-radius:0 0 8px 8px;display:flex;align-items:center;justify-content:center"><div style="width:46px;height:52px;background:#F4EDE4;border-radius:3px"></div></div></div>';
-    var badge = fromPhoto ? 'Ejemplo de lectura' : (w.ejemplo ? 'Vino de ejemplo' : 'Ficha del vino');
+    var badge = fromPhoto ? (state.leidoIA ? 'Leído de la etiqueta' : 'Ejemplo: IA no activada') : (w.ejemplo ? 'Vino de ejemplo' : 'Ficha del vino');
     var priceBlock = w.precio ? ('<div class="box" style="margin-top:12px;gap:10px">' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;color:var(--muted)">' + (w.precio.super ? 'En ' + esc(w.precio.super) : 'Precio aproximado') + '</span><span class="price">' + eur(w.precio.precio) + '</span></div>' +
       (w.mas_barato ? '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #EFE8E0"><span style="font-size:14px;color:var(--green);font-weight:600">Más barato en ' + esc(w.mas_barato.super) + '</span><span style="font-size:15px;font-weight:600;color:var(--green)">' + eur(w.mas_barato.precio) + '</span></div>' : '') +
@@ -489,6 +518,24 @@
         '<p class="note" style="text-align:center;margin:8px 0 0">Consumo responsable. Solo para mayores de 18 años.</p>' +
       '</div>';
   }
+  function renderFueraCatalogo(d){
+    var f = d.fuera_catalogo || {};
+    var visual = state.photo ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">' : '';
+    var datos = [f.tipo, f.uva, f.anada].filter(Boolean);
+    $('#ficha-body').innerHTML =
+      '<div class="px" style="padding-top:8px;display:flex;gap:18px;align-items:center">' + visual +
+        '<div style="display:flex;flex-direction:column;gap:6px">' +
+          '<span class="soon" style="font-size:12px">Leído de la etiqueta</span>' +
+          '<h1 style="font-size:26px;line-height:1.1">' + esc(f.nombre || 'Vino sin identificar') + '</h1>' +
+          '<div style="font-size:14px;color:var(--muted)">' + esc([f.bodega, f.denominacion].filter(Boolean).join(' · ')) + '</div>' +
+        '</div></div>' +
+      (datos.length ? '<div class="px tags" style="padding-top:18px">' + datos.map(function(t){ return '<span class="tg">' + esc(t) + '</span>'; }).join('') + '</div>' : '') +
+      '<div class="px" style="padding-top:20px"><div class="box"><div style="font-size:15px;line-height:1.5">Este vino aún no está en nuestro catálogo. Lo hemos apuntado para añadirlo pronto.</div></div></div>' +
+      sugRow('Parecidos que sí tenemos', d.parecidos) +
+      '<div class="bottom-actions" style="padding-top:28px"><button class="ghost" id="btn-otra-botella">Probar con otra foto</button></div>';
+    var b = $('#btn-otra-botella'); if (b) b.addEventListener('click', function(){ openCam('bottle'); });
+  }
+
   $('#btn-save').addEventListener('click', function(){ toast('Mi bodega llegará en la siguiente versión'); });
 
   // ---------- Control de edad ----------

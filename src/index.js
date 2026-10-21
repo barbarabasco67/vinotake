@@ -27,6 +27,7 @@ async function api(request, env, url) {
   if (method === 'GET' && path === '/api/inicio') return inicio(env);
   if (method === 'POST' && path === '/api/recomendar') return recomendar(env, await body(request));
   if (method === 'POST' && path === '/api/botella') return botella(env, await body(request));
+  if (method === 'POST' && path === '/api/estanteria') return estanteria(env, await body(request));
 
   let m = path.match(/^\/api\/vino\/([a-z0-9-]+)$/);
   if (method === 'GET' && m) return ficha(env, m[1], url.searchParams.get('super'));
@@ -52,6 +53,58 @@ async function inicio(env) {
 
 // ---------- ¿Qué vino para mi cena? ----------
 async function recomendar(env, b) {
+  const r = await recomendarCore(env, b, null, 'cena');
+  return r instanceof Response ? r : json(r);
+}
+
+// ---------- Foto de la estantería: qué vinos del catálogo aparecen y cuál coger ----------
+async function estanteria(env, b) {
+  const imagen = validarImagen(b.imagen);
+  if (!imagen || !env.ANTHROPIC_API_KEY) {
+    const r = await recomendarCore(env, b, null, 'estanteria');
+    if (r instanceof Response) return r;
+    r.leido_por_ia = false;
+    return json(r);
+  }
+
+  const catalogo = (await env.DB.prepare(
+    'SELECT id, nombre, bodega, denominacion, tipo FROM vinos WHERE activo = 1 ORDER BY nombre'
+  ).all()).results;
+
+  const prompt =
+`Eres el lector de etiquetas de Vinotake. En la foto hay una estantería de vinos de un supermercado español.
+
+Este es nuestro catálogo (id | nombre | bodega | denominación | tipo):
+${catalogo.map(v => [v.id, v.nombre, v.bodega, v.denominacion, v.tipo].join(' | ')).join('\n')}
+
+Tarea:
+1. Di qué vinos del catálogo se ven en la foto. Solo los que reconozcas con seguridad por su etiqueta o nombre; no adivines.
+2. Apunta los nombres de otros vinos que se lean claramente pero no estén en el catálogo (máximo 15).
+
+Responde SOLO con este JSON, sin texto alrededor:
+{"visibles": ["id", ...], "otros": ["nombre leído", ...]}`;
+
+  let leido = null;
+  try { leido = await leerConIA(env, imagen, prompt, 1200); } catch (e) { console.error('IA estanteria', e); }
+
+  const ids = new Set(catalogo.map(v => v.id));
+  const visibles = leido && Array.isArray(leido.visibles) ? leido.visibles.filter(id => ids.has(id)) : [];
+  const otros = leido && Array.isArray(leido.otros) ? leido.otros.map(o => limpiar(o, 120)).filter(Boolean).slice(0, 15) : [];
+  const superId = await superValido(env, b.super_id);
+  if (otros.length) {
+    await env.DB.batch(otros.map(n => env.DB.prepare(
+      `INSERT INTO vinos_leidos (origen, nombre, super_id) VALUES ('estanteria', ?, ?)`
+    ).bind(n, superId))).catch(e => console.error('vinos_leidos', e));
+  }
+
+  const r = await recomendarCore(env, b, visibles.length ? new Set(visibles) : null, 'estanteria');
+  if (r instanceof Response) return r;
+  r.leido_por_ia = !!leido;
+  r.reconocidos = visibles.length;
+  return json(r);
+}
+
+async function recomendarCore(env, b, visibles, tipoConsulta) {
   const superId = await superValido(env, b.super_id);
   const presupuesto = PRESUPUESTOS[b.presupuesto] ? b.presupuesto : '5a10';
   const max = PRESUPUESTOS[presupuesto].max;
@@ -75,14 +128,21 @@ async function recomendar(env, b) {
 
   if (!results.length) return json({ error: 'Aún no tenemos vinos para ese plato.' }, 404);
 
+  // Si la foto ha reconocido vinos que van con este plato, se elige entre esos.
+  let lista = results;
+  let enFoto = false;
+  if (visibles) {
+    const enEstanteria = results.filter(v => visibles.has(v.id));
+    if (enEstanteria.length) { lista = enEstanteria; enFoto = true; }
+  }
+
   // Dentro del presupuesto primero, respetando el orden de mejor a peor maridaje.
   // Fuera del presupuesto, los más cercanos al límite primero.
-  const dentro = results.filter(v => max === null || v.precio <= max);
-  const fuera = results.filter(v => !(max === null || v.precio <= max)).sort((a, b2) => a.precio - b2.precio);
+  const dentro = lista.filter(v => max === null || v.precio <= max);
+  const fuera = lista.filter(v => !(max === null || v.precio <= max)).sort((a, b2) => a.precio - b2.precio);
   const orden = dentro.concat(fuera);
   const mejor = orden[0];
   const alternativas = orden.slice(1, 3);
-  const fueraPresupuesto = dentro.length === 0;
 
   let ahorro = null;
   const masBarato = alternativas.filter(a => a.precio < mejor.precio).sort((a, b2) => a.precio - b2.precio)[0];
@@ -90,28 +150,127 @@ async function recomendar(env, b) {
 
   const consulta = await env.DB.prepare(
     `INSERT INTO consultas (tipo, plato_texto, plato_id, presupuesto, super_id, recomendado)
-     VALUES ('cena', ?, ?, ?, ?, ?) RETURNING id`
-  ).bind(texto || null, plato.id, presupuesto, superId, mejor.id).first();
+     VALUES (?, ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(tipoConsulta, texto || null, plato.id, presupuesto, superId, mejor.id).first();
 
-  return json({
+  return {
     consulta_id: consulta ? consulta.id : null,
     plato,
     presupuesto: { id: presupuesto, nombre: PRESUPUESTOS[presupuesto].nombre },
     super_id: superId,
-    fuera_presupuesto: fueraPresupuesto,
+    fuera_presupuesto: dentro.length === 0,
+    en_foto: enFoto,
     mejor: { id: mejor.id, nombre: mejor.nombre, tipo: mejor.tipo, denominacion: mejor.denominacion, precio: mejor.precio, motivo: mejor.motivo },
     alternativas: alternativas.map(a => ({ id: a.id, nombre: a.nombre, precio: a.precio, nota: a.nota })),
     ahorro
-  });
+  };
 }
 
-// ---------- Escanear botella (de momento devuelve un vino de ejemplo; aquí entrará la IA) ----------
+// ---------- Foto de una botella: qué vino es ----------
 async function botella(env, b) {
   const superId = await superValido(env, b.super_id);
-  const vino = await env.DB.prepare('SELECT id FROM vinos WHERE activo = 1 ORDER BY RANDOM() LIMIT 1').first();
-  if (!vino) return json({ error: 'Todavía no hay vinos en la base de datos.' }, 503);
-  await env.DB.prepare(`INSERT INTO consultas (tipo, super_id, recomendado) VALUES ('botella', ?, ?)`).bind(superId, vino.id).run();
-  return json({ vino_id: vino.id, leido_por_ia: false });
+  const imagen = validarImagen(b.imagen);
+
+  if (!imagen || !env.ANTHROPIC_API_KEY) {
+    // Sin IA configurada: vino al azar del catálogo, marcado como ejemplo.
+    const vino = await env.DB.prepare('SELECT id FROM vinos WHERE activo = 1 ORDER BY RANDOM() LIMIT 1').first();
+    if (!vino) return json({ error: 'Todavía no hay vinos en la base de datos.' }, 503);
+    await env.DB.prepare(`INSERT INTO consultas (tipo, super_id, recomendado) VALUES ('botella', ?, ?)`).bind(superId, vino.id).run();
+    return json({ vino_id: vino.id, leido_por_ia: false });
+  }
+
+  const catalogo = (await env.DB.prepare(
+    'SELECT id, nombre, bodega, denominacion, tipo FROM vinos WHERE activo = 1 ORDER BY nombre'
+  ).all()).results;
+
+  const prompt =
+`Eres el lector de etiquetas de Vinotake. En la foto hay una botella de vino (o una etiqueta).
+
+Este es nuestro catálogo (id | nombre | bodega | denominación | tipo):
+${catalogo.map(v => [v.id, v.nombre, v.bodega, v.denominacion, v.tipo].join(' | ')).join('\n')}
+
+Si la botella es uno de los vinos del catálogo, devuelve su id. Fíjate en la bodega y en el tipo (crianza, roble, reserva, verdejo...). Si no estás seguro o no está en el catálogo, devuelve "id": null y apunta lo que leas en la etiqueta.
+Si en la foto no hay ningún vino, devuelve "es_vino": false.
+
+Responde SOLO con este JSON, sin texto alrededor:
+{"es_vino": true, "id": "id-del-catalogo o null", "nombre": "", "bodega": "", "denominacion": "", "tipo": "Tinto|Blanco|Rosado|Espumoso|Generoso|Otro", "uva": "", "anada": ""}`;
+
+  let leido = null;
+  try { leido = await leerConIA(env, imagen, prompt, 500); } catch (e) { console.error('IA botella', e); }
+  if (!leido) return json({ error: 'No hemos podido leer la etiqueta. Prueba con otra foto, más cerca y con buena luz.' }, 502);
+  if (leido.es_vino === false) return json({ error: 'No vemos ninguna botella de vino en la foto. Prueba otra vez, más cerca de la etiqueta.' }, 422);
+
+  const ids = new Set(catalogo.map(v => v.id));
+  if (leido.id && ids.has(leido.id)) {
+    await env.DB.prepare(`INSERT INTO consultas (tipo, super_id, recomendado) VALUES ('botella', ?, ?)`).bind(superId, leido.id).run();
+    return json({ vino_id: leido.id, leido_por_ia: true });
+  }
+
+  const fuera = {
+    nombre: limpiar(leido.nombre, 120),
+    bodega: limpiar(leido.bodega, 120),
+    denominacion: limpiar(leido.denominacion, 120),
+    tipo: limpiar(leido.tipo, 40),
+    uva: limpiar(leido.uva, 80),
+    anada: limpiar(leido.anada, 10)
+  };
+  await env.DB.prepare(
+    `INSERT INTO vinos_leidos (origen, nombre, bodega, denominacion, tipo, super_id) VALUES ('botella', ?, ?, ?, ?, ?)`
+  ).bind(fuera.nombre || null, fuera.bodega || null, fuera.denominacion || null, fuera.tipo || null, superId).run().catch(e => console.error('vinos_leidos', e));
+  await env.DB.prepare(`INSERT INTO consultas (tipo, super_id, plato_texto) VALUES ('botella', ?, ?)`).bind(superId, fuera.nombre || null).run();
+
+  // Parecidos del catálogo para no dejar a la persona sin respuesta.
+  let parecidos = [];
+  if (fuera.tipo) {
+    parecidos = (await env.DB.prepare(
+      `SELECT v.id, v.nombre, v.denominacion, COALESCE(p.precio, v.precio_ref) AS precio
+         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+        WHERE v.activo = 1 AND v.tipo = ?
+        ORDER BY CASE WHEN v.denominacion = ? THEN 0 WHEN v.uva = ? THEN 1 ELSE 2 END, precio
+        LIMIT 3`
+    ).bind(superId, fuera.tipo, fuera.denominacion, fuera.uva).all()).results.map(r => auto(r, r.denominacion));
+  }
+  return json({ vino_id: null, leido_por_ia: true, fuera_catalogo: fuera, parecidos });
+}
+
+// ---------- IA: leer una imagen con Claude ----------
+const MODELO_IA = 'claude-haiku-5-5';
+
+async function leerConIA(env, imagen, prompt, maxTokens) {
+  const res = await fetch(env.IA_URL || 'https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: MODELO_IA,
+      max_tokens: maxTokens,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: imagen.tipo, data: imagen.datos } },
+          { type: 'text', text: prompt }
+        ]
+      }]
+    })
+  });
+  if (!res.ok) throw new Error('IA ' + res.status + ': ' + (await res.text()).slice(0, 300));
+  const data = await res.json();
+  const texto = (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n');
+  const ini = texto.indexOf('{');
+  const fin = texto.lastIndexOf('}');
+  if (ini === -1 || fin <= ini) throw new Error('IA sin JSON: ' + texto.slice(0, 200));
+  return JSON.parse(texto.slice(ini, fin + 1));
+}
+
+function validarImagen(dataUrl) {
+  if (typeof dataUrl !== 'string') return null;
+  const m = dataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+  if (!m) return null;
+  if (m[2].length > 5_000_000) return null; // ~3,7 MB de imagen como máximo
+  return { tipo: m[1], datos: m[2] };
 }
 
 // ---------- Ficha del vino ----------
