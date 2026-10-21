@@ -32,6 +32,7 @@ async function api(request, env, url) {
   let m = path.match(/^\/api\/vino\/([a-z0-9-]+)$/);
   if (method === 'GET' && m) return ficha(env, m[1], url.searchParams.get('super'));
 
+  if (method === 'GET' && path === '/api/top') return mejorValorados(env, url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/cocinar') return cocinar(env, await body(request));
   if (method === 'GET' && path === '/api/buscar') return buscar(env, url.searchParams.get('q'), url.searchParams.get('super'));
   if (method === 'GET' && path === '/api/perfil') return perfilVer(env, url.searchParams.get('d'));
@@ -372,6 +373,9 @@ async function ficha(env, id, superPedido) {
     va_con: v.va_con ? v.va_con.split('|').map(s => s.trim()).filter(Boolean) : [],
     platos,
     color: v.color || '#3A2226',
+    imagen: v.imagen || null,
+    tipo: v.tipo,
+    elaboracion: v.elaboracion,
     ejemplo: !!v.ejemplo,
     precio: aqui ? { super: aqui.super, precio: aqui.precio } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null),
     mas_barato: masBarato ? { super: masBarato.super, precio: masBarato.precio } : null,
@@ -436,6 +440,49 @@ async function buscar(env, q, superPedido) {
     .slice(0, 10)
     .map(x => ({ id: x.v.id, nombre: x.v.nombre, bodega: x.v.bodega, tipo: x.v.tipo, denominacion: x.v.denominacion, color: x.v.color || '#3A2226', precio: x.v.precio }));
   return json({ vinos });
+}
+
+// ---------- Lo mejor valorado por los Takers ----------
+async function mejorValorados(env, superPedido) {
+  const superId = await superValido(env, superPedido);
+  const conImagen = async (sql, ...args) => {
+    try { return (await env.DB.prepare(sql.replace('{IMG}', 'v.imagen')).bind(...args).all()).results; }
+    catch { return (await env.DB.prepare(sql.replace('{IMG}', 'NULL')).bind(...args).all()).results; }
+  };
+  const cols = `v.id, v.nombre, v.tipo, v.denominacion, v.elaboracion, v.color, {IMG} AS imagen, COALESCE(p.precio, v.precio_ref) AS precio`;
+
+  // Media "suavizada": con pocos votos se acerca a 3,5 para que un solo 5 no gane siempre.
+  const votados = await conImagen(
+    `SELECT ${cols}, AVG(b.puntuacion) AS media, COUNT(*) AS votos,
+            (SUM(b.puntuacion) + 2 * 3.5) / (COUNT(*) + 2) AS score
+       FROM bodega b JOIN vinos v ON v.id = b.vino_id AND v.activo = 1
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+      WHERE b.puntuacion IS NOT NULL
+      GROUP BY v.id
+      ORDER BY score DESC, votos DESC
+      LIMIT 10`, superId);
+
+  const MIN_VINOS = 4;
+  if (votados.length >= MIN_VINOS) {
+    return json({ comunidad: true, vinos: votados.map(v => ({
+      id: v.id, nombre: v.nombre, tipo: v.tipo, denominacion: v.denominacion, elaboracion: v.elaboracion, color: v.color,
+      imagen: v.imagen, precio: v.precio, media: Math.round(v.media * 10) / 10, votos: v.votos
+    })) }, 200, 60);
+  }
+
+  // Pocas valoraciones todavía: selección Vinotake (los que más veces son la mejor opción para un plato).
+  const seleccion = await conImagen(
+    `SELECT ${cols}, SUM(CASE WHEN m.orden <= 2 THEN 1 ELSE 0 END) AS destacados
+       FROM vinos v JOIN maridajes m ON m.vino_id = v.id
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+      WHERE v.activo = 1
+      GROUP BY v.id
+      ORDER BY destacados DESC, precio
+      LIMIT 8`, superId);
+  return json({ comunidad: false, vinos: seleccion.map(v => ({
+    id: v.id, nombre: v.nombre, tipo: v.tipo, denominacion: v.denominacion, elaboracion: v.elaboracion, color: v.color,
+    imagen: v.imagen, precio: v.precio, media: null, votos: 0
+  })) }, 200, 60);
 }
 
 // ---------- Mi bodega (por dispositivo, anónimo) ----------
@@ -608,7 +655,7 @@ async function gustosVer(env, dispositivo, superPedido) {
       .filter(x => x.s > 0)
       .sort((a, b) => b.s - a.s || a.v.precio - b.v.precio)
       .slice(0, 6)
-      .map(x => ({ id: x.v.id, nombre: x.v.nombre, precio: x.v.precio, color: x.v.color || '#3A2226', motivo: porQue(x.v, g) }));
+      .map(x => ({ id: x.v.id, nombre: x.v.nombre, tipo: x.v.tipo, precio: x.v.precio, color: x.v.color || '#3A2226', motivo: porQue(x.v, g) }));
   }
 
   return json({ preferencias: g.prefs, perfil: Object.assign({}, pf, { frases }), para_ti: paraTi });
