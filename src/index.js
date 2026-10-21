@@ -34,6 +34,9 @@ async function api(request, env, url) {
 
   if (method === 'POST' && path === '/api/cocinar') return cocinar(env, await body(request));
   if (method === 'GET' && path === '/api/buscar') return buscar(env, url.searchParams.get('q'), url.searchParams.get('super'));
+  if (method === 'GET' && path === '/api/perfil') return perfilVer(env, url.searchParams.get('d'));
+  if (method === 'POST' && path === '/api/perfil') return perfilGuardar(env, await body(request));
+  if (method === 'POST' && path === '/api/perfil/borrar') return perfilBorrar(env, await body(request));
   if (method === 'GET' && path === '/api/gustos') return gustosVer(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/gustos') return gustosGuardar(env, await body(request));
   if (method === 'GET' && path === '/api/bodega') return bodegaListar(env, url.searchParams.get('d'), url.searchParams.get('super'));
@@ -625,6 +628,58 @@ async function gustosGuardar(env, b) {
        presupuesto = excluded.presupuesto, dulce = excluded.dulce, actualizado = CURRENT_TIMESTAMP`
   ).bind(d, tipos.join(','), evitar.join(','), estilo, presupuesto, dulce).run();
   return json({ ok: true, preferencias: { tipos, evitar, estilo, presupuesto, dulce } });
+}
+
+// ---------- Perfil ----------
+async function perfilVer(env, dispositivo) {
+  const d = dispositivoValido(dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const p = await env.DB.prepare('SELECT nombre, super_id FROM perfiles WHERE dispositivo = ?').bind(d).first().catch(() => null);
+  const s = await env.DB.prepare(
+    `SELECT COALESCE(SUM(cantidad), 0) AS botellas,
+            COALESCE(SUM(CASE WHEN cantidad > 0 THEN 1 ELSE 0 END), 0) AS vinos_casa,
+            COALESCE(SUM(CASE WHEN deseo = 1 THEN 1 ELSE 0 END), 0) AS deseo,
+            COALESCE(SUM(CASE WHEN puntuacion IS NOT NULL THEN 1 ELSE 0 END), 0) AS probados,
+            AVG(puntuacion) AS media
+       FROM bodega WHERE dispositivo = ?`
+  ).bind(d).first().catch(() => null) || {};
+  return json({
+    nombre: p ? p.nombre || '' : '',
+    super_id: p ? p.super_id || null : null,
+    stats: {
+      botellas: s.botellas || 0, vinos_casa: s.vinos_casa || 0, deseo: s.deseo || 0, probados: s.probados || 0,
+      media: s.media ? Math.round(s.media * 10) / 10 : null
+    }
+  });
+}
+
+async function perfilGuardar(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const actual = await env.DB.prepare('SELECT nombre, super_id FROM perfiles WHERE dispositivo = ?').bind(d).first() || {};
+  const nombre = 'nombre' in b ? limpiar(b.nombre, 40) : (actual.nombre || '');
+  let superId = actual.super_id || null;
+  if ('super_id' in b) {
+    const s = b.super_id ? await env.DB.prepare('SELECT id FROM supermercados WHERE id = ?').bind(String(b.super_id)).first() : null;
+    superId = s ? s.id : null;
+  }
+  await env.DB.prepare(
+    `INSERT INTO perfiles (dispositivo, nombre, super_id) VALUES (?, ?, ?)
+     ON CONFLICT (dispositivo) DO UPDATE SET nombre = excluded.nombre, super_id = excluded.super_id, actualizado = CURRENT_TIMESTAMP`
+  ).bind(d, nombre || null, superId).run();
+  return json({ ok: true, nombre, super_id: superId });
+}
+
+// Borra todo lo guardado de este dispositivo (bodega, gustos y perfil).
+async function perfilBorrar(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM bodega WHERE dispositivo = ?').bind(d),
+    env.DB.prepare('DELETE FROM gustos WHERE dispositivo = ?').bind(d),
+    env.DB.prepare('DELETE FROM perfiles WHERE dispositivo = ?').bind(d)
+  ]);
+  return json({ ok: true });
 }
 
 // ---------- Utilidades ----------
