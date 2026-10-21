@@ -128,7 +128,7 @@
 
   <!-- 1 · INICIO -->
   <section class="screen" id="s-home" aria-label="Inicio">
-    <div class="proto">Versión en pruebas · los vinos y precios son de ejemplo</div>
+    <div class="proto">Versión en pruebas · precios aproximados</div>
     <div class="topbar">
       <div class="brand">
         <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FAF7F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2h8l-1 7a3 3 0 0 1-6 0z"/><path d="M12 12v8"/><path d="M8 22h8"/></svg></div>
@@ -221,7 +221,7 @@
     <div class="px" style="padding-top:16px" id="res-best"></div>
     <div class="px stack" style="padding-top:14px;gap:10px" id="res-alts"></div>
     <div class="px" style="padding-top:16px" id="res-save"></div>
-    <div class="px note" style="padding-top:16px">Precios orientativos de este súper. Puede haber ofertas en tienda.</div>
+    <div class="px note" style="padding-top:16px">Precios aproximados. Pueden variar según el súper y las ofertas.</div>
     <div class="px grid2" style="padding-top:16px;padding-bottom:calc(28px + var(--safe-b))">
       <button class="ghost" id="btn-retake">Otra foto</button>
       <button class="ghost" data-go="cena">Cambiar plato</button>
@@ -459,11 +459,11 @@
     var visual = (fromPhoto && state.photo)
       ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">'
       : '<div class="bottle" role="img" aria-label="Botella"><div style="width:18px;height:34px;background:#2A1B1E;border-radius:4px 4px 0 0"></div><div style="width:60px;height:22px;background:' + esc(w.color) + ';border-radius:30px 30px 0 0"></div><div style="width:60px;height:112px;background:' + esc(w.color) + ';border-radius:0 0 8px 8px;display:flex;align-items:center;justify-content:center"><div style="width:46px;height:52px;background:#F4EDE4;border-radius:3px"></div></div></div>';
-    var badge = fromPhoto ? 'Ejemplo de lectura' : (w.ejemplo ? 'Vino de ejemplo' : 'Ficha');
+    var badge = fromPhoto ? 'Ejemplo de lectura' : (w.ejemplo ? 'Vino de ejemplo' : 'Ficha del vino');
     var priceBlock = w.precio ? ('<div class="box" style="margin-top:12px;gap:10px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;color:var(--muted)">' + (w.precio.super ? 'En ' + esc(w.precio.super) : 'Precio orientativo') + '</span><span class="price">' + eur(w.precio.precio) + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;color:var(--muted)">' + (w.precio.super ? 'En ' + esc(w.precio.super) : 'Precio aproximado') + '</span><span class="price">' + eur(w.precio.precio) + '</span></div>' +
       (w.mas_barato ? '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #EFE8E0"><span style="font-size:14px;color:var(--green);font-weight:600">Más barato en ' + esc(w.mas_barato.super) + '</span><span style="font-size:15px;font-weight:600;color:var(--green)">' + eur(w.mas_barato.precio) + '</span></div>' : '') +
-      '<div class="note">Precios orientativos</div></div>') : '';
+      '<div class="note">Puede variar según el súper y las ofertas.</div></div>') : '';
     var sab = (w.sabor || w.temperatura || w.va_con.length) ? ('<div class="box">' +
         (w.sabor ? '<div><div class="label" style="margin-bottom:6px">Cómo sabe</div><div style="font-size:15px;line-height:1.5">' + esc(w.sabor) + '</div></div>' : '') +
         ((w.temperatura || w.apertura) ? '<div class="grid2" style="gap:10px"><div class="stat"><div class="k">Sírvelo a</div><div class="v">' + esc(w.temperatura || '—') + '</div></div><div class="stat"><div class="k">Ábrelo</div><div class="v">' + esc(w.apertura || '—') + '</div></div></div>' : '') +

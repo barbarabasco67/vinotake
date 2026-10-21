@@ -108,7 +108,7 @@ async function recomendar(env, b) {
 // ---------- Escanear botella (de momento devuelve un vino de ejemplo; aquí entrará la IA) ----------
 async function botella(env, b) {
   const superId = await superValido(env, b.super_id);
-  const vino = await env.DB.prepare('SELECT id FROM vinos WHERE activo = 1 ORDER BY ejemplo DESC, nombre LIMIT 1').first();
+  const vino = await env.DB.prepare('SELECT id FROM vinos WHERE activo = 1 ORDER BY RANDOM() LIMIT 1').first();
   if (!vino) return json({ error: 'Todavía no hay vinos en la base de datos.' }, 503);
   await env.DB.prepare(`INSERT INTO consultas (tipo, super_id, recomendado) VALUES ('botella', ?, ?)`).bind(superId, vino.id).run();
   return json({ vino_id: vino.id, leido_por_ia: false });
@@ -140,6 +140,35 @@ async function ficha(env, id, superPedido) {
   ).bind(superId, id).all()).results;
 
   const grupo = tipo => rel.filter(r => r.tipo === tipo).map(r => ({ id: r.id, nombre: r.nombre, nota: r.nota, precio: r.precio, patrocinado: !!r.patrocinado }));
+  const sugerencias = { misma: grupo('misma'), parecidos: grupo('parecido'), descubrir: grupo('descubrir') };
+
+  // Si no hay sugerencias puestas a mano, se calculan solas a partir del catálogo.
+  const precioEste = aqui ? aqui.precio : v.precio_ref;
+  const cols = `v.id, v.nombre, v.tipo, v.denominacion, v.elaboracion, v.uva, COALESCE(p.precio, v.precio_ref) AS precio`;
+  const joinPrecio = `LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?`;
+  if (!sugerencias.misma.length && v.bodega) {
+    sugerencias.misma = (await env.DB.prepare(
+      `SELECT ${cols} FROM vinos v ${joinPrecio} WHERE v.bodega = ? AND v.id != ? AND v.activo = 1 ORDER BY precio LIMIT 4`
+    ).bind(superId, v.bodega, id).all()).results.map(r => auto(r, [r.tipo, r.elaboracion].filter(Boolean).join(' · ') || r.denominacion));
+  }
+  if (!sugerencias.parecidos.length && precioEste) {
+    sugerencias.parecidos = (await env.DB.prepare(
+      `SELECT ${cols} FROM vinos v ${joinPrecio}
+        WHERE v.id != ? AND v.activo = 1 AND v.tipo = ? AND COALESCE(v.bodega, '') != COALESCE(?, '')
+          AND (v.uva = ? OR v.denominacion = ?) AND COALESCE(p.precio, v.precio_ref) < ?
+        ORDER BY precio DESC LIMIT 3`
+    ).bind(superId, id, v.tipo, v.bodega, v.uva, v.denominacion, precioEste).all()).results.map(r => auto(r, r.denominacion));
+  }
+  if (!sugerencias.descubrir.length && precioEste) {
+    const ya = new Set([id, ...sugerencias.misma.map(s => s.id), ...sugerencias.parecidos.map(s => s.id)]);
+    const cand = (await env.DB.prepare(
+      `SELECT ${cols} FROM vinos v ${joinPrecio}
+        WHERE v.id != ? AND v.activo = 1 AND v.tipo = ? AND v.denominacion != ?
+          AND COALESCE(p.precio, v.precio_ref) BETWEEN ? AND ?
+        ORDER BY ABS(COALESCE(p.precio, v.precio_ref) - ?) LIMIT 8`
+    ).bind(superId, id, v.tipo, v.denominacion || '', precioEste * 0.6, precioEste * 1.5, precioEste).all()).results;
+    sugerencias.descubrir = cand.filter(r => !ya.has(r.id)).slice(0, 3).map(r => auto(r, [r.uva, r.denominacion].filter(Boolean).join(' · ')));
+  }
 
   return json({
     id: v.id,
@@ -155,8 +184,12 @@ async function ficha(env, id, superPedido) {
     ejemplo: !!v.ejemplo,
     precio: aqui ? { super: aqui.super, precio: aqui.precio } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null),
     mas_barato: masBarato ? { super: masBarato.super, precio: masBarato.precio } : null,
-    sugerencias: { misma: grupo('misma'), parecidos: grupo('parecido'), descubrir: grupo('descubrir') }
+    sugerencias
   }, 200, 60);
+}
+
+function auto(r, nota) {
+  return { id: r.id, nombre: r.nombre, nota: nota || '', precio: r.precio, patrocinado: false };
 }
 
 // ---------- Qué vino abrió la persona tras la recomendación ----------
