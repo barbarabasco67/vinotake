@@ -175,16 +175,16 @@
       <button class="iconbtn" aria-label="Perfil" data-soon="Perfil"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
     </div>
     <div class="px" style="padding-top:24px">
-      <h1 style="font-size:32px;line-height:1.1">¿Qué vino coges hoy?</h1>
-      <p class="lead">Dime qué vas a comer y te digo qué botella elegir de la estantería.</p>
+      <h1 style="font-size:32px;line-height:1.1">Tu sumiller de bolsillo</h1>
+      <p class="lead">Te ayudo a elegir vino en el súper, en casa o cuando te lo regalan.</p>
     </div>
     <div class="px stack" style="padding-top:24px">
       <button class="hero" data-go="cena">
         <span style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h18"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 4v3"/><path d="M9 5l1 2"/><path d="M15 5l-1 2"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
           <span class="pill">Lo más usado</span>
         </span>
-        <span><span class="t" style="display:block">Voy a cenar esto</span><span class="s" style="display:block">Te digo qué vino coger y cuánto gastar</span></span>
+        <span><span class="t" style="display:block">¿Qué vino me llevo?</span><span class="s" style="display:block">Estás comprando: dime para qué es y te digo cuál coger</span></span>
       </button>
       <button class="row-card" id="btn-scan-bottle">
         <span class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8C1D40" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3"/><path d="M16 4h3a1 1 0 0 1 1 1v3"/><path d="M20 16v3a1 1 0 0 1-1 1h-3"/><path d="M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M10 7h4v3l1 2v5h-6v-5l1-2z"/></svg></span>
@@ -219,17 +219,16 @@
   <!-- 2 · QUÉ VAS A CENAR -->
   <section class="screen" id="s-cena" aria-label="Qué vas a cenar">
     <div class="topbar"><button class="iconbtn plain" data-back aria-label="Volver"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
-    <div class="px" style="padding-top:8px"><h1 style="font-size:28px;line-height:1.15">¿Qué vas a cenar?</h1></div>
+    <div class="px" style="padding-top:8px"><h1 style="font-size:28px;line-height:1.15">¿Para qué es el vino?</h1><p class="lead">Una comida, un regalo, un brindis… y tu presupuesto.</p></div>
     <div class="px" style="padding-top:18px">
       <label class="label" for="plato">Escríbelo como quieras</label>
       <div class="field">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8C1D40" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-        <input id="plato" type="text" placeholder="Ej.: lentejas con chorizo" autocomplete="off" enterkeyhint="done">
+        <input id="plato" type="text" placeholder="Ej.: cena con amigos, paella…" autocomplete="off" enterkeyhint="done">
       </div>
     </div>
     <div class="px" style="padding-top:18px">
-      <span class="label">O elige uno rápido</span>
-      <div class="chips" id="chips-plato"></div>
+      <div id="chips-plato"></div>
     </div>
     <div class="px" style="padding-top:22px">
       <span class="label">¿Cuánto quieres gastar?</span>
@@ -451,7 +450,6 @@
       state.platos = d.platos || [];
       state.supers = d.supers || [];
       state.presupuestos = d.presupuestos || [];
-      if (!state.platoId && state.platos[0]) state.platoId = state.platos[0].id;
       var guardado = store('super');
       state.superId = (guardado && superNombre(guardado)) ? guardado : (state.supers[0] ? state.supers[0].id : null);
       pintarSupers();
@@ -474,11 +472,18 @@
 
   // ---------- Pantalla 2: chips ----------
   function renderChips(){
-    $('#chips-plato').innerHTML = state.platos.map(function(p){
-      var on = p.id === state.platoId;
-      return '<button class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-plato="' + esc(p.id) + '">' + esc(p.nombre) + '</button>';
-    }).join('');
-    $('#chips-cocinar').innerHTML = state.platos.map(function(p){
+    function chipsDe(lista){
+      return lista.map(function(p){
+        var on = p.id === state.platoId;
+        return '<button class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-plato="' + esc(p.id) + '">' + esc(p.nombre) + '</button>';
+      }).join('');
+    }
+    var ocasiones = state.platos.filter(function(p){ return p.tipo === 'ocasion'; });
+    var comidas = state.platos.filter(function(p){ return p.tipo !== 'ocasion'; });
+    $('#chips-plato').innerHTML =
+      (ocasiones.length ? '<span class="label">Para una ocasión</span><div class="chips" style="margin-bottom:16px">' + chipsDe(ocasiones) + '</div>' : '') +
+      '<span class="label">' + (ocasiones.length ? 'Para acompañar una comida' : 'O elige uno rápido') + '</span><div class="chips">' + chipsDe(comidas) + '</div>';
+    $('#chips-cocinar').innerHTML = state.platos.filter(function(p){ return p.tipo !== 'ocasion'; }).map(function(p){
       var on = p.id === state.cocinaPlato;
       return '<button class="chip' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-cplato="' + esc(p.id) + '">' + esc(p.nombre) + '</button>';
     }).join('');
@@ -592,7 +597,7 @@
     $('#res-visual').innerHTML = state.photo
       ? '<div class="photo"><img src="' + state.photo + '" alt="Tu foto de la estantería"><div class="tag">' + esc(textoFoto(d)) + '</div></div>'
       : shelfHTML();
-    $('#res-title').innerHTML = esc('Para tu ' + d.plato.nombre.toLowerCase() + ', coge este') +
+    $('#res-title').innerHTML = esc((d.plato.tipo === 'ocasion' ? d.plato.nombre : 'Para acompañar ' + d.plato.nombre.toLowerCase()) + ', coge este') +
       (d.personalizado ? '<br><span class="personal">' + estrellaSVG(true, 14) + 'Elegido según tus gustos</span>' : '');
     var aviso = d.fuera_presupuesto
       ? '<div class="note" style="margin-top:-4px;margin-bottom:10px">No hay ninguno en tu presupuesto; este es el más ajustado.</div>' : '';
@@ -810,7 +815,7 @@
 
   function renderCocinar(d){
     var plato = d.plato.nombre.toLowerCase();
-    $('#coc-title').textContent = 'Para tu ' + plato;
+    $('#coc-title').textContent = 'Para acompañar ' + plato;
     if (d.en_casa.length){
       $('#coc-casa').innerHTML = d.en_casa.map(function(v, i){
         return '<button class="' + (i === 0 ? 'best' : 'alt') + '" data-wine="' + esc(v.id) + '">' +

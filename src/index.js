@@ -49,7 +49,8 @@ async function api(request, env, url) {
 async function inicio(env) {
   const [supers, platos] = await Promise.all([
     env.DB.prepare('SELECT id, nombre FROM supermercados ORDER BY orden, nombre').all(),
-    env.DB.prepare('SELECT id, nombre FROM platos ORDER BY orden, nombre').all()
+    env.DB.prepare("SELECT id, nombre, COALESCE(tipo, 'plato') AS tipo FROM platos ORDER BY orden, nombre").all()
+      .catch(() => env.DB.prepare('SELECT id, nombre FROM platos ORDER BY orden, nombre').all())
   ]);
   return json({
     supers: supers.results,
@@ -120,8 +121,12 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
   let plato = null;
   if (texto) plato = await platoPorTexto(env, texto);
   if (!plato && b.plato_id) plato = await env.DB.prepare('SELECT id, nombre FROM platos WHERE id = ?').bind(String(b.plato_id)).first();
+  // Si no reconoce lo que ha escrito, mejor vinos para compartir que suponer un plato.
+  if (!plato) plato = await env.DB.prepare("SELECT id, nombre FROM platos WHERE id = 'compartir'").first().catch(() => null);
   if (!plato) plato = await env.DB.prepare('SELECT id, nombre FROM platos ORDER BY orden LIMIT 1').first();
   if (!plato) return json({ error: 'Todavía no hay platos en la base de datos.' }, 503);
+  const tipoPlato = await env.DB.prepare("SELECT COALESCE(tipo, 'plato') AS tipo FROM platos WHERE id = ?").bind(plato.id).first().catch(() => null);
+  plato.tipo = tipoPlato ? tipoPlato.tipo : 'plato';
 
   const { results } = await env.DB.prepare(
     `SELECT v.id, v.nombre, v.tipo, v.denominacion, v.uva, v.estilo, v.dulce, m.orden, m.motivo, m.nota,
