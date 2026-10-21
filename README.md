@@ -1,5 +1,5 @@
-# Sommelier del súper
+# Vinotake
 
-Prototipo web para móvil: dime qué vas a cenar y te digo qué vino coger del súper.
+App web para móvil: dime qué vas a cenar y te digo qué vino coger del súper.
 
-Se publica en Cloudflare (vino.picfy.es) automáticamente con cada cambio en `main`.
+Se publica en Cloudflare automáticamente con cada cambio en `main`.

@@ -1,6 +1,6 @@
 {
-  "name": "Sommelier del súper",
-  "short_name": "Sommelier",
+  "name": "Vinotake",
+  "short_name": "Vinotake",
   "description": "Dime qué vas a cenar y te digo qué vino coger del súper.",
   "lang": "es",
   "start_url": "./#home",
