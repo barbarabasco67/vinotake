@@ -133,7 +133,7 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
   plato.tipo = tipoPlato ? tipoPlato.tipo : 'plato';
 
   const { results } = await env.DB.prepare(
-    `SELECT v.id, v.nombre, v.tipo, v.denominacion, v.uva, v.estilo, v.dulce, m.orden, m.motivo, m.nota,
+    `SELECT v.id, v.nombre, v.tipo, v.denominacion, v.uva, v.estilo, v.dulce, v.color, m.orden, m.motivo, m.nota,
             COALESCE(p.precio, v.precio_ref) AS precio
        FROM maridajes m
        JOIN vinos v ON v.id = m.vino_id AND v.activo = 1
@@ -187,8 +187,8 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
     fuera_presupuesto: dentro.length === 0,
     en_foto: enFoto,
     personalizado: !!tieneGustos && !!original && mejor.id !== original.id,
-    mejor: { id: mejor.id, nombre: mejor.nombre, tipo: mejor.tipo, denominacion: mejor.denominacion, precio: mejor.precio, motivo: mejor.motivo },
-    alternativas: alternativas.map(a => ({ id: a.id, nombre: a.nombre, precio: a.precio, nota: a.nota })),
+    mejor: { id: mejor.id, nombre: mejor.nombre, tipo: mejor.tipo, denominacion: mejor.denominacion, color: mejor.color, precio: mejor.precio, motivo: mejor.motivo },
+    alternativas: alternativas.map(a => ({ id: a.id, nombre: a.nombre, tipo: a.tipo, color: a.color, precio: a.precio, nota: a.nota })),
     ahorro
   };
 }
@@ -250,7 +250,7 @@ Responde SOLO con este JSON, sin texto alrededor:
   let parecidos = [];
   if (fuera.tipo) {
     parecidos = (await env.DB.prepare(
-      `SELECT v.id, v.nombre, v.denominacion, COALESCE(p.precio, v.precio_ref) AS precio
+      `SELECT v.id, v.nombre, v.tipo, v.color, v.denominacion, COALESCE(p.precio, v.precio_ref) AS precio
          FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
         WHERE v.activo = 1 AND v.tipo = ?
         ORDER BY CASE WHEN v.denominacion = ? THEN 0 WHEN v.uva = ? THEN 1 ELSE 2 END, precio
@@ -316,7 +316,7 @@ async function ficha(env, id, superPedido) {
   const masBarato = precios.find(p => p.super_id !== superId && (!aqui || p.precio < aqui.precio)) || null;
 
   const rel = (await env.DB.prepare(
-    `SELECT r.tipo, r.nota, r.patrocinado, v.id, v.nombre,
+    `SELECT r.tipo, r.nota, r.patrocinado, v.id, v.nombre, v.tipo AS vtipo, v.color,
             COALESCE(p.precio, v.precio_ref) AS precio
        FROM relacionados r
        JOIN vinos v ON v.id = r.rel_id AND v.activo = 1
@@ -330,12 +330,12 @@ async function ficha(env, id, superPedido) {
       WHERE m.vino_id = ? ORDER BY m.orden, pl.orden LIMIT 6`
   ).bind(id).all()).results.map(r => ({ id: r.id, nombre: r.nombre, motivo: r.motivo, ideal: r.orden <= 2 }));
 
-  const grupo = tipo => rel.filter(r => r.tipo === tipo).map(r => ({ id: r.id, nombre: r.nombre, nota: r.nota, precio: r.precio, patrocinado: !!r.patrocinado }));
+  const grupo = tipo => rel.filter(r => r.tipo === tipo).map(r => ({ id: r.id, nombre: r.nombre, nota: r.nota, precio: r.precio, patrocinado: !!r.patrocinado, tipo: r.vtipo, color: r.color }));
   const sugerencias = { misma: grupo('misma'), parecidos: grupo('parecido'), descubrir: grupo('descubrir') };
 
   // Si no hay sugerencias puestas a mano, se calculan solas a partir del catálogo.
   const precioEste = aqui ? aqui.precio : v.precio_ref;
-  const cols = `v.id, v.nombre, v.tipo, v.denominacion, v.elaboracion, v.uva, COALESCE(p.precio, v.precio_ref) AS precio`;
+  const cols = `v.id, v.nombre, v.tipo, v.denominacion, v.elaboracion, v.uva, v.color, COALESCE(p.precio, v.precio_ref) AS precio`;
   const joinPrecio = `LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?`;
   if (!sugerencias.misma.length && v.bodega) {
     sugerencias.misma = (await env.DB.prepare(
@@ -384,7 +384,7 @@ async function ficha(env, id, superPedido) {
 }
 
 function auto(r, nota) {
-  return { id: r.id, nombre: r.nombre, nota: nota || '', precio: r.precio, patrocinado: false };
+  return { id: r.id, nombre: r.nombre, nota: nota || '', precio: r.precio, patrocinado: false, tipo: r.tipo || null, color: r.color || null };
 }
 
 // ---------- Qué vino abrió la persona tras la recomendación ----------
