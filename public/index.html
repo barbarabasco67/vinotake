@@ -145,6 +145,13 @@
   .stars button{width:44px;height:44px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
   .bodnota{width:100%;min-height:72px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:15px;color:var(--ink);background:var(--card);resize:vertical}
   .iconbtn.on{background:var(--wine-soft);border-color:var(--wine);color:var(--wine)}
+  .gq{display:flex;flex-direction:column;gap:10px}
+  .gq + .gq{padding-top:16px;border-top:1px solid #EFE8E0}
+  .gq .lbl{font-weight:600;font-size:15px}
+  .chip.no{background:#F7E9E4;border-color:#C2412D;color:#8F2B1C;font-weight:600}
+  .perfil-li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45}
+  .perfil-li svg{flex-shrink:0;margin-top:2px}
+  .personal{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;font-weight:600;color:var(--wine-dark);background:var(--wine-soft);padding:6px 10px;border-radius:999px}
 </style>
 </head>
 <body>
@@ -198,7 +205,7 @@
     <nav class="tabbar" aria-label="Navegación principal">
       <button class="tab on" aria-current="page" data-go="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
       <button class="tab" data-go="bodega"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg>Mi bodega</button>
-      <button class="tab" data-soon="Mis gustos"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Mis gustos</button>
+      <button class="tab" data-go="gustos"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Mis gustos</button>
     </nav>
   </section>
 
@@ -261,6 +268,25 @@
     <div id="ficha-body"></div>
   </section>
 
+  <!-- 6 · MIS GUSTOS -->
+  <section class="screen" id="s-gustos" aria-label="Mis gustos">
+    <div class="px" style="padding-top:28px">
+      <h1 style="font-size:30px;line-height:1.1">Mis gustos</h1>
+      <p class="lead" style="margin-top:6px">Cuanto más nos cuentes y más vinos puntúes, mejor acertamos.</p>
+    </div>
+    <div class="px" style="padding-top:18px"><div class="box" id="gus-perfil"></div></div>
+    <div class="px" style="padding-top:26px"><h2 style="font-size:22px">Para ti</h2></div>
+    <div class="px stack" style="padding-top:12px;gap:10px" id="gus-parati"></div>
+    <div class="px" style="padding-top:26px"><h2 style="font-size:22px">Cuéntanos qué te gusta</h2><p class="note" style="margin:6px 0 0">Se guarda solo al tocar.</p></div>
+    <div class="px" style="padding-top:14px"><div class="box" id="gus-form"></div></div>
+    <div class="spacer"></div>
+    <nav class="tabbar" aria-label="Navegación principal">
+      <button class="tab" data-go="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+      <button class="tab" data-go="bodega"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg>Mi bodega</button>
+      <button class="tab on" aria-current="page" data-go="gustos"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Mis gustos</button>
+    </nav>
+  </section>
+
   <!-- 5 · MI BODEGA -->
   <section class="screen" id="s-bodega" aria-label="Mi bodega">
     <div class="px" style="padding-top:28px">
@@ -279,7 +305,7 @@
     <nav class="tabbar" aria-label="Navegación principal">
       <button class="tab" data-go="home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
       <button class="tab on" aria-current="page" data-go="bodega"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12h18"/><path d="M9 4v16"/><path d="M15 4v16"/></svg>Mi bodega</button>
-      <button class="tab" data-soon="Mis gustos"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Mis gustos</button>
+      <button class="tab" data-go="gustos"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>Mis gustos</button>
     </nav>
   </section>
 
@@ -339,6 +365,7 @@
   function show(name, push){
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
     var el = document.getElementById('s-' + name) || document.getElementById('s-home');
+    if (name === 'gustos' && typeof cargarGustosPantalla === 'function') cargarGustosPantalla();
     el.classList.add('active');
     window.scrollTo(0, 0);
     if (push !== false) history.pushState({s:name}, '', '#' + name);
@@ -459,7 +486,8 @@
       plato_texto: $('#plato').value.trim(),
       plato_id: state.platoId,
       presupuesto: state.presupuesto,
-      super_id: state.superId
+      super_id: state.superId,
+      dispositivo: state.dispositivo
     };
     if (imagen) datos.imagen = imagen;
     return api(imagen ? '/api/estanteria' : '/api/recomendar', datos).then(function(d){
@@ -493,7 +521,8 @@
     $('#res-visual').innerHTML = state.photo
       ? '<div class="photo"><img src="' + state.photo + '" alt="Tu foto de la estantería"><div class="tag">' + esc(textoFoto(d)) + '</div></div>'
       : shelfHTML();
-    $('#res-title').textContent = 'Para tu ' + d.plato.nombre.toLowerCase() + ', coge este';
+    $('#res-title').innerHTML = esc('Para tu ' + d.plato.nombre.toLowerCase() + ', coge este') +
+      (d.personalizado ? '<br><span class="personal">' + estrellaSVG(true, 14) + 'Elegido según tus gustos</span>' : '');
     var aviso = d.fuera_presupuesto
       ? '<div class="note" style="margin-top:-4px;margin-bottom:10px">No hay ninguno en tu presupuesto; este es el más ajustado.</div>' : '';
     $('#res-best').innerHTML = aviso +
@@ -684,6 +713,88 @@
     state.bodTab = b.getAttribute('data-bodtab'); renderBodega();
   });
 
+  // ---------- Mis gustos ----------
+  state.prefs = { tipos: [], evitar: [], estilo: null, presupuesto: null, dulce: null };
+  var TIPOS_G = [['Tinto','Tintos'],['Blanco','Blancos'],['Rosado','Rosados'],['Espumoso','Cavas'],['Generoso','Finos y manzanillas']];
+  var ESTILOS_G = [['suave','Suaves y afrutados'],['equilibrado','Equilibrados'],['intenso','Intensos y con cuerpo']];
+
+  function cargarGustosPantalla(){
+    return api('/api/gustos?d=' + encodeURIComponent(state.dispositivo) + '&super=' + encodeURIComponent(state.superId || ''))
+      .then(function(d){ state.prefs = d.preferencias; renderGustos(d); })
+      .catch(function(err){ toast(err.message); });
+  }
+
+  function chipG(attr, val, txt, clase){
+    var on = clase !== '';
+    return '<button type="button" class="chip' + (clase ? ' ' + clase : '') + '" aria-pressed="' + on + '" ' + attr + '="' + esc(val) + '">' + esc(txt) + '</button>';
+  }
+
+  function renderGustos(d){
+    var pf = d.perfil || {};
+    var ico = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8C1D40" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+    var stats = '<div class="grid2" style="gap:10px"><div class="stat"><div class="k">Vinos puntuados</div><div class="v">' + (pf.puntuados || 0) + '</div></div>' +
+      '<div class="stat"><div class="k">Tu media</div><div class="v">' + (pf.media ? String(pf.media).replace('.', ',') + ' ★' : '—') + '</div></div></div>';
+    $('#gus-perfil').innerHTML = '<div class="label" style="margin-bottom:0">Tu perfil</div>' +
+      (pf.frases && pf.frases.length
+        ? pf.frases.map(function(f){ return '<div class="perfil-li">' + ico + '<span>' + esc(f) + '</span></div>'; }).join('')
+        : '<div style="font-size:15px;line-height:1.5">Puntúa al menos 2 vinos en Mi bodega y aquí verás qué te gusta. Mientras, cuéntanos abajo tus preferencias.</div>') +
+      stats;
+
+    $('#gus-parati').innerHTML = (d.para_ti && d.para_ti.length)
+      ? d.para_ti.map(function(v){
+          return '<button class="bcard" data-wine="' + esc(v.id) + '"><span class="mini-bot" style="background:' + esc(v.color) + '" aria-hidden="true"></span>' +
+            '<span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span><span class="s" style="display:block">' + esc(v.motivo) + '</span></span>' +
+            '<span class="meta"><span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span></span></button>';
+        }).join('')
+      : '<div class="empty">Cuéntanos qué te gusta o puntúa algún vino y aquí te propondremos otros que encajen contigo.</div>';
+    renderFormGustos();
+  }
+
+  function renderFormGustos(){
+    var p = state.prefs;
+    var gusta = TIPOS_G.map(function(t){ return chipG('data-gusta', t[0], t[1], p.tipos.indexOf(t[0]) > -1 ? 'on' : ''); }).join('');
+    var evita = TIPOS_G.map(function(t){ return chipG('data-evita', t[0], t[1], p.evitar.indexOf(t[0]) > -1 ? 'no' : ''); }).join('');
+    var estilo = ESTILOS_G.map(function(t){ return chipG('data-estilo', t[0], t[1], p.estilo === t[0] ? 'on' : ''); }).join('');
+    var presu = state.presupuestos.map(function(t){ return chipG('data-gpresu', t.id, t.nombre, p.presupuesto === t.id ? 'on' : ''); }).join('');
+    var dulce = [['1','Sí'],['0','No'],['','Me da igual']].map(function(t){
+      var val = t[0] === '' ? null : Number(t[0]);
+      return chipG('data-dulce', t[0], t[1], p.dulce === val ? 'on' : '');
+    }).join('');
+    $('#gus-form').innerHTML =
+      '<div class="gq"><span class="lbl">Me gustan</span><div class="chips">' + gusta + '</div></div>' +
+      '<div class="gq"><span class="lbl">Mejor no me recomiendes</span><div class="chips">' + evita + '</div></div>' +
+      '<div class="gq"><span class="lbl">Los prefiero</span><div class="chips">' + estilo + '</div></div>' +
+      '<div class="gq"><span class="lbl">Suelo gastar</span><div class="chips">' + presu + '</div></div>' +
+      '<div class="gq"><span class="lbl">¿Te gustan los vinos dulces?</span><div class="chips">' + dulce + '</div></div>';
+  }
+
+  function quitar(arr, v){ return arr.filter(function(x){ return x !== v; }); }
+  var guardarTimer;
+  $('#gus-form').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    var p = state.prefs;
+    if (b.hasAttribute('data-gusta')){ var t = b.getAttribute('data-gusta'); p.tipos = p.tipos.indexOf(t) > -1 ? quitar(p.tipos, t) : p.tipos.concat(t); p.evitar = quitar(p.evitar, t); }
+    else if (b.hasAttribute('data-evita')){ var t2 = b.getAttribute('data-evita'); p.evitar = p.evitar.indexOf(t2) > -1 ? quitar(p.evitar, t2) : p.evitar.concat(t2); p.tipos = quitar(p.tipos, t2); }
+    else if (b.hasAttribute('data-estilo')){ var e2 = b.getAttribute('data-estilo'); p.estilo = p.estilo === e2 ? null : e2; }
+    else if (b.hasAttribute('data-gpresu')){ var pr = b.getAttribute('data-gpresu'); p.presupuesto = p.presupuesto === pr ? null : pr; if (p.presupuesto){ state.presupuesto = p.presupuesto; renderChips(); } }
+    else if (b.hasAttribute('data-dulce')){ var dv = b.getAttribute('data-dulce'); p.dulce = dv === '' ? null : Number(dv); }
+    else return;
+    renderFormGustos();
+    clearTimeout(guardarTimer);
+    guardarTimer = setTimeout(function(){
+      api('/api/gustos', { dispositivo: state.dispositivo, tipos: p.tipos, evitar: p.evitar, estilo: p.estilo, presupuesto: p.presupuesto, dulce: p.dulce })
+        .then(function(){ return cargarGustosPantalla(); })
+        .catch(function(err){ toast(err.message); });
+    }, 500);
+  });
+
+  function cargarPrefsInicio(){
+    return api('/api/gustos?d=' + encodeURIComponent(state.dispositivo)).then(function(d){
+      state.prefs = d.preferencias;
+      if (state.prefs.presupuesto){ state.presupuesto = state.prefs.presupuesto; renderChips(); }
+    }).catch(function(){});
+  }
+
   function renderBodega(){
     var todos = Object.keys(state.bodega).map(function(k){ return state.bodega[k]; });
     var grupos = {
@@ -728,7 +839,7 @@
   // ---------- Inicio ----------
   history.replaceState({s:'home'}, '', '#home');
   show('home', false);
-  cargarInicio().then(cargarBodega).catch(function(err){ toast(err.message); });
+  cargarInicio().then(function(){ return Promise.all([cargarBodega(), cargarPrefsInicio()]); }).catch(function(err){ toast(err.message); });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });

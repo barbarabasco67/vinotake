@@ -32,6 +32,8 @@ async function api(request, env, url) {
   let m = path.match(/^\/api\/vino\/([a-z0-9-]+)$/);
   if (method === 'GET' && m) return ficha(env, m[1], url.searchParams.get('super'));
 
+  if (method === 'GET' && path === '/api/gustos') return gustosVer(env, url.searchParams.get('d'), url.searchParams.get('super'));
+  if (method === 'POST' && path === '/api/gustos') return gustosGuardar(env, await body(request));
   if (method === 'GET' && path === '/api/bodega') return bodegaListar(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/bodega') return bodegaGuardar(env, await body(request));
 
@@ -120,7 +122,7 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
   if (!plato) return json({ error: 'Todavía no hay platos en la base de datos.' }, 503);
 
   const { results } = await env.DB.prepare(
-    `SELECT v.id, v.nombre, v.tipo, v.denominacion, m.orden, m.motivo, m.nota,
+    `SELECT v.id, v.nombre, v.tipo, v.denominacion, v.uva, v.estilo, v.dulce, m.orden, m.motivo, m.nota,
             COALESCE(p.precio, v.precio_ref) AS precio
        FROM maridajes m
        JOIN vinos v ON v.id = m.vino_id AND v.activo = 1
@@ -141,6 +143,16 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
 
   // Dentro del presupuesto primero, respetando el orden de mejor a peor maridaje.
   // Fuera del presupuesto, los más cercanos al límite primero.
+  // Con gustos guardados, se reordena según la persona (siempre entre vinos que van con el plato).
+  const g = await cargarGustos(env, dispositivoValido(b.dispositivo));
+  const tieneGustos = g.prefs.tipos.length || g.prefs.evitar.length || g.prefs.estilo || g.prefs.dulce !== null || g.perfil && g.perfil.puntuados;
+  const enPresupuesto = v => max === null || v.precio <= max;
+  const primero = l => l.find(enPresupuesto) || l.slice().sort((a, b2) => a.precio - b2.precio)[0];
+  const original = primero(lista);
+  if (tieneGustos) {
+    lista = lista.map((v, i) => ({ v, k: i - 1.5 * afinidad(v, g) })).sort((a, b2) => a.k - b2.k).map(x => x.v);
+  }
+
   const dentro = lista.filter(v => max === null || v.precio <= max);
   const fuera = lista.filter(v => !(max === null || v.precio <= max)).sort((a, b2) => a.precio - b2.precio);
   const orden = dentro.concat(fuera);
@@ -163,6 +175,7 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
     super_id: superId,
     fuera_presupuesto: dentro.length === 0,
     en_foto: enFoto,
+    personalizado: !!tieneGustos && !!original && mejor.id !== original.id,
     mejor: { id: mejor.id, nombre: mejor.nombre, tipo: mejor.tipo, denominacion: mejor.denominacion, precio: mejor.precio, motivo: mejor.motivo },
     alternativas: alternativas.map(a => ({ id: a.id, nombre: a.nombre, precio: a.precio, nota: a.nota })),
     ahorro
@@ -419,6 +432,139 @@ async function bodegaGuardar(env, b) {
     ).bind(d, vinoId, nuevo.cantidad, nuevo.deseo, nuevo.puntuacion, nuevo.nota || null).run();
   }
   return json({ ok: true, vino_id: vinoId, cantidad: nuevo.cantidad, deseo: !!nuevo.deseo, puntuacion: nuevo.puntuacion, nota: nuevo.nota || '' });
+}
+
+// ---------- Mis gustos ----------
+const TIPOS = ['Tinto', 'Blanco', 'Rosado', 'Espumoso', 'Generoso'];
+const ESTILOS = ['suave', 'equilibrado', 'intenso'];
+
+function lista(csv) {
+  return String(csv || '').split(',').map(s => s.trim()).filter(s => TIPOS.includes(s));
+}
+
+// Preferencias declaradas + lo aprendido de las estrellas de Mi bodega.
+async function cargarGustos(env, d) {
+  const vacio = { prefs: { tipos: [], evitar: [], estilo: null, presupuesto: null, dulce: null }, puntuados: {}, perfil: null };
+  if (!d) return vacio;
+  const [g, rated] = await Promise.all([
+    env.DB.prepare('SELECT tipos, evitar, estilo, presupuesto, dulce FROM gustos WHERE dispositivo = ?').bind(d).first().catch(() => null),
+    env.DB.prepare(
+      `SELECT b.vino_id, b.puntuacion, v.tipo, v.denominacion, v.uva, v.estilo, v.precio_ref
+         FROM bodega b JOIN vinos v ON v.id = b.vino_id
+        WHERE b.dispositivo = ? AND b.puntuacion IS NOT NULL`
+    ).bind(d).all().then(r => r.results).catch(() => [])
+  ]);
+  const prefs = g ? {
+    tipos: lista(g.tipos), evitar: lista(g.evitar),
+    estilo: ESTILOS.includes(g.estilo) ? g.estilo : null,
+    presupuesto: PRESUPUESTOS[g.presupuesto] ? g.presupuesto : null,
+    dulce: g.dulce === null || g.dulce === undefined ? null : (g.dulce ? 1 : 0)
+  } : vacio.prefs;
+
+  const puntuados = {};
+  rated.forEach(r => { puntuados[r.vino_id] = r.puntuacion; });
+
+  const gustan = rated.filter(r => r.puntuacion >= 4);
+  const top = (campo) => {
+    const n = {};
+    gustan.forEach(r => { if (r[campo]) n[r[campo]] = (n[r[campo]] || 0) + 1; });
+    const orden = Object.entries(n).sort((a, b) => b[1] - a[1]);
+    return orden.length ? orden[0][0] : null;
+  };
+  const perfil = {
+    puntuados: rated.length,
+    media: rated.length ? Math.round(rated.reduce((s, r) => s + r.puntuacion, 0) / rated.length * 10) / 10 : null,
+    tipo: top('tipo'), denominacion: top('denominacion'), uva: top('uva'), estilo: top('estilo'),
+    precio_medio: gustan.length ? redondear(gustan.reduce((s, r) => s + (r.precio_ref || 0), 0) / gustan.length) : null
+  };
+  return { prefs, puntuados, perfil };
+}
+
+// Cuánto encaja un vino con la persona (positivo = le pega, negativo = mejor evitar).
+function afinidad(v, g) {
+  if (!g) return 0;
+  const p = g.prefs, pf = g.perfil || {};
+  let s = 0;
+  if (p.tipos.length && p.tipos.includes(v.tipo)) s += 1;
+  if (p.evitar.includes(v.tipo)) s -= 3;
+  if (p.estilo && v.estilo === p.estilo) s += 1;
+  if (p.dulce === 0 && v.dulce) s -= 2;
+  if (p.dulce === 1 && v.dulce) s += 1;
+  const nota = g.puntuados[v.id];
+  if (nota >= 4) s += 1.5;
+  if (nota && nota <= 2) s -= 3;
+  if (pf.tipo && v.tipo === pf.tipo) s += 0.5;
+  if (pf.denominacion && v.denominacion === pf.denominacion) s += 0.5;
+  if (pf.uva && v.uva === pf.uva) s += 0.5;
+  if (pf.estilo && v.estilo === pf.estilo) s += 0.5;
+  return s;
+}
+
+function porQue(v, g) {
+  const p = g.prefs, pf = g.perfil || {};
+  if (pf.denominacion && v.denominacion === pf.denominacion) return 'De ' + v.denominacion + ', tu zona favorita';
+  if (p.estilo && v.estilo === p.estilo && (!p.tipos.length || p.tipos.includes(v.tipo)))
+    return v.tipo + ' ' + ({ suave: 'suave', equilibrado: 'equilibrado', intenso: 'intenso' })[p.estilo] + ', como te gusta';
+  if (pf.uva && v.uva === pf.uva) return 'De ' + v.uva + ', la uva que más te gusta';
+  if (p.tipos.includes(v.tipo)) return 'Te gustan los ' + plural(v.tipo);
+  return [v.tipo, v.denominacion].filter(Boolean).join(' · ');
+}
+
+function plural(tipo) {
+  return ({ Tinto: 'tintos', Blanco: 'blancos', Rosado: 'rosados', Espumoso: 'espumosos', Generoso: 'generosos' })[tipo] || String(tipo || '').toLowerCase();
+}
+
+async function gustosVer(env, dispositivo, superPedido) {
+  const d = dispositivoValido(dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const superId = await superValido(env, superPedido);
+  const g = await cargarGustos(env, d);
+
+  const frases = [];
+  const pf = g.perfil;
+  if (pf.puntuados >= 2) {
+    if (pf.tipo) frases.push('Te gustan sobre todo los ' + plural(pf.tipo) + (pf.estilo ? ' ' + ({ suave: 'suaves', equilibrado: 'equilibrados', intenso: 'intensos' })[pf.estilo] : '') + '.');
+    if (pf.denominacion) frases.push('Tu zona favorita: ' + pf.denominacion + '.');
+    if (pf.uva) frases.push('Tu uva: ' + pf.uva + '.');
+    if (pf.precio_medio) frases.push('Los que más te gustan cuestan de media unos ' + String(pf.precio_medio).replace('.', ',') + ' €.');
+  }
+
+  const hayAlgo = g.prefs.tipos.length || g.prefs.estilo || g.prefs.evitar.length || g.prefs.dulce !== null || pf.puntuados > 0;
+  let paraTi = [];
+  if (hayAlgo) {
+    const enBodega = new Set((await env.DB.prepare('SELECT vino_id FROM bodega WHERE dispositivo = ?').bind(d).all()).results.map(r => r.vino_id));
+    const max = g.prefs.presupuesto ? PRESUPUESTOS[g.prefs.presupuesto].max : null;
+    const todos = (await env.DB.prepare(
+      `SELECT v.id, v.nombre, v.tipo, v.denominacion, v.uva, v.estilo, v.dulce, v.color, COALESCE(p.precio, v.precio_ref) AS precio
+         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+        WHERE v.activo = 1`
+    ).bind(superId).all()).results;
+    paraTi = todos
+      .filter(v => !enBodega.has(v.id))
+      .map(v => ({ v, s: afinidad(v, g) - (max !== null && v.precio > max ? 1 : 0) }))
+      .filter(x => x.s > 0)
+      .sort((a, b) => b.s - a.s || a.v.precio - b.v.precio)
+      .slice(0, 6)
+      .map(x => ({ id: x.v.id, nombre: x.v.nombre, precio: x.v.precio, color: x.v.color || '#3A2226', motivo: porQue(x.v, g) }));
+  }
+
+  return json({ preferencias: g.prefs, perfil: Object.assign({}, pf, { frases }), para_ti: paraTi });
+}
+
+async function gustosGuardar(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const tipos = Array.isArray(b.tipos) ? b.tipos.filter(t => TIPOS.includes(t)) : [];
+  const evitar = Array.isArray(b.evitar) ? b.evitar.filter(t => TIPOS.includes(t) && !tipos.includes(t)) : [];
+  const estilo = ESTILOS.includes(b.estilo) ? b.estilo : null;
+  const presupuesto = PRESUPUESTOS[b.presupuesto] ? b.presupuesto : null;
+  const dulce = b.dulce === null || b.dulce === undefined ? null : (b.dulce ? 1 : 0);
+  await env.DB.prepare(
+    `INSERT INTO gustos (dispositivo, tipos, evitar, estilo, presupuesto, dulce) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT (dispositivo) DO UPDATE SET tipos = excluded.tipos, evitar = excluded.evitar, estilo = excluded.estilo,
+       presupuesto = excluded.presupuesto, dulce = excluded.dulce, actualizado = CURRENT_TIMESTAMP`
+  ).bind(d, tipos.join(','), evitar.join(','), estilo, presupuesto, dulce).run();
+  return json({ ok: true, preferencias: { tipos, evitar, estilo, presupuesto, dulce } });
 }
 
 // ---------- Utilidades ----------
