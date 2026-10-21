@@ -266,6 +266,25 @@
   .tk-sinresp{font-size:11px;font-weight:700;color:var(--verde-txt);background:var(--verde-soft);border:1px solid var(--verde-line);padding:3px 8px;border-radius:999px;white-space:nowrap}
   .star-pick{display:flex;gap:2px}
   .star-pick button{width:48px;height:48px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+  .estante{border-radius:24px;background:#171213;border:1px solid var(--border);padding:16px 12px 6px;display:flex;flex-direction:column}
+  .estante-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px 12px}
+  .estante-top h2{font-size:20px}
+  .estante .fila{display:flex;justify-content:space-around;align-items:flex-end;height:104px;padding:0 4px}
+  .estante .tabla{height:11px;border-radius:3px;background:#3A2E2A;border-top:2px solid #54443D;box-shadow:0 7px 12px rgba(0,0,0,.55);margin:0 0 14px}
+  .slot{width:42px;height:100px;display:flex;align-items:flex-end;justify-content:center;background:none;border:none;padding:0;cursor:pointer;transition:transform .2s ease;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+  .slot.vacio{cursor:default;filter:none}
+  .slot.sel{transform:translateY(-10px)}
+  .slot.sel svg{filter:drop-shadow(0 0 7px rgba(232,184,74,.75))}
+  .slot.mas{cursor:pointer;filter:none}
+  .estante-leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;padding:2px 4px 10px;font-size:12px;color:var(--ink2)}
+  .estante-leyenda span{display:inline-flex;align-items:center;gap:6px}
+  .estante-leyenda i{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.25)}
+  .estante-tip{display:flex;gap:10px;align-items:flex-start;margin:0 4px 10px;padding:10px 12px;border-radius:14px;background:var(--verde-soft);border:1px solid var(--verde-line);font-size:13px;line-height:1.45;color:var(--verde-txt)}
+  .bod-det{margin-top:12px;padding:16px;border-radius:20px;background:var(--surface);border:1.5px solid var(--amarillo-line);display:flex;flex-direction:column;gap:12px;position:relative;animation:entra .2s ease}
+  .bod-det .x{position:absolute;top:10px;right:10px;width:38px;height:38px;border-radius:19px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .stepper-sm{display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:var(--surface-2);border:1px solid var(--border)}
+  .stepper-sm button{width:40px;height:40px;border-radius:20px;border:none;background:var(--surface-3);color:var(--ink);font-size:20px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .stepper-sm b{min-width:26px;text-align:center;font-size:17px}
   .takers-hero{padding:24px;border-radius:24px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:14px}
   .takers-ic{width:56px;height:56px;border-radius:16px;background:var(--verde);display:flex;align-items:center;justify-content:center}
   .feat{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45;color:var(--ink2)}
@@ -535,7 +554,9 @@
       <h1 style="font-size:30px;line-height:1.1">Mi bodega</h1>
       <p class="lead" style="margin-top:6px">Tus vinos en casa, los que quieres probar y los que ya has probado.</p>
     </div>
-    <div class="px" style="padding-top:18px">
+    <div class="px" style="padding-top:18px" id="bod-estante"></div>
+    <div class="px" id="bod-detalle"></div>
+    <div class="px" style="padding-top:22px">
       <div class="seg" role="tablist" aria-label="Apartados de Mi bodega" id="bod-tabs">
         <button role="tab" class="on" aria-selected="true" data-bodtab="casa">En casa <span class="cnt" id="cnt-casa">0</span></button>
         <button role="tab" aria-selected="false" data-bodtab="deseo">Por probar <span class="cnt" id="cnt-deseo">0</span></button>
@@ -910,17 +931,18 @@
     });
   }
 
-  function guardarBodega(id, cambios){
+  function guardarBodega(id, cambios, info){
     var datos = { dispositivo: state.dispositivo, vino_id: id };
     for (var k in cambios) datos[k] = cambios[k];
     return api('/api/bodega', datos).then(function(r){
       var base = state.bodega[id] || (state.ficha && state.ficha.id === id ? {
         id: id, nombre: state.ficha.nombre, tipo: (state.ficha.etiquetas || [])[0] || '', denominacion: state.ficha.denominacion,
         color: state.ficha.color, precio: state.ficha.precio ? state.ficha.precio.precio : null, va_con: (state.ficha.va_con || []).slice(0, 3)
-      } : { id: id });
+      } : Object.assign({ id: id }, info || {}));
       base.cantidad = r.cantidad; base.deseo = r.deseo; base.puntuacion = r.puntuacion; base.nota = r.nota;
       if (!r.cantidad && !r.deseo && r.puntuacion == null && !r.nota) delete state.bodega[id];
       else state.bodega[id] = base;
+      if (!r.cantidad && state.bodSel === id) state.bodSel = null;
       pintarBodBox(); renderBodega();
       return r;
     }).catch(function(err){ toast(err.message); return null; });
@@ -1753,6 +1775,7 @@
   }
 
   function renderBodega(){
+    pintarEstanteria();
     var todos = Object.keys(state.bodega).map(function(k){ return state.bodega[k]; });
     var grupos = {
       casa: todos.filter(function(v){ return v.cantidad > 0; }),
@@ -1787,6 +1810,112 @@
         '</span></button>';
     }).join('');
   }
+
+  // ---------- Mi bodega: la estantería ----------
+  var ORDEN_TIPOS = ['Tinto', 'Rosado', 'Blanco', 'Espumoso', 'Generoso'];
+  var NOMBRE_TIPOS = { Tinto: ['tinto', 'tintos'], Rosado: ['rosado', 'rosados'], Blanco: ['blanco', 'blancos'], Espumoso: ['cava', 'cavas'], Generoso: ['fino', 'finos'] };
+  var COLOR_TIPOS = { Tinto: '#6E1A2C', Rosado: '#C9767F', Blanco: '#D8CC8A', Espumoso: '#3B5E3F', Generoso: '#E8B84A' };
+  var POR_FILA = 6;
+  state.bodSel = null;
+  function siluetaSVG(mas){
+    return '<svg width="36" height="96" viewBox="0 0 60 160" aria-hidden="true"><path d="M24 6H36V48C36 57 50 58 50 70V150Q50 156 44 156H16Q10 156 10 150V70C10 58 24 57 24 48Z" fill="' + (mas ? 'rgba(232,184,74,.06)' : 'rgba(255,255,255,.025)') + '" stroke="' + (mas ? 'rgba(232,184,74,.7)' : 'rgba(255,255,255,.13)') + '" stroke-width="2" stroke-dasharray="6 5"/>' +
+      (mas ? '<circle cx="30" cy="108" r="13" fill="#E8B84A"/><path d="M30 101v14M23 108h14" stroke="#2A1E08" stroke-width="3" stroke-linecap="round"/>' : '') + '</svg>';
+  }
+  function consejoBodega(cuenta, total){
+    if (!total) return '';
+    if (total >= 3 && !cuenta.Blanco) return 'Te falta un blanco: es lo que mejor va con pescado, marisco y arroces.';
+    if (total >= 3 && !cuenta.Espumoso) return 'Un cava en la nevera nunca sobra: para brindar o para un aperitivo improvisado.';
+    if (total >= 4 && !cuenta.Generoso) return 'Prueba a tener un fino: con jamón, aceitunas y fritos es imbatible.';
+    if (total < 3) return 'Ve sumando botellas: con unas pocas de cada tipo tendrás vino para cualquier comida.';
+    return '¡Bodega completa! Tienes vino para casi cualquier plato.';
+  }
+  function pintarEstanteria(){
+    var casa = Object.keys(state.bodega).map(function(k){ return state.bodega[k]; }).filter(function(v){ return v.cantidad > 0; });
+    casa.sort(function(a, b){
+      var ta = ORDEN_TIPOS.indexOf(a.tipo), tb = ORDEN_TIPOS.indexOf(b.tipo);
+      return (ta < 0 ? 9 : ta) - (tb < 0 ? 9 : tb) || String(a.nombre).localeCompare(b.nombre);
+    });
+    var botellas = [], cuenta = {};
+    casa.forEach(function(v){
+      for (var i = 0; i < v.cantidad; i++) botellas.push(v);
+      cuenta[v.tipo] = (cuenta[v.tipo] || 0) + v.cantidad;
+    });
+    var total = botellas.length, MAX = 36;
+    var visibles = botellas.slice(0, MAX);
+    var huecos = Math.max(3 * POR_FILA, Math.ceil((visibles.length + 1) / POR_FILA) * POR_FILA);
+    if (huecos > MAX) huecos = MAX;
+    var slots = [];
+    for (var i = 0; i < huecos; i++){
+      var v = visibles[i];
+      if (v){
+        var primera = i === 0 || visibles[i - 1].id !== v.id;
+        slots.push('<button class="slot' + (state.bodSel === v.id ? ' sel' : '') + '" data-shelf="' + esc(v.id) + '"' + (primera ? '' : ' tabindex="-1"') + ' aria-label="' + esc(v.nombre) + (primera ? ', ' + v.cantidad + (v.cantidad === 1 ? ' botella' : ' botellas') : '') + '">' + botellaSVG(v, 96) + '</button>');
+      } else if (i === visibles.length) {
+        slots.push('<button class="slot mas" id="bod-anadir" aria-label="Añadir una botella">' + siluetaSVG(true) + '</button>');
+      } else slots.push('<span class="slot vacio" aria-hidden="true">' + siluetaSVG(false) + '</span>');
+    }
+    var filas = '';
+    for (var f = 0; f < slots.length; f += POR_FILA) filas += '<div class="fila">' + slots.slice(f, f + POR_FILA).join('') + '</div><div class="tabla" aria-hidden="true"></div>';
+    var leyenda = ORDEN_TIPOS.filter(function(t){ return cuenta[t]; }).map(function(t){
+      return '<span><i style="background:' + COLOR_TIPOS[t] + '"></i>' + cuenta[t] + ' ' + NOMBRE_TIPOS[t][cuenta[t] === 1 ? 0 : 1] + '</span>';
+    }).join('');
+    var tip = consejoBodega(cuenta, total);
+    $('#bod-estante').innerHTML = '<div class="estante" role="group" aria-label="Tu estantería de vinos">' +
+      '<div class="estante-top"><h2>Tu estantería</h2><span class="badge-n" style="background:var(--surface-3)">' + total + (total === 1 ? ' botella' : ' botellas') + '</span></div>' +
+      filas +
+      (total > MAX ? '<div class="note" style="text-align:center;padding-bottom:10px">Y ' + (total - MAX) + ' botellas más que no caben en la estantería</div>' : '') +
+      (leyenda ? '<div class="estante-leyenda">' + leyenda + '</div>' : '') +
+      (total ? '' : '<p class="note" style="text-align:center;margin:0 8px 12px;font-size:13px">Tu estantería está vacía. Pulsa el <b style="color:var(--amarillo)">+</b> para añadir las botellas que tienes en casa.</p>') +
+      (tip ? '<div class="estante-tip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;margin-top:1px"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg><span>' + esc(tip) + '</span></div>' : '') +
+    '</div>';
+    pintarDetalleBodega();
+  }
+  function pintarDetalleBodega(){
+    var v = state.bodSel && state.bodega[state.bodSel];
+    if (!v || !v.cantidad){ $('#bod-detalle').innerHTML = ''; return; }
+    var est = '';
+    if (v.puntuacion){ for (var i = 1; i <= 5; i++) est += estrellaSVG(i <= v.puntuacion, 14); }
+    $('#bod-detalle').innerHTML = '<div class="bod-det" role="region" aria-label="' + esc(v.nombre) + '">' +
+      '<button class="x" id="bod-det-x" aria-label="Cerrar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+      '<div style="display:flex;gap:14px;align-items:center;padding-right:40px"><span class="best-bot">' + botellaSVG(v, 96) + '</span>' +
+        '<span style="min-width:0"><span style="display:block;font-weight:700;font-size:18px;line-height:1.25">' + esc(v.nombre) + '</span>' +
+        '<span class="note" style="display:block;margin-top:3px;font-size:13px">' + esc([v.tipo, v.denominacion].filter(Boolean).join(' · ')) + '</span>' +
+        (est ? '<span class="tk-stars" style="margin-top:6px">' + est + '</span>' : '') +
+        (v.precio != null ? '<span style="display:block;font-weight:700;margin-top:6px">' + eur(v.precio) + ' <span class="note" style="font-weight:400">aprox.</span></span>' : '') + '</span></div>' +
+      (v.va_con && v.va_con.length ? '<div><span class="label" style="margin-bottom:8px">Ábrelo con</span><div class="tags">' + v.va_con.map(function(x){ return '<span class="tg w">' + esc(x) + '</span>'; }).join('') + '</div></div>' : '') +
+      (v.nota ? '<p class="tk-txt" style="font-size:14px">«' + esc(v.nota) + '»</p>' : '') +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span style="font-weight:600">En casa</span>' +
+        '<span class="stepper-sm"><button id="bod-menos" aria-label="Quitar una botella">−</button><b aria-live="polite">' + v.cantidad + '</b><button id="bod-mas" aria-label="Añadir una botella">+</button></span></div>' +
+      '<button class="ghost" data-wine="' + esc(v.id) + '" style="min-height:50px">Ver ficha completa</button>' +
+    '</div>';
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-shelf]');
+    if (b){
+      var id = b.getAttribute('data-shelf');
+      state.bodSel = state.bodSel === id ? null : id;
+      pintarEstanteria();
+      if (state.bodSel) setTimeout(function(){ var d = $('#bod-detalle .bod-det'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
+      return;
+    }
+    if (e.target.closest('#bod-det-x')){ state.bodSel = null; pintarEstanteria(); return; }
+    if (e.target.closest('#bod-mas') || e.target.closest('#bod-menos')){
+      var v = state.bodega[state.bodSel]; if (!v) return;
+      var mas = !!e.target.closest('#bod-mas');
+      guardarBodega(v.id, { cantidad: Math.max(0, v.cantidad + (mas ? 1 : -1)) }).then(function(r){
+        if (r && !mas) toast(r.cantidad ? '¡Salud! Te quedan ' + r.cantidad : '¡Salud! Era la última botella');
+      });
+      return;
+    }
+    if (e.target.closest('#bod-anadir')){
+      elegirVino('Añade una botella', '¿Qué vino tienes en casa?').then(function(w){
+        cerrarHoja();
+        var it = state.bodega[w.id];
+        return guardarBodega(w.id, { cantidad: (it ? it.cantidad : 0) + 1 }, { nombre: w.nombre, tipo: w.tipo, denominacion: w.denominacion, color: w.color, precio: w.precio, va_con: [] })
+          .then(function(r){ if (r){ state.bodSel = w.id; toast('Añadida a tu estantería'); cargarBodega(); } });
+      });
+    }
+  });
 
   // ---------- Control de edad ----------
   if (store('edad_ok') !== '1') $('#gate').classList.add('show');
