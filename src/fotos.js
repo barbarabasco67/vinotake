@@ -36,6 +36,20 @@ export function mejorCoincidencia(vino, productos) {
   return buenos.find(p => (p.countries_tags || []).includes('en:spain')) || buenos[0] || null;
 }
 
+export async function sondearOFF(nombre) {
+  const url = 'https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=12'
+    + '&fields=code,product_name,brands,categories_tags,countries_tags,image_front_url&search_terms=' + encodeURIComponent(nombre);
+  const r = await fetch(url, { headers: { 'User-Agent': UA } });
+  const txt = await r.text();
+  let d = null; try { d = JSON.parse(txt); } catch (e) { /* no es JSON */ }
+  const prods = (d && d.products) || [];
+  return {
+    http: r.status, es_json: !!d, productos: prods.length, inicio_respuesta: d ? undefined : txt.slice(0, 160),
+    primeros: prods.slice(0, 6).map(p => ({ nombre: p.product_name, marca: p.brands, foto: !!p.image_front_url, vino: /wine|vino|cava|champagne|sherry|jerez|sparkling|alcoholic/.test((p.categories_tags || []).join(' ')) })),
+    coincide: !!mejorCoincidencia({ nombre }, prods)
+  };
+}
+
 async function buscarOFF(nombre) {
   const url = 'https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=12'
     + '&fields=code,product_name,brands,categories_tags,countries_tags,image_front_url&search_terms=' + encodeURIComponent(nombre);
@@ -59,12 +73,17 @@ export async function rellenarFotos(env, max = 6) {
   let nuevas = 0;
   for (const v of lote) {
     try {
-      const p = mejorCoincidencia(v, await buscarOFF(v.nombre));
+      const lista = await buscarOFF(v.nombre);
+      const p = mejorCoincidencia(v, lista);
+      await env.DB.prepare('INSERT INTO cuenta_intentos (clave) VALUES (?)').bind(p ? 'fotos:ok' : lista.length ? 'fotos:sin-coincidencia' : 'fotos:sin-resultados').run().catch(() => {});
       if (p) {
         await env.DB.prepare("UPDATE vinos SET imagen = ? WHERE id = ? AND (imagen IS NULL OR imagen = '')").bind(p.image_front_url, v.id).run();
         nuevas++;
       }
-    } catch (e) { console.error('fotos', v.id, e.message); }
+    } catch (e) {
+      console.error('fotos', v.id, e.message);
+      await env.DB.prepare('INSERT INTO cuenta_intentos (clave) VALUES (?)').bind('fotos:error:' + String(e.message).slice(0, 40)).run().catch(() => {});
+    }
     await esperar(7000);
   }
   return { revisados: lote.length, nuevas, pendientes: results.length - nuevas };

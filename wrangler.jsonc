@@ -7,6 +7,7 @@
     { "binding": "DB", "database_name": "vinotake", "database_id": "5ce5b466-54cb-4e77-bbca-042411f8bed2" }
   ],
   "triggers": { "crons": ["*/15 * * * *"] },
+  "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "keep_vars": true,
   "observability": { "enabled": true }
 }

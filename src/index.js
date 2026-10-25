@@ -1,4 +1,5 @@
-import { rellenarFotos } from './fotos.js';
+import { rellenarFotos, sondearOFF } from './fotos.js';
+import { aplicarMigraciones } from './migraciones.js';
 // Vinotake · API
 // La web (carpeta public) la sirve Cloudflare directamente. Este Worker solo atiende /api/*.
 
@@ -22,6 +23,7 @@ export default {
   },
   // Cada 15 minutos busca unas pocas fotos de vinos que aún no tienen (Open Food Facts).
   async scheduled(event, env, ctx) {
+    ctx.waitUntil(aplicarMigraciones(env).then(r => r.length && console.log('migraciones', r.join(', '))).catch(e => console.error('migraciones', e)));
     ctx.waitUntil(rellenarFotos(env, 6).then(r => console.log('fotos', JSON.stringify(r))).catch(e => console.error('fotos', e)));
   }
 };
@@ -77,7 +79,15 @@ async function api(request, env, url) {
   if (method === 'POST' && path === '/api/bodega') return bodegaGuardar(env, await body(request));
   if (method === 'GET' && path === '/api/fotos/estado') {
     const r = await env.DB.prepare("SELECT COUNT(*) AS total, SUM(CASE WHEN imagen IS NOT NULL AND imagen != '' THEN 1 ELSE 0 END) AS con_foto FROM vinos WHERE activo = 1").first();
-    return json({ total: r.total, con_foto: r.con_foto || 0 });
+    const act = (await env.DB.prepare("SELECT clave, COUNT(*) AS n FROM cuenta_intentos WHERE clave LIKE 'fotos:%' AND creado > datetime('now', '-1 day') GROUP BY clave").all().catch(() => ({ results: [] }))).results;
+    return json({ total: r.total, con_foto: r.con_foto || 0, ultimas_24h: Object.fromEntries(act.map(a => [a.clave, a.n])) });
+  }
+  if (method === 'GET' && path === '/api/fotos/probar') {
+    if (await intentosAltos(env, { ['sonda:' + ipDe(request)]: 10 })) return demasiados();
+    await anotarIntento(env, ['sonda:' + ipDe(request)]);
+    const q = String(url.searchParams.get('q') || '').slice(0, 80);
+    if (!q) return json({ error: 'Falta ?q=nombre del vino' }, 400);
+    return json(await sondearOFF(q).catch(e => ({ error: String(e.message) })));
   }
   if (method === 'GET' && path === '/api/comparar') return comparar(env, url.searchParams.get('a'), url.searchParams.get('b'), url.searchParams.get('super'));
   if (method === 'GET' && path === '/api/lista') return listaVer(env, url.searchParams.get('d'), url.searchParams.get('super'));
