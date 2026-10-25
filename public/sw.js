@@ -1,5 +1,5 @@
 // Guarda la app en el móvil para que cargue rápido aunque haya poca cobertura en el súper.
-var CACHE = 'vinotake-v25';
+var CACHE = 'vinotake-v26';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

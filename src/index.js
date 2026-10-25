@@ -579,7 +579,7 @@ async function bodegaGuardar(env, b) {
   return json({ ok: true, vino_id: vinoId, cantidad: nuevo.cantidad, deseo: !!nuevo.deseo, puntuacion: nuevo.puntuacion, nota: nuevo.nota || '' });
 }
 
-// ---------- Comparavino: comparar dos vinos ----------
+// ---------- Vino VS: comparar dos vinos ----------
 const RANGO_ESTILO = { suave: 1, equilibrado: 2, intenso: 3 };
 function euros(n) { return Number(n).toFixed(2).replace('.', ',') + ' €'; }
 
