@@ -186,6 +186,14 @@
   .cat-h{font-size:20px;margin:14px 0 2px;display:flex;align-items:baseline;gap:8px}
   .cat-h .cnt-h{font-family:Inter,sans-serif;font-size:13px;font-weight:500;color:var(--muted)}
   input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none}
+  .chip.filtros{display:inline-flex;align-items:center;gap:8px}
+  .chip small{font-size:12px;color:var(--muted);margin-left:2px}
+  .chip.on small{color:inherit;opacity:.8}
+  .chip:disabled{opacity:.4;cursor:default}
+  .chip.quita{min-height:36px;padding:0 12px;font-size:13px;background:var(--surface-3)}
+  .chip.mas{border-style:dashed;color:var(--amarillo)}
+  .fgrupo .ft{font-weight:600;font-size:15px;margin-bottom:10px}
+  .fpie{position:sticky;bottom:calc(-1 * (24px + var(--safe-b)));margin:6px -20px calc(-1 * (24px + var(--safe-b)));padding:14px 20px calc(18px + var(--safe-b));display:grid;grid-template-columns:auto 1fr;gap:10px;background:linear-gradient(180deg,rgba(28,24,25,0),var(--surface) 30%)}
   /* ===== Efectos en todos los botones ===== */
   button{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .22s,background-color .2s,border-color .2s,color .2s,filter .2s,opacity .2s}
   button:active:not(:disabled){transform:scale(.965)}
@@ -789,7 +797,8 @@
     <div class="px stack" style="padding-top:14px;gap:12px">
       <label class="field" for="cat-q"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--muted);flex-shrink:0"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="cat-q" type="search" placeholder="Busca un vino" autocomplete="off" enterkeyhint="search"></label>
       <div class="chips" id="cat-tipos" role="group" aria-label="Tipo de vino"></div>
-      <div class="chips" id="cat-opc" role="group" aria-label="Orden y filtros"></div>
+      <div class="chips" id="cat-opc" role="group" aria-label="Filtros y orden"></div>
+      <div class="chips" id="cat-act" hidden aria-label="Filtros activos"></div>
     </div>
     <div class="px stack" style="padding-top:8px;gap:10px" id="cat-lista"></div>
     <div class="spacer"></div>
@@ -1794,16 +1803,31 @@
   }, { passive: true });
 
 
-  // ---------- Catálogo: todos los vinos con buscador ----------
+  // ---------- Catálogo: todos los vinos con buscador y filtros ----------
   var CAT_GRUPOS = [['Tinto', 'Tintos'], ['Blanco', 'Blancos'], ['Rosado', 'Rosados'], ['Espumoso', 'Espumosos'], ['Otros', 'Jereces y dulces']];
-  state.cat = { vinos: null, superId: null, tipo: 'todos', q: '', orden: 'az', solo: false };
+  var CAT_PRECIOS = [['p1', 'Hasta 5 €', 0, 5], ['p2', 'De 5 a 10 €', 5, 10], ['p3', 'De 10 a 20 €', 10, 20], ['p4', 'Más de 20 €', 20, 1e9]];
+  // facetas: clave, título, función que da los valores de un vino (lista), si se abre limitada
+  var CAT_FACETAS = [
+    { k: 'do', t: 'Denominación de origen', vals: function(v){ return v.do ? [v.do] : []; }, max: 8 },
+    { k: 'uva', t: 'Uva', vals: function(v){ return v.uvas; }, max: 8 },
+    { k: 'elab', t: 'Crianza', vals: function(v){ return v.elaboracion ? [v.elaboracion] : []; }, max: 12 },
+    { k: 'estilo', t: 'Intensidad', vals: function(v){ return v.estilo ? [v.estilo.charAt(0).toUpperCase() + v.estilo.slice(1)] : []; }, max: 6 },
+    { k: 'dulz', t: 'Dulzor', vals: function(v){ return [v.dulce ? 'Dulce' : 'Seco']; }, max: 6 },
+    { k: 'bodega', t: 'Bodega o marca', vals: function(v){ return v.bodega ? [v.bodega] : []; }, max: 10 }
+  ];
+  state.cat = { vinos: null, superId: null, tipo: 'todos', q: '', orden: 'az', solo: false, f: {}, precio: null, abiertas: {} };
   function sinTildes(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
   function grupoDe(v){ return /^(tinto|blanco|rosado|espumoso)$/i.test(v.tipo) ? v.tipo.charAt(0).toUpperCase() + v.tipo.slice(1).toLowerCase() : 'Otros'; }
+  function cortoDO(d){ return String(d || '').replace(/^(D\.?O\.?\s*C\.?\s*a\.?|D\.?O\.?\s*C\.?\s*G\.?|D\.?O\.?\s*C\.?|D\.?O\.?\s*P\.?|D\.?O\.?|I\.?G\.?P\.?|A\.?O\.?C\.?)\s+/i, '').trim(); }
   function cargarCatalogo(){
     if (state.cat.vinos && state.cat.superId === state.superId){ pintarCatalogo(); return Promise.resolve(); }
     $('#cat-lista').innerHTML = '<div class="spin" style="margin:30px auto"></div>';
     return api('/api/catalogo?super=' + encodeURIComponent(state.superId || '')).then(function(d){
-      state.cat.vinos = d.vinos.map(function(v){ v.buscar = sinTildes([v.nombre, v.bodega, v.denominacion, v.tipo, v.elaboracion].join(' ')); v.grupo = grupoDe(v); return v; });
+      state.cat.vinos = d.vinos.map(function(v){
+        v.do = cortoDO(v.denominacion);
+        v.uvas = String(v.uva || '').split(/\s+·\s+|\s*,\s*/).map(function(u){ return u.trim(); }).filter(Boolean);
+        v.buscar = sinTildes([v.nombre, v.bodega, v.denominacion, v.tipo, v.elaboracion, v.uva].join(' ')); v.grupo = grupoDe(v); return v;
+      });
       state.cat.superId = state.superId; state.cat.superNombre = d.super || '';
       pintarCatalogo();
     }).catch(function(err){ $('#cat-lista').innerHTML = '<p class="note">' + esc(err.message) + '</p>'; });
@@ -1813,24 +1837,46 @@
       '<span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span><span class="s" style="display:block">' + esc([v.denominacion, v.elaboracion].filter(Boolean).join(' · ')) + '</span></span>' +
       '<span class="meta">' + (v.precio != null ? '<span class="price-cat' + (v.en_super ? '' : ' ref') + '">' + eur(v.precio) + '</span>' + (v.en_super ? '' : '<span class="s" style="font-size:11px">aprox.</span>') : '') + '</span></button>';
   }
+  // ¿Cumple el vino todos los filtros? «salta» ignora una faceta (para contar sus opciones).
+  function cumple(v, salta){
+    var c = state.cat, q = sinTildes(c.q).split(/\s+/).filter(Boolean);
+    if (c.tipo !== 'todos' && v.grupo !== c.tipo) return false;
+    if (c.solo && !v.en_super) return false;
+    if (salta !== 'precio' && c.precio){ var r = CAT_PRECIOS.filter(function(x){ return x[0] === c.precio; })[0]; if (v.precio == null || v.precio < r[2] || v.precio >= r[3]) return false; }
+    for (var i = 0; i < CAT_FACETAS.length; i++){
+      var fa = CAT_FACETAS[i], sel = c.f[fa.k];
+      if (fa.k === salta || !sel || !sel.length) continue;
+      if (!fa.vals(v).some(function(x){ return sel.indexOf(x) !== -1; })) return false;
+    }
+    return q.every(function(w){ return v.buscar.indexOf(w) !== -1; });
+  }
+  function nFiltros(){
+    var c = state.cat, n = (c.precio ? 1 : 0) + (c.solo ? 1 : 0);
+    CAT_FACETAS.forEach(function(fa){ n += (c.f[fa.k] || []).length; });
+    return n;
+  }
   function pintarCatalogo(){
     var c = state.cat, todos = c.vinos || [], q = sinTildes(c.q).split(/\s+/).filter(Boolean);
     var cuentaG = {}; todos.forEach(function(v){ cuentaG[v.grupo] = (cuentaG[v.grupo] || 0) + 1; });
     $('#cat-tipos').innerHTML = '<button class="chip' + (c.tipo === 'todos' ? ' on' : '') + '" data-cattipo="todos" aria-pressed="' + (c.tipo === 'todos') + '">Todos (' + todos.length + ')</button>' +
       CAT_GRUPOS.filter(function(g){ return cuentaG[g[0]]; }).map(function(g){ return '<button class="chip' + (c.tipo === g[0] ? ' on' : '') + '" data-cattipo="' + g[0] + '" aria-pressed="' + (c.tipo === g[0]) + '">' + g[1] + ' (' + cuentaG[g[0]] + ')</button>'; }).join('');
-    var nSuper = todos.filter(function(v){ return v.en_super; }).length;
-    $('#cat-opc').innerHTML = '<button class="chip' + (c.orden === 'az' ? ' on' : '') + '" data-catorden="az" aria-pressed="' + (c.orden === 'az') + '">De la A a la Z</button>' +
-      '<button class="chip' + (c.orden === 'precio' ? ' on' : '') + '" data-catorden="precio" aria-pressed="' + (c.orden === 'precio') + '">Más baratos primero</button>' +
-      (c.superNombre && nSuper ? '<button class="chip' + (c.solo ? ' on' : '') + '" data-catsolo="1" aria-pressed="' + c.solo + '">Con precio en ' + esc(c.superNombre) + ' (' + nSuper + ')</button>' : '');
-    var lista = todos.filter(function(v){
-      if (c.tipo !== 'todos' && v.grupo !== c.tipo) return false;
-      if (c.solo && !v.en_super) return false;
-      return q.every(function(w){ return v.buscar.indexOf(w) !== -1; });
-    });
+    var nf = nFiltros();
+    $('#cat-opc').innerHTML = '<button class="chip filtros' + (nf ? ' on' : '') + '" data-catfiltros="1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg> Filtros' + (nf ? ' (' + nf + ')' : '') + '</button>' +
+      '<button class="chip' + (c.orden === 'az' ? ' on' : '') + '" data-catorden="az" aria-pressed="' + (c.orden === 'az') + '">De la A a la Z</button>' +
+      '<button class="chip' + (c.orden === 'precio' ? ' on' : '') + '" data-catorden="precio" aria-pressed="' + (c.orden === 'precio') + '">Más baratos primero</button>';
+    // filtros activos, para quitarlos de uno en uno
+    var act = '';
+    CAT_FACETAS.forEach(function(fa){ (c.f[fa.k] || []).forEach(function(x){ act += '<button class="chip quita" data-catquita="' + fa.k + '|' + esc(x) + '" aria-label="Quitar ' + esc(x) + '">' + esc(x) + ' <span aria-hidden="true">×</span></button>'; }); });
+    if (c.precio) act += '<button class="chip quita" data-catquita="precio|" aria-label="Quitar precio">' + CAT_PRECIOS.filter(function(x){ return x[0] === c.precio; })[0][1] + ' <span aria-hidden="true">×</span></button>';
+    if (c.solo) act += '<button class="chip quita" data-catquita="solo|" aria-label="Quitar filtro de supermercado">Con precio en ' + esc(c.superNombre) + ' <span aria-hidden="true">×</span></button>';
+    $('#cat-act').innerHTML = act; $('#cat-act').hidden = !act;
+    var lista = todos.filter(function(v){ return cumple(v); });
     lista.sort(c.orden === 'precio'
       ? function(a, b){ return (a.precio == null) - (b.precio == null) || a.precio - b.precio || a.nombre.localeCompare(b.nombre, 'es'); }
       : function(a, b){ return a.nombre.localeCompare(b.nombre, 'es'); });
-    $('#cat-sub').textContent = lista.length + (lista.length === 1 ? ' vino' : ' vinos') + (q.length || c.tipo !== 'todos' || c.solo ? ' con estos filtros' : ' en la app');
+    $('#cat-sub').textContent = lista.length + (lista.length === 1 ? ' vino' : ' vinos') + (q.length || c.tipo !== 'todos' || nf ? ' con estos filtros' : ' en la app');
+    c.n = lista.length;
+    var btn = $('#cat-ver'); if (btn) btn.textContent = lista.length ? 'Ver ' + lista.length + (lista.length === 1 ? ' vino' : ' vinos') : 'Sin resultados';
     if (!lista.length){ $('#cat-lista').innerHTML = '<div class="empty"><p class="note" style="margin:0">No hay vinos con esa búsqueda. Prueba con otra palabra o quita algún filtro.</p></div>'; return; }
     var html = '';
     if (c.orden === 'precio') html = lista.map(filaCatalogo).join('');
@@ -1840,6 +1886,38 @@
     });
     $('#cat-lista').innerHTML = html;
   }
+  // Hoja con todos los filtros: cada bloque cuenta cuántos vinos daría cada opción con el resto de filtros puestos.
+  function cuerpoFiltros(){
+    var c = state.cat, todos = c.vinos || [], out = '';
+    out += '<div class="fgrupo"><div class="ft">Precio</div><div class="chips">' + CAT_PRECIOS.map(function(r){
+      var n = todos.filter(function(v){ return cumple(v, 'precio') && v.precio != null && v.precio >= r[2] && v.precio < r[3]; }).length;
+      return '<button class="chip' + (c.precio === r[0] ? ' on' : '') + '" data-catf="precio|' + r[0] + '" aria-pressed="' + (c.precio === r[0]) + '"' + (!n && c.precio !== r[0] ? ' disabled' : '') + '>' + r[1] + ' <small>' + n + '</small></button>';
+    }).join('') + '</div></div>';
+    if (c.superNombre && todos.some(function(v){ return v.en_super; })){
+      var ns = todos.filter(function(v){ return v.en_super; }).length;
+      out += '<div class="fgrupo"><div class="ft">Supermercado</div><div class="chips"><button class="chip' + (c.solo ? ' on' : '') + '" data-catf="solo|1" aria-pressed="' + c.solo + '">Con precio en ' + esc(c.superNombre) + ' <small>' + ns + '</small></button></div></div>';
+    }
+    CAT_FACETAS.forEach(function(fa){
+      var cuenta = {};
+      todos.forEach(function(v){ if (cumple(v, fa.k)) fa.vals(v).forEach(function(x){ cuenta[x] = (cuenta[x] || 0) + 1; }); });
+      var sel = c.f[fa.k] || [];
+      var ops = Object.keys(cuenta).sort(function(a, b){ return (sel.indexOf(b) !== -1) - (sel.indexOf(a) !== -1) || cuenta[b] - cuenta[a] || a.localeCompare(b, 'es'); });
+      sel.forEach(function(x){ if (ops.indexOf(x) === -1) ops.push(x); });
+      if (ops.length < 2 && !sel.length) return;
+      var abierta = !!c.abiertas[fa.k], vis = abierta ? ops : ops.slice(0, fa.max);
+      out += '<div class="fgrupo"><div class="ft">' + fa.t + '</div><div class="chips">' + vis.map(function(x){
+        var on = sel.indexOf(x) !== -1;
+        return '<button class="chip' + (on ? ' on' : '') + '" data-catf="' + fa.k + '|' + esc(x) + '" aria-pressed="' + on + '">' + esc(x) + ' <small>' + (cuenta[x] || 0) + '</small></button>';
+      }).join('') + (ops.length > fa.max ? '<button class="chip mas" data-catmas="' + fa.k + '">' + (abierta ? 'Ver menos' : 'Ver todas (' + ops.length + ')') + '</button>' : '') + '</div></div>';
+    });
+    return out;
+  }
+  function abrirFiltros(){
+    abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0">Filtros</h2><div id="cat-fh" class="stack" style="gap:20px">' + cuerpoFiltros() + '</div>' +
+      '<div class="fpie"><button class="ghost" data-catlimpiar="1">Quitar filtros</button><button class="cta" id="cat-ver" data-hoja-cerrar>Ver vinos</button></div>');
+    pintarCatalogo();
+  }
+  function refrescarFiltros(){ var f = $('#cat-fh'); if (f) f.innerHTML = cuerpoFiltros(); pintarCatalogo(); }
   document.addEventListener('input', function(e){
     if (e.target.id === 'cat-q'){ state.cat.q = e.target.value; pintarCatalogo(); }
   });
@@ -1848,7 +1926,24 @@
     if (t){ state.cat.tipo = t.getAttribute('data-cattipo'); pintarCatalogo(); return; }
     var o = e.target.closest('[data-catorden]');
     if (o){ state.cat.orden = o.getAttribute('data-catorden'); pintarCatalogo(); return; }
-    if (e.target.closest('[data-catsolo]')){ state.cat.solo = !state.cat.solo; pintarCatalogo(); }
+    if (e.target.closest('[data-catfiltros]')){ abrirFiltros(); return; }
+    var c = state.cat, fb = e.target.closest('[data-catf]');
+    if (fb){
+      var par = fb.getAttribute('data-catf').split('|'), k = par[0], val = par.slice(1).join('|');
+      if (k === 'precio') c.precio = c.precio === val ? null : val;
+      else if (k === 'solo') c.solo = !c.solo;
+      else { var s = c.f[k] || (c.f[k] = []), i = s.indexOf(val); if (i === -1) s.push(val); else s.splice(i, 1); }
+      refrescarFiltros(); return;
+    }
+    var m = e.target.closest('[data-catmas]');
+    if (m){ var k2 = m.getAttribute('data-catmas'); c.abiertas[k2] = !c.abiertas[k2]; refrescarFiltros(); return; }
+    var q = e.target.closest('[data-catquita]');
+    if (q){
+      var p2 = q.getAttribute('data-catquita').split('|'), k3 = p2[0], v3 = p2.slice(1).join('|');
+      if (k3 === 'precio') c.precio = null; else if (k3 === 'solo') c.solo = false; else c.f[k3] = (c.f[k3] || []).filter(function(x){ return x !== v3; });
+      pintarCatalogo(); return;
+    }
+    if (e.target.closest('[data-catlimpiar]')){ c.f = {}; c.precio = null; c.solo = false; c.tipo = 'todos'; refrescarFiltros(); }
   });
 
   // ---------- Menú «Más»: perfil, gustos y lista de la compra ----------

@@ -71,12 +71,12 @@ async function api(request, env, url) {
     const superId = await superValido(env, url.searchParams.get('super'));
     const sup = await env.DB.prepare('SELECT nombre FROM supermercados WHERE id = ?').bind(superId).first().catch(() => null);
     const { results } = await env.DB.prepare(
-      `SELECT v.id, v.nombre, v.bodega, v.denominacion, v.tipo, v.elaboracion, v.color, v.imagen,
+      `SELECT v.id, v.nombre, v.bodega, v.denominacion, v.tipo, v.elaboracion, v.uva, v.estilo, v.dulce, v.color, v.imagen,
               COALESCE(p.precio, v.precio_ref) AS precio, CASE WHEN p.precio IS NOT NULL THEN 1 ELSE 0 END AS en_super
          FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
         WHERE v.activo = 1 ORDER BY v.nombre`
     ).bind(superId).all();
-    return json({ super: sup ? sup.nombre : '', vinos: results.map(r => ({ ...r, en_super: !!r.en_super })) }, 200, 60);
+    return json({ super: sup ? sup.nombre : '', vinos: results.map(r => ({ ...r, dulce: !!r.dulce, en_super: !!r.en_super })) }, 200, 60);
   }
   if (method === 'GET' && path === '/api/top') return mejorValorados(env, url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/cocinar') return cocinar(env, await body(request));
