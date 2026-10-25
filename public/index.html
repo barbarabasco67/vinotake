@@ -173,16 +173,20 @@
   .nota-badge .nb-n{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:34px;line-height:1;letter-spacing:-.03em;color:var(--ink)}
   .nota-badge .nb-s{display:flex;gap:2px}
   .nota-badge .nb-v{font-size:12px;color:var(--muted);line-height:1.25}
-  .comp{margin:18px 0 0;padding:6px 14px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:16px;background:rgba(255,255,255,.03)}
-  .comp-t{font-size:13px;color:var(--muted);padding:8px 0 4px}
-  .comp-f{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.08)}
-  .comp-f:first-of-type{border-top:0}
-  .comp-n{flex:1;font-size:15px}
-  .comp-n small{display:block;font-size:12px;color:var(--muted)}
-  .comp-p{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:18px}
-  .comp-f.best .comp-p{color:var(--verde-txt)}
-  .comp-tag{font-size:11px;color:var(--verde-txt);background:var(--verde-soft);border:1px solid var(--verde-line);border-radius:999px;padding:2px 8px}
-  .comp-d{font-size:12px;color:var(--muted)}
+  .comp{margin:20px 0 26px}
+  .comp-t{font-size:13px;color:var(--muted);padding:0 2px 10px}
+  .comp-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:2px 2px 10px;margin:0 -2px;scrollbar-width:none}
+  .comp-row::-webkit-scrollbar{display:none}
+  .comp-c{flex:0 0 138px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;border-radius:16px;border:1px solid var(--line,rgba(255,255,255,.12));background:rgba(255,255,255,.03);text-align:center}
+  .comp-c.best{border-color:var(--verde-line);background:var(--verde-soft)}
+  .comp-n{font-size:15px;line-height:1.2}
+  .comp-n small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+  .comp-p{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:22px}
+  .comp-c.best .comp-p{color:var(--verde-txt)}
+  .comp-tag{font-size:11px;color:var(--verde-txt);background:var(--verde-soft);border:1px solid var(--verde-line);border-radius:999px;padding:2px 9px}
+  .comp-d{font-size:12px;color:var(--muted);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:2px 9px}
+  .comp-ahorro{font-size:13px;color:var(--muted);padding:2px 2px 0}
+  .comp-ahorro b{color:var(--verde-txt);font-weight:600}
   .precio-fila{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 8px;margin-top:16px}
   .precio-fila .pv{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:22px;color:var(--amarillo);letter-spacing:-.02em}
   .precio-fila .pk{font-size:14px;color:var(--muted)}
@@ -1147,12 +1151,22 @@
       '<div class="note" style="margin:6px 0 0;text-align:center">Puede variar según el súper y las ofertas.</div>') : '';
     var compBlock = '';
     if (!fromPhoto && w.comparativa && w.comparativa.length >= 1){
-      var minP = w.comparativa[0].precio;
-      compBlock = '<div class="comp"><div class="comp-t">Precio en cada súper</div>' + w.comparativa.map(function(c){
-        var best = c.precio === minP, dif = c.precio - minP;
-        return '<div class="comp-f' + (best ? ' best' : '') + '"><div class="comp-n">' + esc(c.super) + (c.id === state.superId ? '<small>Tu súper</small>' : '') + '</div>' +
-          (best ? '<span class="comp-tag">Más barato</span>' : '<span class="comp-d">+' + eur(dif) + '</span>') + '<span class="comp-p">' + eur(c.precio) + '</span></div>';
-      }).join('') + '</div>';
+      var cmp = w.comparativa, minP = cmp[0].precio, maxP = cmp[cmp.length - 1].precio;
+      var todosIgual = cmp.length > 1 && minP === maxP;
+      var nMin = cmp.filter(function(c){ return c.precio === minP; }).length;
+      var cards = cmp.map(function(c){
+        var best = !todosIgual && cmp.length > 1 && c.precio === minP, dif = c.precio - minP;
+        var yo = c.id === state.superId ? '<small>Tu súper</small>' : '';
+        return '<div class="comp-c' + (best ? ' best' : '') + '"><div class="comp-n">' + esc(c.super) + yo + '</div>' +
+          '<span class="comp-p">' + eur(c.precio) + '</span>' +
+          (best ? '<span class="comp-tag">Más barato</span>' : (dif > 0.004 ? '<span class="comp-d">+' + eur(dif) + '</span>' : '')) + '</div>';
+      }).join('');
+      var pie = '';
+      if (cmp.length > 1){
+        if (todosIgual) pie = 'Mismo precio en todos los súper.';
+        else pie = (nMin > 1 ? 'Más barato en ' + nMin + ' súper' : 'Más barato en <b>' + esc(cmp[0].super) + '</b>') + ' · hasta <b>' + eur(maxP - minP) + '</b> menos que el más caro.';
+      }
+      compBlock = '<div class="comp"><div class="comp-t">Precio en cada súper</div><div class="comp-row">' + cards + '</div>' + (pie ? '<div class="comp-ahorro">' + pie + '</div>' : '') + '</div>';
     }
     var notaBadge = '';
     if (!fromPhoto){
