@@ -1,0 +1,55 @@
+-- Vinotake · tintos de Ribera del Duero de Alcampo (precios copiados de alcampo.es)
+
+INSERT OR REPLACE INTO vinos (id, nombre, bodega, denominacion, tipo, uva, elaboracion, sabor, temperatura, apertura, va_con, color, precio_ref, ejemplo, estilo, dulce) VALUES
+  ('ederra-roble-ribera', 'Ederra Edición Especial Roble', 'Bodegas Ederra', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Joven con toque de barrica, frutal y jugoso.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 9.98, 0, 'equilibrado', 0),
+  ('finca-resalso', 'Finca Resalso', 'Emilio Moro', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Frutal y con cuerpo, con fruta negra y un toque de madera.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 10.50, 0, 'intenso', 0),
+  ('valderivero-roble', 'Valderivero Roble', 'Valderivero', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Joven con un toque de barrica, jugoso y frutal.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 5.95, 0, 'equilibrado', 0),
+  ('pradorey-origen', 'Pradorey Origen', 'Pradorey', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Frutal y jugoso, con fruta negra y vainilla.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 6.35, 0, 'equilibrado', 0),
+  ('melior-matarromera', 'Melior de Matarromera', 'Matarromera', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Intenso y frutal, con fruta negra y tostados.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 8.15, 0, 'intenso', 0),
+  ('carramimbre-roble', 'Carramimbre Roble', 'Carramimbre', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Joven con toque de barrica, jugoso y con fruta negra.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 8.25, 0, 'equilibrado', 0),
+  ('fuentespina-crianza', 'Fuentespina Crianza', 'Fuentespina', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Crianza', 'Con cuerpo, fruta negra y especias.', '16 °C', '10 minutos antes', 'Legumbres|Pollo|Embutido|Quesos', '#3A2226', 7.95, 0, 'intenso', 0),
+  ('valderivero-crianza', 'Valderivero Crianza', 'Valderivero', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Crianza', 'Fruta madura y madera suave. Buen precio.', '16 °C', '10 minutos antes', 'Legumbres|Pollo|Embutido|Quesos', '#3A2226', 4.99, 0, 'equilibrado', 0);
+
+INSERT OR REPLACE INTO precios (vino_id, super_id, precio) VALUES
+  ('ederra-roble-ribera', 'alcampo', 9.98),
+  ('finca-resalso', 'alcampo', 10.50),
+  ('valderivero-roble', 'alcampo', 5.95),
+  ('pradorey-origen', 'alcampo', 6.35),
+  ('melior-matarromera', 'alcampo', 8.15),
+  ('carramimbre-roble', 'alcampo', 8.25),
+  ('fuentespina-crianza', 'alcampo', 7.95),
+  ('valderivero-crianza', 'alcampo', 4.99);
+
+INSERT OR REPLACE INTO maridajes (plato_id, vino_id, orden, motivo, nota) VALUES
+  ('lentejas', 'ederra-roble-ribera', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'ederra-roble-ribera', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'ederra-roble-ribera', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'ederra-roble-ribera', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'finca-resalso', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'finca-resalso', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'finca-resalso', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'finca-resalso', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'valderivero-roble', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'valderivero-roble', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'valderivero-roble', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'valderivero-roble', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'pradorey-origen', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'pradorey-origen', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'pradorey-origen', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'pradorey-origen', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'melior-matarromera', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'melior-matarromera', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'melior-matarromera', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'melior-matarromera', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'carramimbre-roble', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'carramimbre-roble', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'carramimbre-roble', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'carramimbre-roble', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'fuentespina-crianza', 40, 'Con cuerpo y taninos suaves: aguanta un guiso contundente.', 'Crianza o reserva'),
+  ('pollo', 'fuentespina-crianza', 41, 'Suave y redondo: acompaña un pollo asado sin taparlo.', 'Crianza o reserva'),
+  ('embutido', 'fuentespina-crianza', 42, 'Fruta y madera que casan con jamón y embutidos.', 'Crianza o reserva'),
+  ('quesos', 'fuentespina-crianza', 43, 'Fruta y madera bien integradas: acompaña quesos curados.', 'Crianza o reserva'),
+  ('lentejas', 'valderivero-crianza', 40, 'Con cuerpo y taninos suaves: aguanta un guiso contundente.', 'Crianza o reserva'),
+  ('pollo', 'valderivero-crianza', 41, 'Suave y redondo: acompaña un pollo asado sin taparlo.', 'Crianza o reserva'),
+  ('embutido', 'valderivero-crianza', 42, 'Fruta y madera que casan con jamón y embutidos.', 'Crianza o reserva'),
+  ('quesos', 'valderivero-crianza', 43, 'Fruta y madera bien integradas: acompaña quesos curados.', 'Crianza o reserva');
