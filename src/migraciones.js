@@ -16,6 +16,7 @@ import sql27 from '../sql/27-alcampo-otras-do.sql';
 import sql28 from '../sql/28-alcampo-eco-internacional.sql';
 import sql29 from '../sql/29-alcampo-blancos-rueda.sql';
 import sql30 from '../sql/30-alcampo-blancos-galicia-aragon-rioja.sql';
+import sql31 from '../sql/31-alcampo-blancos-resto.sql';
 
 const LISTA = [
   ['15-alcampo-tintos', sql15],
@@ -33,7 +34,8 @@ const LISTA = [
   ['27-alcampo-otras-do', sql27],
   ['28-alcampo-eco-internacional', sql28],
   ['29-alcampo-blancos-rueda', sql29],
-  ['30-alcampo-blancos-galicia-aragon-rioja', sql30]
+  ['30-alcampo-blancos-galicia-aragon-rioja', sql30],
+  ['31-alcampo-blancos-resto', sql31]
 ];
 
 // Separa un archivo SQL en sentencias (respeta comillas y comentarios de línea).
