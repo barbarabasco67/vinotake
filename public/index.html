@@ -181,6 +181,11 @@
   .sh-b{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:84px;padding:12px 6px;border-radius:18px;background:var(--surface-2);border:1px solid var(--border);color:var(--amarillo);font-weight:600;font-size:13px;cursor:pointer}
   .sh-b span{color:var(--ink)}
 
+  .price-cat{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:16px;color:var(--amarillo)}
+  .price-cat.ref{color:var(--muted)}
+  .cat-h{font-size:20px;margin:14px 0 2px;display:flex;align-items:baseline;gap:8px}
+  .cat-h .cnt-h{font-family:Inter,sans-serif;font-size:13px;font-weight:500;color:var(--muted)}
+  input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none}
   /* ===== Efectos en todos los botones ===== */
   button{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .22s,background-color .2s,border-color .2s,color .2s,filter .2s,opacity .2s}
   button:active:not(:disabled){transform:scale(.965)}
@@ -774,6 +779,22 @@
   </section>
 
 
+  <!-- Catálogo: todos los vinos -->
+  <section class="screen" id="s-catalogo" aria-label="Todos los vinos">
+    <div class="topbar"><button class="iconbtn plain" data-back aria-label="Volver"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
+    <div class="px" style="padding-top:8px">
+      <h1 style="font-size:30px;line-height:1.1">Todos los vinos</h1>
+      <p class="lead" id="cat-sub">Busca por nombre, bodega, zona o tipo.</p>
+    </div>
+    <div class="px stack" style="padding-top:14px;gap:12px">
+      <label class="field" for="cat-q"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--muted);flex-shrink:0"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input id="cat-q" type="search" placeholder="Busca un vino" autocomplete="off" enterkeyhint="search"></label>
+      <div class="chips" id="cat-tipos" role="group" aria-label="Tipo de vino"></div>
+      <div class="chips" id="cat-opc" role="group" aria-label="Orden y filtros"></div>
+    </div>
+    <div class="px stack" style="padding-top:8px;gap:10px" id="cat-lista"></div>
+    <div class="spacer"></div>
+  </section>
+
   <!-- 5c · COPA A COPA (comparador) -->
   <section class="screen" id="s-comparar" aria-label="Vino VS Vino: comparar dos vinos">
     <div class="px" style="padding-top:28px">
@@ -858,6 +879,7 @@
     if (name === 'home' && state.cata) cargarCata();
     if (name === 'takers') cargarTakers();
     if (name === 'comparar' && typeof pintarCmp === 'function') pintarCmp();
+    if (name === 'catalogo' && typeof cargarCatalogo === 'function') cargarCatalogo();
     el.classList.add('active');
     window.scrollTo(0, 0);
     if (push !== false) history.pushState({s:name}, '', '#' + name);
@@ -1771,6 +1793,64 @@
     setTimeout(function(){ if (wrap.parentNode) wrap.remove(); }, 650);
   }, { passive: true });
 
+
+  // ---------- Catálogo: todos los vinos con buscador ----------
+  var CAT_GRUPOS = [['Tinto', 'Tintos'], ['Blanco', 'Blancos'], ['Rosado', 'Rosados'], ['Espumoso', 'Espumosos'], ['Otros', 'Jereces y dulces']];
+  state.cat = { vinos: null, superId: null, tipo: 'todos', q: '', orden: 'az', solo: false };
+  function sinTildes(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  function grupoDe(v){ return /^(tinto|blanco|rosado|espumoso)$/i.test(v.tipo) ? v.tipo.charAt(0).toUpperCase() + v.tipo.slice(1).toLowerCase() : 'Otros'; }
+  function cargarCatalogo(){
+    if (state.cat.vinos && state.cat.superId === state.superId){ pintarCatalogo(); return Promise.resolve(); }
+    $('#cat-lista').innerHTML = '<div class="spin" style="margin:30px auto"></div>';
+    return api('/api/catalogo?super=' + encodeURIComponent(state.superId || '')).then(function(d){
+      state.cat.vinos = d.vinos.map(function(v){ v.buscar = sinTildes([v.nombre, v.bodega, v.denominacion, v.tipo, v.elaboracion].join(' ')); v.grupo = grupoDe(v); return v; });
+      state.cat.superId = state.superId; state.cat.superNombre = d.super || '';
+      pintarCatalogo();
+    }).catch(function(err){ $('#cat-lista').innerHTML = '<p class="note">' + esc(err.message) + '</p>'; });
+  }
+  function filaCatalogo(v){
+    return '<button class="bcard" data-wine="' + esc(v.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(v, 56) + '</span>' +
+      '<span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span><span class="s" style="display:block">' + esc([v.denominacion, v.elaboracion].filter(Boolean).join(' · ')) + '</span></span>' +
+      '<span class="meta">' + (v.precio != null ? '<span class="price-cat' + (v.en_super ? '' : ' ref') + '">' + eur(v.precio) + '</span>' + (v.en_super ? '' : '<span class="s" style="font-size:11px">aprox.</span>') : '') + '</span></button>';
+  }
+  function pintarCatalogo(){
+    var c = state.cat, todos = c.vinos || [], q = sinTildes(c.q).split(/\s+/).filter(Boolean);
+    var cuentaG = {}; todos.forEach(function(v){ cuentaG[v.grupo] = (cuentaG[v.grupo] || 0) + 1; });
+    $('#cat-tipos').innerHTML = '<button class="chip' + (c.tipo === 'todos' ? ' on' : '') + '" data-cattipo="todos" aria-pressed="' + (c.tipo === 'todos') + '">Todos (' + todos.length + ')</button>' +
+      CAT_GRUPOS.filter(function(g){ return cuentaG[g[0]]; }).map(function(g){ return '<button class="chip' + (c.tipo === g[0] ? ' on' : '') + '" data-cattipo="' + g[0] + '" aria-pressed="' + (c.tipo === g[0]) + '">' + g[1] + ' (' + cuentaG[g[0]] + ')</button>'; }).join('');
+    var nSuper = todos.filter(function(v){ return v.en_super; }).length;
+    $('#cat-opc').innerHTML = '<button class="chip' + (c.orden === 'az' ? ' on' : '') + '" data-catorden="az" aria-pressed="' + (c.orden === 'az') + '">De la A a la Z</button>' +
+      '<button class="chip' + (c.orden === 'precio' ? ' on' : '') + '" data-catorden="precio" aria-pressed="' + (c.orden === 'precio') + '">Más baratos primero</button>' +
+      (c.superNombre && nSuper ? '<button class="chip' + (c.solo ? ' on' : '') + '" data-catsolo="1" aria-pressed="' + c.solo + '">Con precio en ' + esc(c.superNombre) + ' (' + nSuper + ')</button>' : '');
+    var lista = todos.filter(function(v){
+      if (c.tipo !== 'todos' && v.grupo !== c.tipo) return false;
+      if (c.solo && !v.en_super) return false;
+      return q.every(function(w){ return v.buscar.indexOf(w) !== -1; });
+    });
+    lista.sort(c.orden === 'precio'
+      ? function(a, b){ return (a.precio == null) - (b.precio == null) || a.precio - b.precio || a.nombre.localeCompare(b.nombre, 'es'); }
+      : function(a, b){ return a.nombre.localeCompare(b.nombre, 'es'); });
+    $('#cat-sub').textContent = lista.length + (lista.length === 1 ? ' vino' : ' vinos') + (q.length || c.tipo !== 'todos' || c.solo ? ' con estos filtros' : ' en la app');
+    if (!lista.length){ $('#cat-lista').innerHTML = '<div class="empty"><p class="note" style="margin:0">No hay vinos con esa búsqueda. Prueba con otra palabra o quita algún filtro.</p></div>'; return; }
+    var html = '';
+    if (c.orden === 'precio') html = lista.map(filaCatalogo).join('');
+    else CAT_GRUPOS.forEach(function(g){
+      var del = lista.filter(function(v){ return v.grupo === g[0]; }); if (!del.length) return;
+      html += (c.tipo === 'todos' ? '<h2 class="cat-h">' + g[1] + ' <span class="cnt-h">' + del.length + '</span></h2>' : '') + del.map(filaCatalogo).join('');
+    });
+    $('#cat-lista').innerHTML = html;
+  }
+  document.addEventListener('input', function(e){
+    if (e.target.id === 'cat-q'){ state.cat.q = e.target.value; pintarCatalogo(); }
+  });
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-cattipo]');
+    if (t){ state.cat.tipo = t.getAttribute('data-cattipo'); pintarCatalogo(); return; }
+    var o = e.target.closest('[data-catorden]');
+    if (o){ state.cat.orden = o.getAttribute('data-catorden'); pintarCatalogo(); return; }
+    if (e.target.closest('[data-catsolo]')){ state.cat.solo = !state.cat.solo; pintarCatalogo(); }
+  });
+
   // ---------- Menú «Más»: perfil, gustos y lista de la compra ----------
   function iconoMas(d){ return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; }
   function abrirMas(){
@@ -1781,6 +1861,7 @@
         '<span aria-hidden="true" style="color:var(--muted);font-size:20px">›</span></button>';
     }
     abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0 0 14px">Más</h2><div class="stack" style="gap:10px">' +
+      fila('catalogo', iconoMas('<path d="M4 6h16M4 12h16M4 18h10"/>'), 'Todos los vinos', 'Busca y recorre el catálogo por tipos') +
       fila('perfil', iconoMas('<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c.9-3.8 3.7-6 7.5-6s6.6 2.2 7.5 6"/>'), 'Mi perfil', state.cuenta ? state.cuenta.email : (state.nombre || 'Tu nombre, tu cuenta y tus datos')) +
       fila('gustos', iconoMas('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'), 'Mis gustos', 'Lo que te gusta y vinos para ti') +
       fila('compra', iconoMas('<path d="M5 8h14l-1.2 11.2a1 1 0 0 1-.8.8H7a1 1 0 0 1-.8-.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>'), 'Lista de la compra', pend ? pend + (pend === 1 ? ' vino por comprar' : ' vinos por comprar') : 'Vacía por ahora') +

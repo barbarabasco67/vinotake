@@ -67,6 +67,17 @@ async function api(request, env, url) {
   let m = path.match(/^\/api\/vino\/([a-z0-9-]+)$/);
   if (method === 'GET' && m) return ficha(env, m[1], url.searchParams.get('super'));
 
+  if (method === 'GET' && path === '/api/catalogo') {
+    const superId = await superValido(env, url.searchParams.get('super'));
+    const sup = await env.DB.prepare('SELECT nombre FROM supermercados WHERE id = ?').bind(superId).first().catch(() => null);
+    const { results } = await env.DB.prepare(
+      `SELECT v.id, v.nombre, v.bodega, v.denominacion, v.tipo, v.elaboracion, v.color, v.imagen,
+              COALESCE(p.precio, v.precio_ref) AS precio, CASE WHEN p.precio IS NOT NULL THEN 1 ELSE 0 END AS en_super
+         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+        WHERE v.activo = 1 ORDER BY v.nombre`
+    ).bind(superId).all();
+    return json({ super: sup ? sup.nombre : '', vinos: results.map(r => ({ ...r, en_super: !!r.en_super })) }, 200, 60);
+  }
   if (method === 'GET' && path === '/api/top') return mejorValorados(env, url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/cocinar') return cocinar(env, await body(request));
   if (method === 'GET' && path === '/api/buscar') return buscar(env, url.searchParams.get('q'), url.searchParams.get('super'));
