@@ -956,14 +956,14 @@
     loading(true, camMode === 'shelf' ? 'Leyendo etiquetas…' : 'Leyendo la etiqueta…');
     comprimir(f).then(function(img){
       if (camMode === 'regalo'){
-        return api('/api/botella', { super_id: state.superId, imagen: img }).then(function(d){
+        return api('/api/botella', { super_id: state.superId, imagen: img, dispositivo: state.dispositivo }).then(function(d){
           state.leidoIA = !!d.leido_por_ia;
           if (d.vino_id) return abrirRegalo(d.vino_id, true);
           loading(false); renderFueraCatalogo(d); show('ficha');
         });
       }
       if (camMode === 'bottle'){
-        return api('/api/botella', { super_id: state.superId, imagen: img }).then(function(d){
+        return api('/api/botella', { super_id: state.superId, imagen: img, dispositivo: state.dispositivo }).then(function(d){
           state.leidoIA = !!d.leido_por_ia;
           if (d.vino_id) return abrirFicha(d.vino_id, true, false, true);
           loading(false); renderFueraCatalogo(d); show('ficha');

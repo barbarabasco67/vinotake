@@ -55,8 +55,12 @@ async function api(request, env, url) {
 
   if (method === 'GET' && path === '/api/inicio') return inicio(env);
   if (method === 'POST' && path === '/api/recomendar') return recomendar(env, await body(request));
-  if (method === 'POST' && path === '/api/botella') return botella(env, await body(request));
-  if (method === 'POST' && path === '/api/estanteria') return estanteria(env, await body(request));
+  if (method === 'POST' && (path === '/api/botella' || path === '/api/estanteria')) {
+    const b = await body(request);
+    const lim = await limiteIA(env, request, b);
+    if (lim) return lim;
+    return path === '/api/botella' ? botella(env, b) : estanteria(env, b);
+  }
 
   let m = path.match(/^\/api\/vino\/([a-z0-9-]+)$/);
   if (method === 'GET' && m) return ficha(env, m[1], url.searchParams.get('super'));
@@ -1576,6 +1580,24 @@ function emailLimpio(e) {
 }
 function claveValida(c) { return typeof c === 'string' && c.length >= 8 && c.length <= 100; }
 function ipDe(request) { return request.headers.get('cf-connecting-ip') || 'sin-ip'; }
+
+// Tope de fotos leídas con IA para controlar el gasto: por dispositivo, por red y en total, cada día.
+const TOPE_IA = { dispositivo: 8, ip: 20, total: 300 };
+async function limiteIA(env, request, b) {
+  if (!env.ANTHROPIC_API_KEY || !validarImagen(b && b.imagen)) return null;
+  const disp = String((b && b.dispositivo) || '').slice(0, 64);
+  const claves = ['ia:ip:' + ipDe(request)].concat(disp ? ['ia:d:' + disp] : []);
+  const { results } = await env.DB.prepare(
+    `SELECT clave, COUNT(*) AS n FROM cuenta_intentos
+      WHERE (clave IN (${claves.map(() => '?').join(',')}) OR clave = 'ia:total') AND creado > datetime('now', '-1 day') GROUP BY clave`
+  ).bind(...claves).all();
+  const n = Object.fromEntries(results.map(r => [r.clave, r.n]));
+  if ((n['ia:total'] || 0) >= TOPE_IA.total || (n[claves[0]] || 0) >= TOPE_IA.ip || (disp && (n['ia:d:' + disp] || 0) >= TOPE_IA.dispositivo)) {
+    return json({ error: 'Has llegado al límite de fotos de hoy. Vuelve mañana o busca el vino a mano.' }, 429);
+  }
+  await anotarIntento(env, claves.concat(['ia:total']));
+  return null;
+}
 
 async function intentosAltos(env, limites) {
   const claves = Object.keys(limites);
