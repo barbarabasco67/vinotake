@@ -2,10 +2,12 @@
 // Cada una se ejecuta una sola vez y se anota en la tabla «migraciones»: así no hay que pegar nada a mano.
 import sql15 from '../sql/15-alcampo-tintos.sql';
 import sql16 from '../sql/16-catalogo-ampliado-2.sql';
+import sql17 from '../sql/17-alcampo-precios-2.sql';
 
 const LISTA = [
   ['15-alcampo-tintos', sql15],
-  ['16-catalogo-ampliado-2', sql16]
+  ['16-catalogo-ampliado-2', sql16],
+  ['17-alcampo-precios-2', sql17]
 ];
 
 // Separa un archivo SQL en sentencias (respeta comillas y comentarios de línea).
