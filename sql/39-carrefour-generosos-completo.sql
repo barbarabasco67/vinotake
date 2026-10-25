@@ -1,0 +1,58 @@
+-- Vinotake · generosos, dulces, frizzantes, internacionales y sin alcohol de Carrefour (precios copiados de carrefour.es)
+
+INSERT OR REPLACE INTO vinos (id, nombre, bodega, denominacion, tipo, uva, elaboracion, sabor, temperatura, apertura, va_con, color, precio_ref, ejemplo, estilo, dulce) VALUES
+  ('cortijo-ceret-fino', 'Cortijo de Ceret Fino', 'Cortijo de Ceret', 'D.O. Jerez-Xérès-Sherry', 'Generoso', 'Palomino', 'Fino', 'Seco y salino, con notas de almendra. Se toma muy frío.', '6–8 °C', 'Bien frío', 'Pescado|Marisco|Quesos', '#E0D08A', 3.99, 0, 'equilibrado', 0),
+  ('cortijo-ceret-oloroso', 'Cortijo de Ceret Oloroso', 'Cortijo de Ceret', 'D.O. Jerez-Xérès-Sherry', 'Generoso', 'Palomino', 'Oloroso', 'Seco e intenso, con frutos secos, nuez y especias.', '10–12 °C', 'Fresco', 'Quesos|Aperitivos|Embutido', '#B8863B', 4.65, 0, 'intenso', 0),
+  ('cortijo-ceret-cream', 'Cortijo de Ceret Cream', 'Cortijo de Ceret', 'D.O. Jerez-Xérès-Sherry', 'Dulce', 'Palomino', 'Cream', 'Dulce y suave, con pasas, nuez y caramelo.', '10–12 °C', 'Fresco', 'Postres|Quesos', '#6B3A1E', 4.45, 0, 'intenso', 1),
+  ('canasta-cream', 'Canasta Cream', 'Canasta', 'D.O. Jerez-Xérès-Sherry', 'Dulce', 'Palomino', 'Cream', 'Dulce y suave, con pasas, nuez y caramelo.', '10–12 °C', 'Fresco', 'Postres|Quesos', '#6B3A1E', 9.49, 0, 'intenso', 1),
+  ('la-guita-manzanilla', 'La Guita Manzanilla', 'La Guita', 'D.O. Manzanilla-Sanlúcar', 'Generoso', 'Palomino', 'Manzanilla', 'Seco y ligero, con notas salinas y de almendra. Se toma muy frío.', '6–8 °C', 'Bien frío', 'Pescado|Marisco|Quesos', '#E0D08A', 8.05, 0, 'equilibrado', 0),
+  ('de-nuestra-tierra-manzanilla', 'De Nuestra Tierra Manzanilla', 'De Nuestra Tierra', 'D.O. Manzanilla-Sanlúcar', 'Generoso', 'Palomino', 'Manzanilla', 'Seco y ligero, con notas salinas y de almendra. Se toma muy frío.', '6–8 °C', 'Bien frío', 'Pescado|Marisco|Quesos', '#E0D08A', 5.65, 0, 'equilibrado', 0),
+  ('de-nuestra-tierra-px', 'De Nuestra Tierra Pedro Ximénez', 'De Nuestra Tierra', 'D.O. Montilla-Moriles', 'Dulce', 'Pedro Ximénez', 'Dulce', 'Dulce e intenso, con pasas, higos y caramelo. Se toma como un postre.', '10–12 °C', 'Fresco', 'Postres|Quesos', '#6B3A1E', 11.19, 0, 'intenso', 1),
+  ('malaga-virgen-px', 'Málaga Virgen Pedro Ximénez', 'Málaga Virgen', 'D.O. Málaga', 'Dulce', 'Pedro Ximénez', 'Dulce', 'Dulce e intenso, con pasas, higos y caramelo. Se toma como un postre.', '10–12 °C', 'Fresco', 'Postres|Quesos', '#6B3A1E', 11.15, 0, 'intenso', 1),
+  ('sandeman-porto', 'Sandeman Porto', 'Sandeman', 'D.O. Oporto (Portugal)', 'Dulce', 'Variedades de Oporto', 'Joven', 'Dulce e intenso, con ciruela, cereza y especias.', '10–12 °C', 'Fresco', 'Postres|Quesos', '#6B3A1E', 12.09, 0, 'intenso', 1),
+  ('impresiones-verdejo-semidulce', 'Impresiones Verdejo Semidulce', 'Impresiones', 'V.T. Castilla y León', 'Blanco', 'Verdejo', 'Joven', 'Suave y frutal, con fruta blanca y un toque dulce.', '8–10 °C', 'Bien frío', 'Pescado|Arroces|Ensaladas|Aperitivos', '#D4C27A', 6.75, 0, 'suave', 1),
+  ('vecchia-italia-fragolino', 'Vecchia Italia Fragolino Rosado', 'Vecchia Italia', 'Italia', 'Espumoso', 'Variedades tintas', 'Frizzante', 'Dulce y burbujeante suave, con fresa.', '6–8 °C', 'Muy frío', 'Aperitivos|Marisco', '#3E4A33', 3.99, 0, 'suave', 1);
+
+INSERT OR REPLACE INTO precios (vino_id, super_id, precio) VALUES
+  ('cortijo-ceret-fino', 'carrefour', 3.99),
+  ('cortijo-ceret-oloroso', 'carrefour', 4.65),
+  ('cortijo-ceret-cream', 'carrefour', 4.45),
+  ('canasta-cream', 'carrefour', 9.49),
+  ('la-guita-manzanilla', 'carrefour', 8.05),
+  ('de-nuestra-tierra-manzanilla', 'carrefour', 5.65),
+  ('de-nuestra-tierra-px', 'carrefour', 11.19),
+  ('malaga-virgen-px', 'carrefour', 11.15),
+  ('sandeman-porto', 'carrefour', 12.09),
+  ('impresiones-verdejo-semidulce', 'carrefour', 6.75),
+  ('vecchia-italia-fragolino', 'carrefour', 3.99),
+  ('la-ina-fino', 'carrefour', 8.59);
+
+INSERT OR REPLACE INTO maridajes (plato_id, vino_id, orden, motivo, nota) VALUES
+  ('pescado', 'cortijo-ceret-fino', 40, 'Seco y salino, para pescado frito o a la plancha.', 'Jerez seco'),
+  ('marisco', 'cortijo-ceret-fino', 41, 'Seco y salino, va de cine con gambas y langostinos.', 'Jerez seco'),
+  ('quesos', 'cortijo-ceret-fino', 42, 'Con frutos secos, ideal con quesos curados.', 'Jerez seco'),
+  ('quesos', 'cortijo-ceret-oloroso', 40, 'Con frutos secos, ideal con quesos curados.', 'Jerez seco'),
+  ('aperitivo', 'cortijo-ceret-oloroso', 41, 'Seco y salino: el aperitivo de toda la vida.', 'Jerez seco'),
+  ('embutido', 'cortijo-ceret-oloroso', 42, 'Con jamón ibérico, un jerez seco es imbatible.', 'Jerez seco'),
+  ('postres', 'cortijo-ceret-cream', 40, 'Dulce y aromático: se toma casi como un postre.', 'Para postre'),
+  ('quesos', 'cortijo-ceret-cream', 41, 'El contraste dulce-salado con un queso azul o curado es un clásico.', 'Para postre'),
+  ('postres', 'canasta-cream', 40, 'Dulce y aromático: se toma casi como un postre.', 'Para postre'),
+  ('quesos', 'canasta-cream', 41, 'El contraste dulce-salado con un queso azul o curado es un clásico.', 'Para postre'),
+  ('pescado', 'la-guita-manzanilla', 40, 'Seco y salino, para pescado frito o a la plancha.', 'Jerez seco'),
+  ('marisco', 'la-guita-manzanilla', 41, 'Seco y salino, va de cine con gambas y langostinos.', 'Jerez seco'),
+  ('quesos', 'la-guita-manzanilla', 42, 'Con frutos secos, ideal con quesos curados.', 'Jerez seco'),
+  ('pescado', 'de-nuestra-tierra-manzanilla', 40, 'Seco y salino, para pescado frito o a la plancha.', 'Jerez seco'),
+  ('marisco', 'de-nuestra-tierra-manzanilla', 41, 'Seco y salino, va de cine con gambas y langostinos.', 'Jerez seco'),
+  ('quesos', 'de-nuestra-tierra-manzanilla', 42, 'Con frutos secos, ideal con quesos curados.', 'Jerez seco'),
+  ('postres', 'de-nuestra-tierra-px', 40, 'Dulce y aromático: se toma casi como un postre.', 'Para postre'),
+  ('quesos', 'de-nuestra-tierra-px', 41, 'El contraste dulce-salado con un queso azul o curado es un clásico.', 'Para postre'),
+  ('postres', 'malaga-virgen-px', 40, 'Dulce y aromático: se toma casi como un postre.', 'Para postre'),
+  ('quesos', 'malaga-virgen-px', 41, 'El contraste dulce-salado con un queso azul o curado es un clásico.', 'Para postre'),
+  ('postres', 'sandeman-porto', 40, 'Dulce y aromático: se toma casi como un postre.', 'Para postre'),
+  ('quesos', 'sandeman-porto', 41, 'El contraste dulce-salado con un queso azul o curado es un clásico.', 'Para postre'),
+  ('pescado', 'impresiones-verdejo-semidulce', 40, 'Fresco y con buena acidez: no tapa el sabor del pescado.', 'Blanco fresco'),
+  ('paella', 'impresiones-verdejo-semidulce', 41, 'Fresco y con cuerpo, para paellas y arroces.', 'Blanco fresco'),
+  ('ensalada', 'impresiones-verdejo-semidulce', 42, 'Fresco y vivo, no pesa con las ensaladas.', 'Blanco fresco'),
+  ('aperitivo', 'impresiones-verdejo-semidulce', 43, 'Fresco y ligero: perfecto para picar algo.', 'Blanco fresco'),
+  ('aperitivo', 'vecchia-italia-fragolino', 40, 'Burbuja fresca que va bien con fritos y aperitivos.', 'Con burbujas'),
+  ('marisco', 'vecchia-italia-fragolino', 41, 'La burbuja y la acidez limpian el paladar entre bocado y bocado.', 'Con burbujas');
