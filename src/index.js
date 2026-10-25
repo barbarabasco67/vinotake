@@ -42,6 +42,10 @@ async function api(request, env, url) {
   if (method === 'POST' && path === '/api/gustos') return gustosGuardar(env, await body(request));
   if (method === 'GET' && path === '/api/bodega') return bodegaListar(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/bodega') return bodegaGuardar(env, await body(request));
+  if (method === 'GET' && path === '/api/lista') return listaVer(env, url.searchParams.get('d'), url.searchParams.get('super'));
+  if (method === 'POST' && path === '/api/lista') return listaGuardar(env, await body(request));
+  if (method === 'POST' && path === '/api/lista/vaciar') return listaVaciar(env, await body(request));
+  if (method === 'POST' && path === '/api/lista/a-bodega') return listaABodega(env, await body(request));
 
   if (path.startsWith('/api/cuenta')) {
     if (method === 'GET' && path === '/api/cuenta') return cuentaYo(request, env);
@@ -574,6 +578,74 @@ async function bodegaGuardar(env, b) {
   return json({ ok: true, vino_id: vinoId, cantidad: nuevo.cantidad, deseo: !!nuevo.deseo, puntuacion: nuevo.puntuacion, nota: nuevo.nota || '' });
 }
 
+// ---------- Lista de la compra (por dispositivo) ----------
+async function listaVer(env, dispositivo, superPedido) {
+  const d = dispositivoValido(dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const superId = await superValido(env, superPedido);
+  const { results } = await env.DB.prepare(
+    `SELECT l.vino_id AS id, l.cantidad, l.comprado, v.nombre, v.tipo, v.denominacion, v.color,
+            COALESCE(p.precio, v.precio_ref) AS precio
+       FROM lista l
+       JOIN vinos v ON v.id = l.vino_id AND v.activo = 1
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+      WHERE l.dispositivo = ?
+      ORDER BY l.comprado, l.creado DESC`
+  ).bind(superId, d).all();
+  return json({ vinos: results.map(r => ({
+    id: r.id, nombre: r.nombre, tipo: r.tipo, denominacion: r.denominacion, color: r.color || '#3A2226',
+    precio: r.precio, cantidad: r.cantidad || 1, comprado: !!r.comprado
+  })) });
+}
+
+async function listaGuardar(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  const vinoId = limpiar(b.vino_id, 80);
+  if (!d || !vinoId) return json({ error: 'Faltan datos.' }, 400);
+  if (b.quitar) {
+    await env.DB.prepare('DELETE FROM lista WHERE dispositivo = ? AND vino_id = ?').bind(d, vinoId).run();
+    return json({ ok: true, vino_id: vinoId, en_lista: false });
+  }
+  const existe = await env.DB.prepare('SELECT id FROM vinos WHERE id = ? AND activo = 1').bind(vinoId).first();
+  if (!existe) return json({ error: 'Ese vino no está en el catálogo.' }, 404);
+  const actual = await env.DB.prepare('SELECT cantidad, comprado FROM lista WHERE dispositivo = ? AND vino_id = ?').bind(d, vinoId).first();
+  if (!actual && (await env.DB.prepare('SELECT COUNT(*) AS n FROM lista WHERE dispositivo = ?').bind(d).first()).n >= 60)
+    return json({ error: 'Tu lista ya tiene 60 vinos. Quita alguno para añadir más.' }, 400);
+  const cantidad = 'cantidad' in b ? Math.max(1, Math.min(24, parseInt(b.cantidad, 10) || 1)) : (actual ? actual.cantidad : 1);
+  const comprado = 'comprado' in b ? (b.comprado ? 1 : 0) : (actual ? actual.comprado : 0);
+  await env.DB.prepare(
+    `INSERT INTO lista (dispositivo, vino_id, cantidad, comprado) VALUES (?, ?, ?, ?)
+     ON CONFLICT (dispositivo, vino_id) DO UPDATE SET cantidad = excluded.cantidad, comprado = excluded.comprado`
+  ).bind(d, vinoId, cantidad, comprado).run();
+  return json({ ok: true, vino_id: vinoId, en_lista: true, cantidad, comprado: !!comprado });
+}
+
+// solo: 'comprados' (por defecto) o 'todo'
+async function listaVaciar(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  if (b.solo === 'todo') await env.DB.prepare('DELETE FROM lista WHERE dispositivo = ?').bind(d).run();
+  else await env.DB.prepare('DELETE FROM lista WHERE dispositivo = ? AND comprado = 1').bind(d).run();
+  return json({ ok: true });
+}
+
+// Pasa lo comprado a "Mi bodega" (suma las botellas) y lo quita de la lista.
+async function listaABodega(env, b) {
+  const d = dispositivoValido(b.dispositivo);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const { results } = await env.DB.prepare('SELECT vino_id, cantidad FROM lista WHERE dispositivo = ? AND comprado = 1').bind(d).all();
+  if (!results.length) return json({ ok: true, movidos: 0 });
+  await env.DB.batch(results.flatMap(r => [
+    env.DB.prepare(
+      `INSERT INTO bodega (dispositivo, vino_id, cantidad) VALUES (?, ?, ?)
+       ON CONFLICT (dispositivo, vino_id) DO UPDATE SET cantidad = MIN(99, cantidad + excluded.cantidad),
+         deseo = 0, actualizado = CURRENT_TIMESTAMP`
+    ).bind(d, r.vino_id, r.cantidad),
+    env.DB.prepare('DELETE FROM lista WHERE dispositivo = ? AND vino_id = ?').bind(d, r.vino_id)
+  ]));
+  return json({ ok: true, movidos: results.length });
+}
+
 // ---------- Mis gustos ----------
 const TIPOS = ['Tinto', 'Blanco', 'Rosado', 'Espumoso', 'Generoso'];
 const ESTILOS = ['suave', 'equilibrado', 'intenso'];
@@ -759,6 +831,7 @@ async function perfilBorrar(env, b) {
   if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
   await env.DB.batch([
     env.DB.prepare('DELETE FROM bodega WHERE dispositivo = ?').bind(d),
+    env.DB.prepare('DELETE FROM lista WHERE dispositivo = ?').bind(d),
     env.DB.prepare('DELETE FROM gustos WHERE dispositivo = ?').bind(d),
     env.DB.prepare('DELETE FROM perfiles WHERE dispositivo = ?').bind(d)
   ]);
@@ -1337,7 +1410,7 @@ async function cataResponder(env, b) {
 const SESION_DIAS = 90;
 const PBKDF2_ITER = 100000; // máximo que admite Workers
 const TABLAS_DISPOSITIVO = ['bodega', 'gustos', 'perfiles', 'resenas', 'brindis', 'preguntas', 'respuestas', 'utiles',
-  'reto_propuestas', 'reto_votos', 'denuncias', 'cata_respuestas'];
+  'reto_propuestas', 'reto_votos', 'denuncias', 'cata_respuestas', 'lista'];
 const enc = new TextEncoder();
 
 function aB64(buf) { let s = ''; new Uint8Array(buf).forEach(b => { s += String.fromCharCode(b); }); return btoa(s); }
