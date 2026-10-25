@@ -43,6 +43,14 @@ async function api(request, env, url) {
   if (method === 'GET' && path === '/api/bodega') return bodegaListar(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/bodega') return bodegaGuardar(env, await body(request));
 
+  if (path.startsWith('/api/cuenta')) {
+    if (method === 'GET' && path === '/api/cuenta') return cuentaYo(request, env);
+    if (method === 'POST' && path === '/api/cuenta/registro') return cuentaRegistro(request, env, await body(request));
+    if (method === 'POST' && path === '/api/cuenta/entrar') return cuentaEntrar(request, env, await body(request));
+    if (method === 'POST' && path === '/api/cuenta/recuperar') return cuentaRecuperar(request, env, await body(request));
+    if (method === 'POST' && path === '/api/cuenta/salir') return cuentaSalir(request, env);
+    if (method === 'POST' && path === '/api/cuenta/clave') return cuentaClave(request, env, await body(request));
+  }
   if (method === 'GET' && path === '/api/cata') return cataVer(env, url.searchParams.get('d'));
   if (method === 'POST' && path === '/api/cata/responder') return cataResponder(env, await body(request));
   if (method === 'GET' && path === '/api/takers') return takersInicio(env, url.searchParams.get('d'), url.searchParams.get('super'));
@@ -763,6 +771,11 @@ async function perfilBorrar(env, b) {
     'DELETE FROM denuncias WHERE dispositivo = ?1'
   ].map(sql => env.DB.prepare(sql).bind(d))).catch(e => console.error('borrar takers', e));
   await env.DB.prepare('DELETE FROM cata_respuestas WHERE dispositivo = ?').bind(d).run().catch(() => {});
+  // Si el móvil tenía cuenta, también se borra.
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM sesiones WHERE cuenta_id IN (SELECT id FROM cuentas WHERE dispositivo = ?)').bind(d),
+    env.DB.prepare('DELETE FROM cuentas WHERE dispositivo = ?').bind(d)
+  ]).catch(() => {});
   return json({ ok: true });
 }
 
@@ -1313,4 +1326,175 @@ async function cataResponder(env, b) {
     acierto: !!acierto, correcta: p.correcta, explicacion: p.explicacion, terminado,
     aciertos: total.a, puntos: total.a * CATA_PUNTOS + (terminado && total.a === CATA_N ? CATA_PLENO : 0)
   });
+}
+
+// ---------- Cuentas: email y contraseña ----------
+// Los datos siguen colgando del código de dispositivo (tabla por tabla). La cuenta lo "ata" a un email:
+// al entrar en otro móvil se recupera ese mismo código y, con él, la bodega, los puntos y las opiniones.
+const SESION_DIAS = 90;
+const PBKDF2_ITER = 100000; // máximo que admite Workers
+const TABLAS_DISPOSITIVO = ['bodega', 'gustos', 'perfiles', 'resenas', 'brindis', 'preguntas', 'respuestas', 'utiles',
+  'reto_propuestas', 'reto_votos', 'denuncias', 'cata_respuestas'];
+const enc = new TextEncoder();
+
+function aB64(buf) { let s = ''; new Uint8Array(buf).forEach(b => { s += String.fromCharCode(b); }); return btoa(s); }
+function deB64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+function aHex(buf) { return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join(''); }
+async function sha256(txt) { return aHex(await crypto.subtle.digest('SHA-256', enc.encode(txt))); }
+function aleatorio(n) { return crypto.getRandomValues(new Uint8Array(n)); }
+async function hashClave(clave, salB64) {
+  const k = await crypto.subtle.importKey('raw', enc.encode(clave), 'PBKDF2', false, ['deriveBits']);
+  return aB64(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: deB64(salB64), iterations: PBKDF2_ITER }, k, 256));
+}
+function iguales(a, b) {
+  if (a.length !== b.length) return false;
+  let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+// 16 caracteres sin letras que se confundan (sin I, O, 0, 1): 80 bits.
+function nuevoCodigoRecuperacion() {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = ''; aleatorio(16).forEach((x, i) => { s += A[x % 32]; if (i % 4 === 3 && i < 15) s += '-'; });
+  return s;
+}
+function normalizarCodigo(c) { return String(c || '').toUpperCase().replace(/[^A-Z2-9]/g, ''); }
+function emailLimpio(e) {
+  const t = String(e || '').trim().toLowerCase();
+  return t.length <= 120 && /^[^\s@]{1,64}@[^\s@]+\.[^\s@]{2,}$/.test(t) ? t : null;
+}
+function claveValida(c) { return typeof c === 'string' && c.length >= 8 && c.length <= 100; }
+function ipDe(request) { return request.headers.get('cf-connecting-ip') || 'sin-ip'; }
+
+async function intentosAltos(env, limites) {
+  const claves = Object.keys(limites);
+  const { results } = await env.DB.prepare(
+    `SELECT clave, COUNT(*) AS n FROM cuenta_intentos
+      WHERE clave IN (${claves.map(() => '?').join(',')}) AND creado > datetime('now', '-15 minutes') GROUP BY clave`
+  ).bind(...claves).all();
+  return results.some(r => r.n >= limites[r.clave]);
+}
+async function anotarIntento(env, claves) {
+  await env.DB.batch(claves.map(c => env.DB.prepare('INSERT INTO cuenta_intentos (clave) VALUES (?)').bind(c)));
+  if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM cuenta_intentos WHERE creado < datetime('now', '-1 day')`).run();
+}
+const demasiados = () => json({ error: 'Demasiados intentos. Espera unos minutos y vuelve a probar.' }, 429);
+
+async function crearSesion(env, cuentaId) {
+  const token = aHex(aleatorio(32));
+  await env.DB.prepare(`INSERT INTO sesiones (token, cuenta_id, expira) VALUES (?, ?, datetime('now', ?))`)
+    .bind(await sha256(token), cuentaId, `+${SESION_DIAS} days`).run();
+  return token;
+}
+async function cuentaDeSesion(request, env) {
+  const m = /^Bearer ([a-f0-9]{64})$/.exec(request.headers.get('authorization') || '');
+  if (!m) return null;
+  const h = await sha256(m[1]);
+  const c = await env.DB.prepare(
+    `SELECT c.id, c.email, c.dispositivo, c.hash, c.sal, c.creado FROM sesiones s JOIN cuentas c ON c.id = s.cuenta_id
+      WHERE s.token = ? AND s.expira > datetime('now')`
+  ).bind(h).first();
+  return c ? Object.assign(c, { _token: h }) : null;
+}
+
+// Pasa lo que había en un móvil anónimo a la cuenta (no pisa lo que la cuenta ya tiene).
+async function fusionarDispositivo(env, desdeCrudo, hacia) {
+  const desde = dispositivoValido(desdeCrudo);
+  if (!desde || desde === hacia) return;
+  const enCuenta = await env.DB.prepare('SELECT 1 AS x FROM cuentas WHERE dispositivo = ?').bind(desde).first();
+  if (enCuenta) return; // ese móvil ya es de otra cuenta
+  for (const t of TABLAS_DISPOSITIVO) {
+    try {
+      await env.DB.prepare(`UPDATE OR IGNORE ${t} SET dispositivo = ? WHERE dispositivo = ?`).bind(hacia, desde).run();
+      await env.DB.prepare(`DELETE FROM ${t} WHERE dispositivo = ?`).bind(desde).run();
+    } catch (e) { console.error('fusionar', t, e); }
+  }
+}
+
+async function cuentaRegistro(request, env, b) {
+  const email = emailLimpio(b.email);
+  const d = dispositivoValido(b.dispositivo);
+  if (!email) return json({ error: 'Escribe un email válido.' }, 400);
+  if (!claveValida(b.clave)) return json({ error: 'La contraseña debe tener entre 8 y 100 caracteres.' }, 400);
+  if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const ip = 'r:' + ipDe(request);
+  if (await intentosAltos(env, { [ip]: 10 })) return demasiados();
+  await anotarIntento(env, [ip]);
+  if (await env.DB.prepare('SELECT 1 AS x FROM cuentas WHERE email = ?').bind(email).first())
+    return json({ error: 'Ya hay una cuenta con ese email. Prueba a iniciar sesión.', existe: true }, 409);
+  if (await env.DB.prepare('SELECT 1 AS x FROM cuentas WHERE dispositivo = ?').bind(d).first())
+    return json({ error: 'Este móvil ya tiene una cuenta. Inicia sesión con ella.' }, 409);
+  const sal = aB64(aleatorio(16)), recSal = aB64(aleatorio(16));
+  const codigo = nuevoCodigoRecuperacion();
+  const r = await env.DB.prepare('INSERT INTO cuentas (email, dispositivo, hash, sal, rec_hash, rec_sal) VALUES (?, ?, ?, ?, ?, ?) RETURNING id')
+    .bind(email, d, await hashClave(b.clave, sal), sal, await sha256(recSal + normalizarCodigo(codigo)), recSal).first();
+  return json({ ok: true, token: await crearSesion(env, r.id), email, dispositivo: d, codigo_recuperacion: codigo });
+}
+
+async function cuentaEntrar(request, env, b) {
+  const email = emailLimpio(b.email);
+  const claves = { ['e:' + (email || 'x')]: 8, ['i:' + ipDe(request)]: 30 };
+  if (await intentosAltos(env, claves)) return demasiados();
+  const c = email ? await env.DB.prepare('SELECT id, dispositivo, hash, sal FROM cuentas WHERE email = ?').bind(email).first() : null;
+  // Se calcula siempre el hash para que no se note si el email existe.
+  const calculado = await hashClave(String(b.clave || '').slice(0, 100), c ? c.sal : 'AAAAAAAAAAAAAAAAAAAAAA==');
+  if (!c || !iguales(calculado, c.hash)) {
+    await anotarIntento(env, Object.keys(claves));
+    return json({ error: 'Email o contraseña incorrectos.' }, 401);
+  }
+  await env.DB.prepare('DELETE FROM cuenta_intentos WHERE clave = ?').bind('e:' + email).run();
+  await fusionarDispositivo(env, b.dispositivo_actual, c.dispositivo);
+  return json({ ok: true, token: await crearSesion(env, c.id), email, dispositivo: c.dispositivo });
+}
+
+async function cuentaRecuperar(request, env, b) {
+  const email = emailLimpio(b.email);
+  const claves = { ['e:' + (email || 'x')]: 8, ['i:' + ipDe(request)]: 30 };
+  if (await intentosAltos(env, claves)) return demasiados();
+  if (!claveValida(b.clave)) return json({ error: 'La nueva contraseña debe tener entre 8 y 100 caracteres.' }, 400);
+  const c = email ? await env.DB.prepare('SELECT id, dispositivo, rec_hash, rec_sal FROM cuentas WHERE email = ?').bind(email).first() : null;
+  const calculado = await sha256((c ? c.rec_sal : 'x') + normalizarCodigo(b.codigo));
+  if (!c || !iguales(calculado, c.rec_hash)) {
+    await anotarIntento(env, Object.keys(claves));
+    return json({ error: 'El email o el código de recuperación no son correctos.' }, 401);
+  }
+  const sal = aB64(aleatorio(16)), recSal = aB64(aleatorio(16));
+  const codigo = nuevoCodigoRecuperacion();
+  await env.DB.batch([
+    env.DB.prepare('UPDATE cuentas SET hash = ?, sal = ?, rec_hash = ?, rec_sal = ? WHERE id = ?')
+      .bind(await hashClave(b.clave, sal), sal, await sha256(recSal + normalizarCodigo(codigo)), recSal, c.id),
+    env.DB.prepare('DELETE FROM sesiones WHERE cuenta_id = ?').bind(c.id),
+    env.DB.prepare('DELETE FROM cuenta_intentos WHERE clave = ?').bind('e:' + email)
+  ]);
+  await fusionarDispositivo(env, b.dispositivo_actual, c.dispositivo);
+  return json({ ok: true, token: await crearSesion(env, c.id), email, dispositivo: c.dispositivo, codigo_recuperacion: codigo });
+}
+
+async function cuentaYo(request, env) {
+  const c = await cuentaDeSesion(request, env);
+  if (!c) return json({ error: 'Sesión caducada.' }, 401);
+  return json({ email: c.email, dispositivo: c.dispositivo, creado: c.creado });
+}
+
+async function cuentaSalir(request, env) {
+  const c = await cuentaDeSesion(request, env);
+  if (c) await env.DB.prepare('DELETE FROM sesiones WHERE token = ?').bind(c._token).run();
+  return json({ ok: true });
+}
+
+async function cuentaClave(request, env, b) {
+  const c = await cuentaDeSesion(request, env);
+  if (!c) return json({ error: 'Sesión caducada.' }, 401);
+  if (!claveValida(b.nueva)) return json({ error: 'La nueva contraseña debe tener entre 8 y 100 caracteres.' }, 400);
+  const clave = 'p:' + c.id;
+  if (await intentosAltos(env, { [clave]: 8 })) return demasiados();
+  if (!iguales(await hashClave(String(b.actual || '').slice(0, 100), c.sal), c.hash)) {
+    await anotarIntento(env, [clave]);
+    return json({ error: 'La contraseña actual no es correcta.' }, 401);
+  }
+  const sal = aB64(aleatorio(16));
+  await env.DB.batch([
+    env.DB.prepare('UPDATE cuentas SET hash = ?, sal = ? WHERE id = ?').bind(await hashClave(b.nueva, sal), sal, c.id),
+    env.DB.prepare('DELETE FROM sesiones WHERE cuenta_id = ? AND token != ?').bind(c.id, c._token)
+  ]);
+  return json({ ok: true });
 }

@@ -1,0 +1,24 @@
+CREATE TABLE IF NOT EXISTS cuentas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  dispositivo TEXT NOT NULL UNIQUE,
+  hash TEXT NOT NULL,
+  sal TEXT NOT NULL,
+  rec_hash TEXT NOT NULL,
+  rec_sal TEXT NOT NULL,
+  creado TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sesiones (
+  token TEXT PRIMARY KEY,
+  cuenta_id INTEGER NOT NULL,
+  creado TEXT DEFAULT CURRENT_TIMESTAMP,
+  expira TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sesiones_cuenta ON sesiones (cuenta_id);
+
+CREATE TABLE IF NOT EXISTS cuenta_intentos (
+  clave TEXT NOT NULL,
+  creado TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_intentos ON cuenta_intentos (clave, creado);

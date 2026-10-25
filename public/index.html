@@ -216,6 +216,13 @@
   .cata-rev .i{width:24px;height:24px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;color:#fff}
   .cata-rev.ok .i{background:var(--verde)}
   .cata-rev.ko .i{background:var(--burdeos)}
+  .hoja.fija .hoja-x{display:none}
+  .ojo{background:none;border:none;color:var(--amarillo);font-weight:600;font-size:13px;min-height:44px;padding:0 4px;cursor:pointer;flex-shrink:0}
+  .cta:disabled{opacity:.45;cursor:default;box-shadow:none}
+  .cu-ok{width:40px;height:40px;border-radius:20px;background:var(--verde);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .cu-codigo{padding:18px 12px;border-radius:16px;background:var(--surface-2);border:1.5px dashed var(--amarillo-line);text-align:center;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;font-weight:700;letter-spacing:.06em;color:var(--amarillo);user-select:all;-webkit-user-select:all}
+  .cu-check{display:flex;align-items:center;gap:12px;min-height:44px;font-size:15px;cursor:pointer}
+  .cu-check input{width:22px;height:22px;accent-color:var(--amarillo);flex-shrink:0}
   .hist-card{width:116px;flex-shrink:0;scroll-snap-align:start;padding:10px;border-radius:18px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;color:var(--ink)}
   .hist-card .stage{height:104px;border-radius:12px;background:var(--surface-3);display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35))}
   .hist-card .n{font-weight:600;font-size:13px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px}
@@ -552,7 +559,7 @@
     <div class="topbar"><button class="iconbtn plain" data-back aria-label="Volver"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
     <div class="px" style="padding-top:8px;display:flex;align-items:center;gap:16px">
       <div class="avatar" id="perfil-avatar" aria-hidden="true"></div>
-      <div><h1 style="font-size:28px;line-height:1.1" id="perfil-titulo">Tu perfil</h1><p class="note" style="margin:4px 0 0">Tus datos se guardan en este móvil</p></div>
+      <div><h1 style="font-size:28px;line-height:1.1" id="perfil-titulo">Tu perfil</h1><p class="note" id="perfil-sub" style="margin:4px 0 0;overflow-wrap:anywhere">Tus datos se guardan en este móvil</p></div>
     </div>
     <div class="px" style="padding-top:20px"><div class="box">
       <div><label class="label" for="perfil-nombre" style="margin-bottom:8px">¿Cómo te llamamos?</label>
@@ -567,8 +574,7 @@
       <button class="row-card" data-go="gustos"><span class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span><span style="flex:1"><span class="t" style="display:block">Mis gustos</span><span class="s" style="display:block">Tu perfil de vino y recomendaciones para ti</span></span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A89CA0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
     </div>
     <div class="px" style="padding-top:22px"><div class="box">
-      <div class="label" style="margin-bottom:0">Tu cuenta</div>
-      <div style="font-size:15px;line-height:1.5">Ahora tu bodega y tus gustos se guardan en este móvil. Pronto podrás crear una cuenta para no perderlos si cambias de móvil.</div>
+      <div id="perfil-cuenta" style="display:flex;flex-direction:column;gap:14px"></div>
       <div class="note">Código de este móvil: <strong id="perfil-codigo"></strong></div>
     </div></div>
     <div class="px" style="padding-top:12px"><div class="box">
@@ -671,7 +677,8 @@
   function presuNombre(id){ for (var i = 0; i < state.presupuestos.length; i++) if (state.presupuestos[i].id === id) return state.presupuestos[i].nombre; return ''; }
 
   function api(path, body){
-    var opts = body ? { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body) } : {};
+    var opts = body ? { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body) } : { headers:{} };
+    var ses = store('sesion'); if (ses) opts.headers.authorization = 'Bearer ' + ses;
     return fetch(path, opts).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(d){
         if (!r.ok) throw new Error(d.error || 'No hemos podido conectar. Inténtalo de nuevo.');
@@ -1462,13 +1469,17 @@
   function plural(n, uno, varios){ return n + ' ' + (n === 1 ? uno : varios); }
 
   // ----- Hoja inferior genérica -----
-  function abrirHoja(html){
+  function abrirHoja(html, fija){
+    state.hojaFija = !!fija; $('#hoja').classList.toggle('fija', !!fija);
     $('#hoja-body').innerHTML = '<button class="hoja-x" data-hoja-cerrar aria-label="Cerrar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' + html;
     $('#hoja').classList.add('show');
     var f = $('#hoja-body').querySelector('input,textarea'); if (f) setTimeout(function(){ f.focus(); }, 150);
   }
-  function cerrarHoja(){ $('#hoja').classList.remove('show'); $('#hoja-body').innerHTML = ''; }
-  $('#hoja').addEventListener('click', function(e){ if (e.target.id === 'hoja' || e.target.closest('[data-hoja-cerrar]')) cerrarHoja(); });
+  function cerrarHoja(){ state.hojaFija = false; $('#hoja').classList.remove('show', 'fija'); $('#hoja-body').innerHTML = ''; }
+  $('#hoja').addEventListener('click', function(e){
+    if (state.hojaFija && !e.target.closest('[data-hoja-cerrar]')) return;
+    if (e.target.id === 'hoja' || e.target.closest('[data-hoja-cerrar]')) cerrarHoja();
+  });
 
   // Para publicar hace falta un nombre de Taker.
   function asegurarNombre(){
@@ -1660,6 +1671,7 @@
         '<div><div class="tk-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><span style="width:' + pct + '%"></span></div>' +
           '<div class="note" style="margin-top:6px">' + (sig ? 'Te faltan ' + sig.faltan + ' puntos para ' + esc(sig.nombre) : '¡Nivel máximo! Eres leyenda') + '</div></div>' +
         '<div class="tk-stats"><div><b>' + y.stats.opiniones + '</b><span>Opiniones</span></div><div><b>' + y.stats.respuestas + '</b><span>Respuestas</span></div><div><b>' + y.stats.brindis + '</b><span>Brindis recibidos</span></div></div>' +
+        (!state.cuenta ? '<button class="linkbtn" id="tk-crear-cuenta" style="align-self:center">Crea una cuenta para no perder tus puntos</button>' : '') +
       '</div>';
     }
     // Reto
@@ -1834,6 +1846,153 @@
     }
   });
 
+  // ---------- Cuenta (email y contraseña) ----------
+  state.cuenta = store('sesion') && store('cuenta_email') ? { email: store('cuenta_email') } : null;
+  function generarUUID(){
+    return (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c){ var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); });
+  }
+  function borrarClave(k){ try { localStorage.removeItem(k); } catch(e){} }
+  function recargarConAviso(msg){ if (msg) store('aviso', msg); location.replace(location.pathname + '#home'); location.reload(); }
+  function guardarSesion(r){ store('sesion', r.token); store('cuenta_email', r.email); store('dispositivo', r.dispositivo); }
+
+  function cargarCuenta(){
+    if (!store('sesion')){ state.cuenta = null; pintarCuenta(); return Promise.resolve(); }
+    return api('/api/cuenta').then(function(c){ state.cuenta = c; store('cuenta_email', c.email); pintarCuenta(); })
+      .catch(function(err){
+        if (/caducada/i.test(err.message)){ borrarClave('sesion'); borrarClave('cuenta_email'); state.cuenta = null; }
+        pintarCuenta();
+      });
+  }
+  function pintarCuenta(){
+    var box = $('#perfil-cuenta'); if (!box) return;
+    var c = state.cuenta;
+    $('#perfil-sub').textContent = c ? 'Cuenta: ' + c.email : 'Tus datos se guardan en este móvil';
+    box.innerHTML = c
+      ? '<div class="label" style="margin-bottom:0">Tu cuenta</div>' +
+        '<div style="display:flex;align-items:center;gap:12px"><span class="cu-ok" aria-hidden="true">' + ICON_OK + '</span>' +
+          '<div style="min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(c.email) + '</div>' +
+          '<div class="note" style="margin-top:2px">Tu vinoteka, tus puntos y tus opiniones te siguen a cualquier móvil.</div></div></div>' +
+        '<button class="ghost" id="cu-clave" style="min-height:48px">Cambiar contraseña</button>' +
+        '<button class="ghost" id="cu-salir" style="min-height:48px">Cerrar sesión</button>'
+      : '<div class="label" style="margin-bottom:0">Tu cuenta</div>' +
+        '<div style="font-size:15px;line-height:1.5">Ahora tu vinoteka, tus puntos y tus opiniones solo están en este móvil. Crea una cuenta para no perderlos si cambias de móvil o borras los datos del navegador.</div>' +
+        '<button class="cta" id="cu-crear" style="min-height:52px">Crear mi cuenta</button>' +
+        '<button class="ghost" id="cu-tengo" style="min-height:48px">Ya tengo cuenta</button>';
+    if (state.tk && state.tk.datos) pintarTakers();
+  }
+
+  function campoCuenta(id, tipo, etiqueta, attrs){
+    return '<div><label class="label" for="' + id + '" style="margin-bottom:8px">' + etiqueta + '</label><div class="field" style="border-width:1px"><input id="' + id + '" type="' + tipo + '" ' + attrs + '>' +
+      (tipo === 'password' ? '<button type="button" class="ojo" data-ojo="' + id + '" aria-label="Mostrar la contraseña">Mostrar</button>' : '') + '</div></div>';
+  }
+  function formularioCuenta(botonId, enviar){
+    function lanzar(){
+      var btn = $('#' + botonId), err = $('#cu-err'); err.textContent = ''; btn.disabled = true;
+      Promise.resolve().then(enviar).catch(function(e){ btn.disabled = false; err.textContent = e && e.message ? e.message : 'Algo ha fallado.'; });
+    }
+    $('#' + botonId).addEventListener('click', lanzar);
+    document.querySelectorAll('#hoja-body input[type=email],#hoja-body input[type=password],#hoja-body input[type=text]').forEach(function(i){
+      i.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); lanzar(); } });
+    });
+  }
+  var ERR = '<p class="note" id="cu-err" role="alert" style="color:var(--amarillo);min-height:18px;margin:0"></p>';
+
+  function abrirRegistro(){
+    abrirHoja('<h2 id="hoja-t" style="font-size:24px">Crea tu cuenta</h2>' +
+      '<p class="lead" style="margin:0">Todo lo que ya tienes en este móvil pasa a tu cuenta: vinoteka, gustos, puntos y opiniones.</p>' +
+      campoCuenta('cu-email', 'email', 'Tu email', 'autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="120" placeholder="tu@email.com"') +
+      campoCuenta('cu-clave1', 'password', 'Contraseña (mínimo 8 caracteres)', 'autocomplete="new-password" maxlength="100"') + ERR +
+      '<button class="cta" id="cu-reg">Crear cuenta</button>' +
+      '<button class="linkbtn" id="cu-a-entrar" style="align-self:center">Ya tengo cuenta</button>');
+    formularioCuenta('cu-reg', function(){
+      return api('/api/cuenta/registro', { dispositivo: state.dispositivo, email: $('#cu-email').value, clave: $('#cu-clave1').value }).then(function(r){
+        store('sesion', r.token); store('cuenta_email', r.email); state.cuenta = { email: r.email }; pintarCuenta();
+        mostrarCodigo(r.codigo_recuperacion, '¡Cuenta creada! Tus datos ya están a salvo.', function(){ cargarTakers(); });
+      });
+    });
+  }
+  function abrirEntrar(){
+    abrirHoja('<h2 id="hoja-t" style="font-size:24px">Inicia sesión</h2>' +
+      '<p class="lead" style="margin:0">Si en este móvil ya tienes vinos guardados, se sumarán a los de tu cuenta.</p>' +
+      campoCuenta('cu-email', 'email', 'Tu email', 'autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="120"') +
+      campoCuenta('cu-clave1', 'password', 'Contraseña', 'autocomplete="current-password" maxlength="100"') + ERR +
+      '<button class="cta" id="cu-ent">Iniciar sesión</button>' +
+      '<div style="display:flex;justify-content:space-between;gap:8px"><button class="linkbtn" id="cu-a-recuperar">He olvidado la contraseña</button><button class="linkbtn" id="cu-a-registro">Crear cuenta</button></div>');
+    formularioCuenta('cu-ent', function(){
+      return api('/api/cuenta/entrar', { email: $('#cu-email').value, clave: $('#cu-clave1').value, dispositivo_actual: state.dispositivo }).then(function(r){
+        guardarSesion(r); recargarConAviso('Sesión iniciada. ¡Bienvenido de nuevo!');
+      });
+    });
+  }
+  function abrirRecuperar(){
+    abrirHoja('<h2 id="hoja-t" style="font-size:24px">Recupera tu cuenta</h2>' +
+      '<p class="lead" style="margin:0">Escribe tu email y el código de recuperación que te dimos al crear la cuenta (son 16 letras y números).</p>' +
+      campoCuenta('cu-email', 'email', 'Tu email', 'autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="120"') +
+      campoCuenta('cu-codigo-in', 'text', 'Código de recuperación', 'autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="30" placeholder="XXXX-XXXX-XXXX-XXXX"') +
+      campoCuenta('cu-clave1', 'password', 'Nueva contraseña (mínimo 8 caracteres)', 'autocomplete="new-password" maxlength="100"') + ERR +
+      '<button class="cta" id="cu-rec">Recuperar cuenta</button>' +
+      '<button class="linkbtn" id="cu-a-entrar" style="align-self:center">Volver a iniciar sesión</button>');
+    formularioCuenta('cu-rec', function(){
+      return api('/api/cuenta/recuperar', { email: $('#cu-email').value, codigo: $('#cu-codigo-in').value, clave: $('#cu-clave1').value, dispositivo_actual: state.dispositivo }).then(function(r){
+        guardarSesion(r);
+        mostrarCodigo(r.codigo_recuperacion, 'Tu código anterior ya no vale: este es el nuevo.', function(){ recargarConAviso('Contraseña cambiada. ¡Bienvenido de nuevo!'); });
+      });
+    });
+  }
+  function abrirCambiarClave(){
+    abrirHoja('<h2 id="hoja-t" style="font-size:24px">Cambiar contraseña</h2>' +
+      campoCuenta('cu-clave0', 'password', 'Contraseña actual', 'autocomplete="current-password" maxlength="100"') +
+      campoCuenta('cu-clave1', 'password', 'Nueva contraseña (mínimo 8 caracteres)', 'autocomplete="new-password" maxlength="100"') + ERR +
+      '<button class="cta" id="cu-cam">Guardar</button>');
+    formularioCuenta('cu-cam', function(){
+      return api('/api/cuenta/clave', { actual: $('#cu-clave0').value, nueva: $('#cu-clave1').value }).then(function(){
+        cerrarHoja(); toast('Contraseña cambiada');
+      });
+    });
+  }
+  function mostrarCodigo(codigo, msg, despues){
+    abrirHoja('<h2 id="hoja-t" style="font-size:24px">Guarda tu código de recuperación</h2>' +
+      '<p class="lead" style="margin:0">' + esc(msg) + ' Este código es la única forma de recuperar la cuenta si olvidas la contraseña. Guárdalo en tus notas o haz una captura: no lo volveremos a mostrar.</p>' +
+      '<div class="cu-codigo" id="cu-codigo" aria-label="Código de recuperación">' + esc(codigo) + '</div>' +
+      '<button class="ghost" id="cu-copiar" style="min-height:48px">Copiar código</button>' +
+      '<label class="cu-check"><input type="checkbox" id="cu-ok"><span>Ya lo he guardado</span></label>' +
+      '<button class="cta" id="cu-seguir" disabled>Continuar</button>', true);
+    $('#cu-copiar').addEventListener('click', function(){
+      var ok = function(){ toast('Código copiado'); }, ko = function(){ toast('No se ha podido copiar. Anótalo a mano.'); };
+      try { navigator.clipboard.writeText(codigo).then(ok, ko); } catch(e){ ko(); }
+    });
+    $('#cu-ok').addEventListener('change', function(){ $('#cu-seguir').disabled = !this.checked; });
+    $('#cu-seguir').addEventListener('click', function(){ cerrarHoja(); if (despues) despues(); });
+  }
+  function abrirSalir(){
+    abrirHoja('<h2 id="hoja-t" style="font-size:24px">¿Cerrar sesión?</h2>' +
+      '<p class="lead" style="margin:0">En este móvil dejarás de ver tus datos. Volverán a aparecer cuando inicies sesión otra vez.</p>' +
+      '<button class="cta" id="cu-salir-ok">Cerrar sesión</button><button class="ghost" data-hoja-cerrar>Cancelar</button>');
+    $('#cu-salir-ok').addEventListener('click', function(){
+      $('#cu-salir-ok').disabled = true;
+      api('/api/cuenta/salir', {}).catch(function(){}).then(function(){
+        ['sesion', 'cuenta_email', 'historial', 'super', 'takers_aviso'].forEach(borrarClave);
+        store('dispositivo', generarUUID());
+        recargarConAviso('Sesión cerrada');
+      });
+    });
+  }
+
+  document.addEventListener('click', function(e){
+    var t = e.target, b;
+    if ((b = t.closest('[data-ojo]'))){
+      var i = $('#' + b.getAttribute('data-ojo')), ver = i.type === 'password';
+      i.type = ver ? 'text' : 'password'; b.textContent = ver ? 'Ocultar' : 'Mostrar';
+      b.setAttribute('aria-label', ver ? 'Ocultar la contraseña' : 'Mostrar la contraseña'); return;
+    }
+    if (t.closest('#cu-crear') || t.closest('#cu-a-registro') || t.closest('#tk-crear-cuenta')){ abrirRegistro(); return; }
+    if (t.closest('#cu-tengo') || t.closest('#cu-a-entrar')){ abrirEntrar(); return; }
+    if (t.closest('#cu-a-recuperar')){ abrirRecuperar(); return; }
+    if (t.closest('#cu-clave')){ abrirCambiarClave(); return; }
+    if (t.closest('#cu-salir')){ abrirSalir(); }
+  });
+
   // ---------- Perfil ----------
   state.nombre = '';
   function iniciales(n){ return (n || '').trim().split(/\s+/).slice(0, 2).map(function(p){ return p.charAt(0).toUpperCase(); }).join(''); }
@@ -1878,9 +2037,9 @@
     }).catch(function(err){ toast(err.message); });
   });
   $('#btn-borrar-datos').addEventListener('click', function(){
-    if (!window.confirm('Se borrarán tu bodega, tus gustos y tu perfil de este móvil. No se puede deshacer. ¿Seguro?')) return;
+    if (!window.confirm('Se borrarán tu bodega, tus gustos, tu perfil, lo que hayas publicado y tu cuenta (si la tienes). No se puede deshacer. ¿Seguro?')) return;
     api('/api/perfil/borrar', { dispositivo: state.dispositivo }).then(function(){
-      try { localStorage.removeItem('dispositivo'); localStorage.removeItem('super'); localStorage.removeItem('historial'); } catch(e){} pintarHistorial();
+      try { localStorage.removeItem('dispositivo'); localStorage.removeItem('super'); localStorage.removeItem('historial'); localStorage.removeItem('sesion'); localStorage.removeItem('cuenta_email'); } catch(e){} pintarHistorial();
       toast('Datos borrados');
       setTimeout(function(){ location.replace(location.pathname + '#home'); location.reload(); }, 800);
     }).catch(function(err){ toast(err.message); });
@@ -2128,6 +2287,9 @@
     }
   });
 
+  // Aviso tras iniciar o cerrar sesión (la página se recarga).
+  (function(){ var av = store('aviso'); if (av){ borrarClave('aviso'); setTimeout(function(){ toast(av); }, 900); } })();
+
   // ---------- Control de edad ----------
   if (store('edad_ok') !== '1') $('#gate').classList.add('show');
   $('#gate-yes').addEventListener('click', function(){ store('edad_ok', '1'); $('#gate').classList.remove('show'); });
@@ -2136,7 +2298,7 @@
   // ---------- Inicio ----------
   history.replaceState({s:'home'}, '', '#home');
   show('home', false);
-  cargarInicio().then(function(){ return Promise.all([cargarBodega(), cargarPrefsInicio(), cargarPerfilInicio()]); }).then(function(){ cargarCata(); return cargarTop(); }).catch(function(err){ toast(err.message); });
+  cargarInicio().then(function(){ return Promise.all([cargarBodega(), cargarPrefsInicio(), cargarPerfilInicio(), cargarCuenta()]); }).then(function(){ cargarCata(); return cargarTop(); }).catch(function(err){ toast(err.message); });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
