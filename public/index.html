@@ -185,6 +185,12 @@
   .comp-c.best .comp-p{color:var(--verde-txt)}
   .comp-tag{font-size:11px;color:var(--verde-txt);background:var(--verde-soft);border:1px solid var(--verde-line);border-radius:999px;padding:2px 9px}
   .comp-d{font-size:12px;color:var(--muted);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:2px 9px}
+  .pw-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .pw-lista li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.4}
+  .pw-lista svg{flex-shrink:0;margin-top:2px}
+  .pw-input{width:100%;min-height:48px;border-radius:14px;border:1px solid var(--border-hi);background:var(--surface-2);color:var(--ink);padding:0 14px;font-size:16px;text-transform:uppercase}
+  .pw-fila{display:flex;justify-content:space-between;gap:12px;font-size:14px;padding:6px 0;border-top:1px solid var(--border)}
+  .pw-fila:first-of-type{border-top:0}
   .comp-ahorro{font-size:13px;color:var(--muted);padding:2px 2px 0}
   .comp-ahorro b{color:var(--verde-txt);font-weight:600}
   .precio-fila{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:4px 8px;margin-top:16px}
@@ -719,6 +725,7 @@
       <div><label class="label" for="perfil-super" style="margin-bottom:8px">Tu súper habitual</label>
         <div class="store" style="margin-top:0"><span style="font-size:14px">Normalmente compro en</span><select id="perfil-super"></select></div></div>
     </div></div>
+    <div class="px" style="padding-top:18px" id="perfil-premium"></div>
     <div class="px" style="padding-top:22px"><h2 style="font-size:20px">Tu resumen</h2></div>
     <div class="px" style="padding-top:12px"><div class="box"><div class="grid2" style="gap:10px" id="perfil-stats"></div></div></div>
     <div class="px stack" style="padding-top:18px;gap:10px">
@@ -796,6 +803,7 @@
     </div>
     <div class="px stack" style="padding-top:18px;gap:10px" id="compra-lista"></div>
     <div class="px" style="padding-top:16px" id="compra-total"></div>
+    <div class="px" style="padding-top:14px" id="compra-mejor"></div>
     <div class="px stack" style="padding-top:14px;gap:10px" id="compra-acc"></div>
     <div class="spacer"></div>
   </section>
@@ -885,7 +893,7 @@
     var ses = store('sesion'); if (ses) opts.headers.authorization = 'Bearer ' + ses;
     return fetch(path, opts).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(d){
-        if (!r.ok) throw new Error(d.error || 'No hemos podido conectar. Inténtalo de nuevo.');
+        if (!r.ok){ if (d.premium && typeof abrirPaywall === 'function') abrirPaywall(d.error); throw new Error(d.error || 'No hemos podido conectar. Inténtalo de nuevo.'); }
         return d;
       });
     }, function(){ throw new Error('Sin conexión. Inténtalo de nuevo en un momento.'); });
@@ -1168,6 +1176,12 @@
       }
       compBlock = '<div class="comp"><div class="comp-t">Precio en cada súper</div><div class="comp-row">' + cards + '</div>' + (pie ? '<div class="comp-ahorro">' + pie + '</div>' : '') + '</div>';
     }
+    var tiendasBlock = '';
+    if (!fromPhoto && w.tiendas && w.tiendas.length){
+      tiendasBlock = '<div class="comp"><div class="comp-t">Comprar online</div><div class="comp-row">' + w.tiendas.map(function(t){
+        return '<a class="comp-c" href="/api/ir/' + encodeURIComponent(t.id) + '/' + encodeURIComponent(w.id) + '?d=' + encodeURIComponent(state.dispositivo) + '" target="_blank" rel="noopener sponsored" style="text-decoration:none;color:inherit"><span class="comp-n">' + esc(t.nombre) + '</span><span class="comp-d">Buscar este vino</span></a>';
+      }).join('') + '</div><div class="comp-ahorro">Enlaces de afiliado: si compras, Vinotake recibe una pequeña comisión. El precio no cambia.</div></div>';
+    }
     var notaBadge = '';
     if (!fromPhoto){
       var est = ''; for (var si = 1; si <= 5; si++) est += estrellaSVG(si <= Math.round(w.media || 0), 14);
@@ -1194,7 +1208,7 @@
         '<div class="sub">' + esc([w.bodega, w.denominacion].filter(Boolean).join(' · ')) + '</div>' +
         '<div class="tags" style="justify-content:center;margin-top:14px">' + (w.etiquetas || []).map(function(t){ return '<span class="tg">' + esc(t) + '</span>'; }).join('') + '</div>' + priceBlock + '</div>' +
       
-      '<div class="px" style="padding-top:14px">' + compBlock + sab + '</div>' +
+      '<div class="px" style="padding-top:14px">' + compBlock + tiendasBlock + sab + '</div>' +
       (haySug ? '<div class="px" style="padding-top:28px"><h2 style="font-size:22px">Si te gusta, mira también</h2></div>' : '') +
       sugRow('De la misma bodega', s.misma) +
       sugRow('Parecidos y más baratos', s.parecidos, true) +
@@ -1355,6 +1369,7 @@
       '<button class="toggle" data-lc="limpiar" style="justify-content:center">Quitar lo comprado</button>';
     acc += '<button class="toggle" data-lc="vaciar" style="justify-content:center;color:var(--muted)">Vaciar la lista</button>';
     $('#compra-acc').innerHTML = acc;
+    cargarMejorSuper(pend);
   }
   var vaciarArmado = false, vaciarTimer;
   document.addEventListener('click', function(e){
@@ -1386,6 +1401,84 @@
       if (!vaciarArmado){ vaciarArmado = true; b.textContent = 'Toca otra vez para vaciarla'; clearTimeout(vaciarTimer); vaciarTimer = setTimeout(function(){ vaciarArmado = false; pintarLista(); }, 3500); return; }
       vaciarArmado = false;
       api('/api/lista/vaciar', { dispositivo: state.dispositivo, solo: 'todo' }).then(cargarLista).catch(function(err){ toast(err.message); });
+    }
+  });
+
+
+  // ---------- Premium ----------
+  state.prem = { premium: false };
+  function cargarPremium(){
+    return api('/api/premium?d=' + encodeURIComponent(state.dispositivo)).then(function(p){ state.prem = p; pintarPremiumPerfil(); }).catch(function(){});
+  }
+  function fmtFecha(s){
+    var d = new Date(String(s).replace(' ', 'T') + 'Z');
+    return isNaN(d) ? '' : d.toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' });
+  }
+  var ICO_OK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function pintarPremiumPerfil(){
+    var el = $('#perfil-premium'); if (!el) return;
+    var p = state.prem || {}, e = p.escaneos || { usados:0, tope:0 }, b = p.bodega || { usados:0, tope:0 };
+    var uso = '<div class="pw-fila"><span>Fotos de etiquetas este mes</span><b>' + e.usados + ' de ' + e.tope + '</b></div>' +
+      '<div class="pw-fila"><span>Vinos en tu bodega</span><b>' + b.usados + (p.premium ? '' : ' de ' + b.tope) + '</b></div>';
+    el.innerHTML = '<div class="box">' +
+      '<div><div style="font-weight:700;font-size:17px">' + (p.premium ? 'Vinotake Premium' : 'Plan gratis') + '</div>' +
+      '<div class="note" style="margin:3px 0 0">' + (p.premium && p.hasta ? 'Activo hasta el ' + esc(fmtFecha(p.hasta)) : 'Puedes ampliarlo cuando quieras.') + '</div></div>' + uso +
+      '<button class="' + (p.premium ? 'ghost' : 'cta') + '" data-paywall="1">' + (p.premium ? 'Ver mi plan' : 'Ver Premium') + '</button></div>';
+  }
+  function abrirPaywall(motivo){
+    var p = state.prem || {}, pr = p.precios || { mes:'2,49', anio:'19,99' }, lim = (p.limites && p.limites.premium) || { escaneos:60 }, gr = (p.limites && p.limites.gratis) || { escaneos:5, bodega:25 };
+    var mes = (parseFloat(String(pr.anio).replace(',', '.')) / 12).toFixed(2).replace('.', ',');
+    var pago = p.pago || {};
+    var botones = '';
+    if (p.premium) botones = '<div class="note" style="margin:0">Ya tienes Premium' + (p.hasta ? ' hasta el ' + esc(fmtFecha(p.hasta)) : '') + '. Gracias por apoyar Vinotake.</div>';
+    else if (pago.anio || pago.mes){
+      if (pago.anio) botones += '<button class="cta" data-pagar="anio">Anual · ' + esc(pr.anio) + ' € al año<span style="font-weight:500;font-size:13px;opacity:.85"> (' + mes + ' €/mes)</span></button>';
+      if (pago.mes) botones += '<button class="' + (pago.anio ? 'ghost' : 'cta') + '" data-pagar="mes">Mensual · ' + esc(pr.mes) + ' € al mes</button>';
+      botones += '<div class="note" style="margin:0;text-align:center">Pago seguro con Stripe. Cancelas cuando quieras.</div>';
+    } else botones = '<div class="note" style="margin:0">El pago estará disponible muy pronto. Si tienes un código, puedes canjearlo aquí abajo.</div>';
+    abrirHoja('<h2 id="hoja-t" style="font-size:24px;margin:0">Vinotake Premium</h2>' +
+      (motivo ? '<p class="lead" style="margin:0">' + esc(motivo) + '</p>' : '<p class="lead" style="margin:0">Para sacarle más partido a tu compra de vino.</p>') +
+      '<ul class="pw-lista">' +
+        '<li>' + ICO_OK + '<span>Hasta ' + lim.escaneos + ' fotos de etiquetas y estanterías al mes <span class="note" style="display:inline;margin:0">(gratis: ' + gr.escaneos + ')</span></span></li>' +
+        '<li>' + ICO_OK + '<span>Mi bodega sin límite <span class="note" style="display:inline;margin:0">(gratis: ' + gr.bodega + ' vinos)</span></span></li>' +
+        '<li>' + ICO_OK + '<span>La lista de la compra te dice en qué súper te sale más barata, o cómo repartirla entre varios para ahorrar</span></li>' +
+      '</ul>' + botones +
+      (p.premium ? '' : '<div style="display:flex;gap:8px"><input class="pw-input" id="pw-codigo" type="text" placeholder="Código de regalo" autocomplete="off" autocapitalize="characters" maxlength="30"><button class="toggle" data-canjear="1" style="flex-shrink:0">Canjear</button></div>'));
+  }
+  var mejorKey = '';
+  function cargarMejorSuper(pend){
+    var cont = $('#compra-mejor'); if (!cont) return;
+    if (!pend || pend.length < 2){ cont.innerHTML = ''; mejorKey = ''; return; }
+    var key = pend.map(function(v){ return v.id + ':' + v.cantidad; }).join(',') + '|' + state.superId + '|' + (state.prem && state.prem.premium);
+    if (key === mejorKey) return; mejorKey = key;
+    api('/api/lista/mejor-super?d=' + encodeURIComponent(state.dispositivo) + '&super=' + encodeURIComponent(state.superId || '')).then(function(r){
+      if (!r.hay){ cont.innerHTML = ''; return; }
+      if (!r.premium){
+        cont.innerHTML = '<div class="box" style="gap:12px"><div style="font-weight:600">Podrías ahorrar hasta ' + eur(r.ahorro) + '</div>' +
+          '<div class="note" style="margin:0">Repartiendo esta lista entre varios súper te sale más barata. Con Premium ves cómo.</div>' +
+          '<button class="ghost" data-paywall="1">Ver cómo ahorrar</button></div>';
+        return;
+      }
+      var h = '<div class="box" style="gap:10px"><div style="font-weight:700;font-size:17px">Mejor súper para tu lista</div>';
+      if (r.mejor_uno) h += '<div class="pw-fila"><span>Todo en ' + esc(r.mejor_uno.nombre) + '</span><b>' + eur(r.mejor_uno.total) + '</b></div>' +
+        (r.mejor_uno.ahorro > 0 && r.tu_super ? '<div class="note" style="margin:0">' + eur(r.mejor_uno.ahorro) + ' menos que en ' + esc(r.tu_super.nombre) + '.</div>' : '');
+      if (r.repartido && r.repartido.tiendas.length > 1){
+        h += '<div style="font-weight:600;margin-top:6px">Repartida, ' + eur(r.repartido.total) + (r.repartido.ahorro > 0 ? ' · ahorras ' + eur(r.repartido.ahorro) : '') + '</div>';
+        h += r.repartido.tiendas.map(function(t){ return '<div class="pw-fila"><span>' + esc(t.nombre) + ' · ' + t.vinos.length + (t.vinos.length === 1 ? ' vino' : ' vinos') + '</span><b>' + eur(t.total) + '</b></div>'; }).join('');
+      }
+      if (r.sin_precio) h += '<div class="note" style="margin:0">' + r.sin_precio + (r.sin_precio === 1 ? ' vino no tiene' : ' vinos no tienen') + ' precio en ningún súper y no cuenta.</div>';
+      cont.innerHTML = h + '</div>';
+    }).catch(function(){ cont.innerHTML = ''; });
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-paywall],[data-pagar],[data-canjear]'); if (!b) return;
+    if (b.hasAttribute('data-paywall')) abrirPaywall();
+    else if (b.hasAttribute('data-pagar')) window.location.href = '/api/premium/pagar?d=' + encodeURIComponent(state.dispositivo) + '&plan=' + encodeURIComponent(b.getAttribute('data-pagar'));
+    else {
+      var c = $('#pw-codigo'); if (!c || !c.value.trim()){ toast('Escribe el código.'); return; }
+      api('/api/premium/canjear', { dispositivo: state.dispositivo, codigo: c.value }).then(function(r){
+        state.prem = r; pintarPremiumPerfil(); mejorKey = ''; pintarLista(); cerrarHoja(); toast('Premium activado');
+      }).catch(function(err){ toast(err.message); });
     }
   });
 
@@ -3299,7 +3392,7 @@
   var enlaceVino = (location.pathname === '/v') ? new URLSearchParams(location.search).get('i') : null;
   history.replaceState({s:'home'}, '', '/#home');
   show('home', false);
-  cargarInicio().then(function(){ return Promise.all([cargarBodega(), cargarLista(), cargarPrefsInicio(), cargarPerfilInicio(), cargarCuenta()]); }).then(function(){ cargarCata(); return cargarTop(); }).then(function(){ if (enlaceVino && /^[a-z0-9-]+$/.test(enlaceVino)) abrirFicha(enlaceVino); }).catch(function(err){ toast(err.message); });
+  cargarInicio().then(function(){ return Promise.all([cargarPremium(), cargarBodega(), cargarLista(), cargarPrefsInicio(), cargarPerfilInicio(), cargarCuenta()]); }).then(function(){ cargarCata(); return cargarTop(); }).then(function(){ if (enlaceVino && /^[a-z0-9-]+$/.test(enlaceVino)) abrirFicha(enlaceVino); }).catch(function(err){ toast(err.message); });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });

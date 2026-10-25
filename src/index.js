@@ -1,5 +1,11 @@
 import { rellenarFotos, sondearOFF } from './fotos.js';
 import { aplicarMigraciones } from './migraciones.js';
+import { crear as crearPremium } from './premium.js';
+
+let _prem;
+function prem() {
+  return _prem || (_prem = crearPremium({ json, dispositivoValido, limpiar, ipDe, intentosAltos, anotarIntento, demasiados, superValido }));
+}
 // Vinotake · API
 // La web (carpeta public) la sirve Cloudflare directamente. Este Worker solo atiende /api/*.
 
@@ -101,6 +107,14 @@ async function api(request, env, url) {
     return json(await sondearOFF(q).catch(e => ({ error: String(e.message) })));
   }
   if (method === 'GET' && path === '/api/comparar') return comparar(env, url.searchParams.get('a'), url.searchParams.get('b'), url.searchParams.get('super'));
+  if (method === 'GET' && path === '/api/premium') return prem().estado(env, url.searchParams.get('d'));
+  if (method === 'POST' && path === '/api/premium/canjear') return prem().canjear(request, env, await body(request));
+  if (method === 'POST' && path === '/api/premium/codigos') return prem().crearCodigos(request, env, await body(request));
+  if (method === 'GET' && path === '/api/premium/pagar') return prem().pagar(env, url.searchParams.get('d'), url.searchParams.get('plan'));
+  if (method === 'POST' && path === '/api/premium/stripe') return prem().stripe(request, env);
+  if (method === 'GET' && path === '/api/lista/mejor-super') return prem().mejorSuper(env, url.searchParams.get('d'), url.searchParams.get('super'));
+  let mi = path.match(/^\/api\/ir\/([a-z0-9-]+)\/([a-z0-9-]+)$/);
+  if (method === 'GET' && mi) return prem().ir(env, mi[1], mi[2], url.searchParams.get('d'));
   if (method === 'GET' && path === '/api/lista') return listaVer(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/lista') return listaGuardar(env, await body(request));
   if (method === 'POST' && path === '/api/lista/vaciar') return listaVaciar(env, await body(request));
@@ -479,6 +493,7 @@ async function ficha(env, id, superPedido) {
     precio: aqui ? { super: aqui.super, precio: aqui.precio } : (masBaratoReal ? { super: masBaratoReal.super, precio: masBaratoReal.precio, desde: true } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null)),
     mas_barato: masBarato ? { super: masBarato.super, precio: masBarato.precio } : null,
     comparativa: precios.map(p => ({ id: p.super_id, super: p.super, precio: p.precio })),
+    tiendas: prem().tiendasPublicas(env),
     sugerencias
   }, 200, 60);
 }
@@ -633,6 +648,8 @@ async function bodegaGuardar(env, b) {
   if (!nuevo.cantidad && !nuevo.deseo && nuevo.puntuacion === null && !nuevo.nota) {
     await env.DB.prepare('DELETE FROM bodega WHERE dispositivo = ? AND vino_id = ?').bind(d, vinoId).run();
   } else {
+    const hay = await env.DB.prepare('SELECT 1 AS x FROM bodega WHERE dispositivo = ? AND vino_id = ?').bind(d, vinoId).first();
+    if (!hay) { const lim = await prem().limiteBodega(env, d); if (lim) return lim; }
     await env.DB.prepare(
       `INSERT INTO bodega (dispositivo, vino_id, cantidad, deseo, puntuacion, nota)
        VALUES (?, ?, ?, ?, ?, ?)
@@ -1618,6 +1635,10 @@ async function limiteIA(env, request, b) {
   if ((n['ia:total'] || 0) >= TOPE_IA.total || (n[claves[0]] || 0) >= TOPE_IA.ip || (disp && (n['ia:d:' + disp] || 0) >= TOPE_IA.dispositivo)) {
     return json({ error: 'Has llegado al límite de fotos de hoy. Vuelve mañana o busca el vino a mano.' }, 429);
   }
+  const dv = dispositivoValido(disp);
+  if (!dv) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
+  const tope = await prem().contarEscaneo(env, dv);
+  if (tope) return tope;
   await anotarIntento(env, claves.concat(['ia:total']));
   return null;
 }
