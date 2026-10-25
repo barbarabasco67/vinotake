@@ -11,6 +11,7 @@ const PRESUPUESTOS = {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/v' && request.method === 'GET') return vinoCompartido(request, env, url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
     try {
       return await api(request, env, url);
@@ -24,6 +25,29 @@ export default {
     ctx.waitUntil(rellenarFotos(env, 6).then(r => console.log('fotos', JSON.stringify(r))).catch(e => console.error('fotos', e)));
   }
 };
+
+// Enlace para compartir un vino: sirve la misma web, con título y descripción del vino para la vista previa (WhatsApp, redes).
+async function vinoCompartido(request, env, url) {
+  const res = await env.ASSETS.fetch(new Request(url.origin + '/', { headers: request.headers }));
+  const id = (url.searchParams.get('i') || '').toLowerCase();
+  if (!/^[a-z0-9-]+$/.test(id)) return res;
+  const v = await env.DB.prepare('SELECT nombre, bodega, denominacion, tipo, sabor, imagen, precio_ref FROM vinos WHERE id = ? AND activo = 1').bind(id).first().catch(() => null);
+  if (!v) return res;
+  const titulo = v.nombre + ' · Vinotake';
+  const desc = [[v.tipo, v.denominacion].filter(Boolean).join(' · '), v.precio_ref ? 'desde ' + String(v.precio_ref).replace('.', ',') + ' €' : '', v.sabor].filter(Boolean).join('. ').slice(0, 200);
+  const poner = (c) => ({ element(e) { e.setAttribute('content', c); } });
+  let rw = new HTMLRewriter()
+    .on('title', { element(e) { e.setInnerContent(titulo); } })
+    .on('meta[property="og:title"]', poner(titulo))
+    .on('meta[property="og:description"]', poner(desc))
+    .on('meta[name="description"]', poner(desc));
+  if (v.imagen && /^https:\/\//.test(v.imagen)) {
+    rw = rw.on('meta[property="og:type"]', { element(e) { e.after('<meta property="og:image" content="' + v.imagen.replace(/"/g, '&quot;') + '">', { html: true }); } });
+  }
+  const out = new Response(rw.transform(res).body, res);
+  out.headers.set('cache-control', 'no-cache');
+  return out;
+}
 
 async function api(request, env, url) {
   const path = url.pathname.replace(/\/+$/, '');
@@ -405,6 +429,7 @@ async function ficha(env, id, superPedido) {
     sugerencias.descubrir = cand.filter(r => !ya.has(r.id)).slice(0, 3).map(r => auto(r, [r.uva, r.denominacion].filter(Boolean).join(' · ')));
   }
 
+  const valo = await env.DB.prepare('SELECT AVG(puntuacion) AS media, COUNT(*) AS n FROM resenas WHERE vino_id = ? AND oculto = 0').bind(id).first().catch(() => null);
   return json({
     id: v.id,
     nombre: v.nombre,
@@ -422,6 +447,8 @@ async function ficha(env, id, superPedido) {
     elaboracion: v.elaboracion,
     estilo: v.estilo || null,
     dulce: !!v.dulce,
+    media: valo && valo.media ? Math.round(valo.media * 10) / 10 : null,
+    votos: valo ? valo.n : 0,
     ejemplo: !!v.ejemplo,
     precio: aqui ? { super: aqui.super, precio: aqui.precio } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null),
     mas_barato: masBarato ? { super: masBarato.super, precio: masBarato.precio } : null,
