@@ -118,6 +118,76 @@
   @keyframes cmbIn{to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.cmb-r,.cmb-fin{animation-duration:.01s;animation-delay:0s!important}}
   .cmp-ver li{margin:0 0 8px;line-height:1.45}
+
+  /* ===== Ficha del vino: la botella en el escenario ===== */
+  .stage{position:relative;height:430px;margin-top:-56px;display:flex;align-items:center;justify-content:center;overflow:hidden;--lx:50%;
+    background:radial-gradient(ellipse 70% 62% at var(--lx) 44%, color-mix(in srgb, var(--vc) 55%, #5a4a40) 0%, color-mix(in srgb, var(--vc) 30%, var(--bg)) 52%, var(--bg) 100%)}
+  .stage::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,17,.55) 0%,rgba(18,16,17,0) 26%,rgba(18,16,17,0) 70%,var(--bg) 100%);pointer-events:none;z-index:1}
+  .stage-luz{position:absolute;top:-10px;left:var(--lx);width:340px;height:420px;transform:translateX(-50%);pointer-events:none;
+    background:conic-gradient(from 180deg at 50% 0%, transparent 168deg, rgba(255,236,200,.20) 180deg, transparent 192deg);filter:blur(10px);opacity:.9}
+  .stage-luz::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 40%,rgba(255,240,215,.32) 50%,transparent 60%);transform:translateX(-120%);animation:barrido 1.5s .35s ease-out forwards;mix-blend-mode:screen}
+  @keyframes barrido{to{transform:translateX(120%)}}
+  .stage-suelo{position:absolute;left:50%;bottom:62px;width:230px;height:34px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at center,rgba(0,0,0,.65),transparent 70%);filter:blur(6px);z-index:1}
+  .bottle-big{position:relative;z-index:2;margin-top:38px;--rx:0deg;--ry:0deg;transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));transition:transform .25s ease-out;
+    filter:drop-shadow(0 22px 26px rgba(0,0,0,.55));animation:sube .9s cubic-bezier(.2,.8,.2,1) both}
+  .bottle-float{animation:flota 6s ease-in-out 1s infinite alternate}
+  @keyframes sube{from{opacity:0;transform:perspective(900px) translateY(34px) scale(.94)}to{opacity:1;transform:perspective(900px)}}
+  @keyframes flota{from{transform:translateY(0)}to{transform:translateY(-9px)}}
+  .thumb-big{position:relative;z-index:2;margin-top:34px;height:300px;width:auto;max-width:78%;border-radius:18px;object-fit:cover;border:1px solid var(--border-hi);box-shadow:0 22px 40px rgba(0,0,0,.55)}
+  .ficha-titulo{display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:14px;position:relative;z-index:3}
+  .ficha-titulo h1{font-size:34px;line-height:1.05;margin-top:8px}
+  .ficha-titulo .sub{font-size:15px;color:var(--muted);margin-top:8px}
+  .ficha-titulo .soon{align-self:center}
+  .precio-card{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px 16px;padding:18px 20px;border-radius:22px;background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid var(--border-hi);backdrop-filter:blur(6px)}
+  .precio-card .pk{font-size:13px;color:var(--muted)}
+  .precio-card .pv{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:38px;letter-spacing:-.03em;color:var(--amarillo);line-height:1.1;margin-top:2px}
+  .precio-card .pbar{display:flex;flex-direction:column;align-items:flex-end;font-size:12px;color:var(--verde-txt);background:var(--verde-soft);border:1px solid var(--verde-line);border-radius:14px;padding:8px 12px}
+  .precio-card .pbar b{font-size:16px}
+  .sec{display:flex;flex-direction:column;gap:16px;padding:22px 20px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+  .sec h2{font-size:22px}
+  .sabor{margin:0;font-size:16px;line-height:1.55;color:var(--ink2)}
+  .meters{display:flex;flex-direction:column;gap:10px}
+  .meter{display:grid;grid-template-columns:96px auto 1fr;align-items:center;gap:12px;font-size:14px}
+  .meter .ml{color:var(--muted)}
+  .meter .mp{display:flex;gap:5px}
+  .meter .mp i{width:34px;height:8px;border-radius:4px;background:rgba(255,255,255,.12);display:block;transform-origin:left;animation:llena .7s .5s cubic-bezier(.2,.8,.2,1) both}
+  .meter .mp i.on{background:linear-gradient(90deg,var(--burdeos),var(--amarillo))}
+  .meter .mp i:nth-child(2){animation-delay:.62s}.meter .mp i:nth-child(3){animation-delay:.74s}
+  @keyframes llena{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .meter .mw{font-weight:600}
+  .stat2{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);color:var(--amarillo)}
+  .stat2 .k{font-size:12px;color:var(--muted)}.stat2 .v{font-weight:700;font-size:16px;margin-top:2px;color:var(--ink)}
+  .dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + var(--safe-b));width:calc(min(480px,100vw) - 24px);display:grid;grid-template-columns:1fr 54px 54px;gap:8px;padding:8px;border-radius:999px;z-index:15;
+    background:rgba(30,25,27,.88);border:1px solid var(--border-hi);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 10px 30px rgba(0,0,0,.55)}
+  .dock button{min-height:54px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:9px;font-weight:700;font-size:15px;cursor:pointer}
+  .dock .dock-main{background:var(--burdeos);border-color:var(--burdeos-line);color:#fff;box-shadow:0 6px 16px rgba(98,22,40,.45)}
+  .dock .dock-main.on{background:var(--amarillo-soft);border-color:var(--amarillo-line);color:var(--amarillo);box-shadow:none}
+  #s-ficha .topbar{position:relative;z-index:5}
+
+  /* ===== Efectos en todos los botones ===== */
+  button{transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .22s,background-color .2s,border-color .2s,color .2s,filter .2s,opacity .2s}
+  button:active:not(:disabled){transform:scale(.965)}
+  button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amarillo);outline-offset:2px}
+  .cta{position:relative;overflow:hidden}
+  .cta::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 32%,rgba(255,255,255,.26) 50%,transparent 68%);transform:translateX(-130%);pointer-events:none}
+  .cta:not(:disabled):hover::after,.cta:not(:disabled):active::after{transform:translateX(130%);transition:transform .75s ease}
+  .tab.on svg{animation:tabPop .45s cubic-bezier(.2,.9,.3,1.4)}
+  @keyframes tabPop{0%{transform:scale(.7) translateY(2px)}60%{transform:scale(1.18) translateY(-2px)}100%{transform:none}}
+  .chip.on,.budget.on,.toggle.on{animation:pop .32s cubic-bezier(.2,.9,.3,1.4)}
+  @keyframes pop{0%{transform:scale(.92)}60%{transform:scale(1.05)}100%{transform:none}}
+  .rp-wrap{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+  .rp{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:rgba(255,255,255,.28);transform:scale(0);animation:rp .6s ease-out forwards}
+  @keyframes rp{to{transform:scale(var(--rs,12));opacity:0}}
+  @media (hover:hover){
+    .bcard:hover,.alt:hover,.best:hover,.hero:hover,.sug:hover,.store:hover{transform:translateY(-2px);border-color:var(--border-hi);box-shadow:0 12px 26px rgba(0,0,0,.42)}
+    .chip:hover,.budget:hover,.toggle:hover,.ghost:hover,.iconbtn:hover,.dock button:hover,.cmp-slot:hover{border-color:var(--border-hi);background-color:var(--surface-3)}
+    .cta:not(:disabled):hover{filter:brightness(1.1);box-shadow:0 10px 26px rgba(123,30,52,.55)}
+    .tab:hover{background:rgba(255,255,255,.06)}
+    .bcard:active,.alt:active,.best:active,.hero:active{transform:scale(.985)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
   .tabbar{position:fixed;z-index:15;left:50%;transform:translateX(-50%);bottom:calc(6px + var(--safe-b));width:calc(min(480px,100vw) - 20px);
     display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;padding:4px;border-radius:999px;
     background:rgba(30,25,27,.86);border:1px solid var(--border-hi);
@@ -983,34 +1053,60 @@
       }).join('') + '</div></div>';
   }
 
+  var IC = {
+    termo: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/></svg>',
+    reloj: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+    bolsa: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a1 1 0 0 1-.8.8H7a1 1 0 0 1-.8-.8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>',
+    versus: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h7l-.7 5.4a2.8 2.8 0 0 1-5.6 0z"/><path d="M6.5 12.3V19M3.8 19h5.4"/><path d="M14 4h7l-.7 5.4a2.8 2.8 0 0 1-5.6 0z"/><path d="M17.5 12.3V19M14.8 19h5.4"/></svg>',
+    compartir: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>'
+  };
+  function dockHTML(w){
+    var en = !!state.lista[w.id];
+    return '<div class="dock" id="dock-ficha">' +
+      '<button type="button" class="dock-main' + (en ? ' on' : '') + '" data-lc="ficha" aria-pressed="' + en + '">' + IC.bolsa + '<span>' + (en ? 'En tu lista de la compra' : 'Añadir a la compra') + '</span></button>' +
+      '<button type="button" class="dock-ic" data-cmp="ficha" aria-label="Comparar con otro vino">' + IC.versus + '</button>' +
+      '<button type="button" class="dock-ic" data-share="ficha" aria-label="Compartir este vino">' + IC.compartir + '</button></div>';
+  }
+  function pintarDock(){
+    var d = $('#dock-ficha'); if (!d || !state.ficha) return;
+    d.outerHTML = dockHTML(state.ficha);
+  }
+  function medidorFicha(label, n, palabra){
+    var pips = ''; for (var i = 1; i <= 3; i++) pips += '<i' + (i <= n ? ' class="on"' : '') + '></i>';
+    return '<div class="meter"><span class="ml">' + label + '</span><span class="mp" aria-hidden="true">' + pips + '</span><span class="mw">' + palabra + '</span></div>';
+  }
   function renderFicha(w, fromPhoto){
     state.ficha = w;
     apuntarHistorial(w);
+    var vc = colorSeguro(w.color, '#4A1420');
     var visual = (fromPhoto && state.photo)
-      ? '<img class="thumb" src="' + state.photo + '" alt="Tu foto de la botella">'
-      : '<div class="bottle" role="img" aria-label="Botella de ' + esc(w.nombre) + '">' + botellaSVG(w, 168) + '</div>';
-    var badge = fromPhoto ? (state.leidoIA ? 'Leído de la etiqueta' : 'Ejemplo: IA no activada') : (w.ejemplo ? 'Vino de ejemplo' : 'Ficha del vino');
-    var priceBlock = w.precio ? ('<div class="box" style="margin-top:12px;gap:10px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;color:var(--muted)">' + (w.precio.super ? 'En ' + esc(w.precio.super) : 'Precio aproximado') + '</span><span class="price">' + eur(w.precio.precio) + '</span></div>' +
-      (w.mas_barato ? '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)"><span style="font-size:14px;color:var(--green);font-weight:600">Más barato en ' + esc(w.mas_barato.super) + '</span><span style="font-size:15px;font-weight:600;color:var(--green)">' + eur(w.mas_barato.precio) + '</span></div>' : '') +
-      '<div class="note">Puede variar según el súper y las ofertas.</div></div>') : '';
-    var sab = (w.sabor || w.temperatura || w.va_con.length) ? ('<div class="box">' +
-        (w.sabor ? '<div><div class="label" style="margin-bottom:6px">Cómo sabe</div><div style="font-size:15px;line-height:1.5">' + esc(w.sabor) + '</div></div>' : '') +
-        ((w.temperatura || w.apertura) ? '<div class="grid2" style="gap:10px"><div class="stat"><div class="k">Sírvelo a</div><div class="v">' + esc(w.temperatura || '—') + '</div></div><div class="stat"><div class="k">Ábrelo</div><div class="v">' + esc(w.apertura || '—') + '</div></div></div>' : '') +
+      ? '<img class="thumb-big" src="' + state.photo + '" alt="Tu foto de la botella">'
+      : '<div class="bottle-big" role="img" aria-label="Botella de ' + esc(w.nombre) + '"><div class="bottle-float">' + botellaSVG(w, 300) + '</div></div>';
+    var badge = fromPhoto ? (state.leidoIA ? 'Leído de la etiqueta' : 'Ejemplo: IA no activada') : (w.ejemplo ? 'Vino de ejemplo' : '');
+    var RANGO = { suave: 1, equilibrado: 2, intenso: 3 };
+    var priceBlock = w.precio ? ('<div class="precio-card"><div><div class="pk">' + (w.precio.super ? 'En ' + esc(w.precio.super) : 'Precio aproximado') + '</div><div class="pv">' + eur(w.precio.precio) + '</div></div>' +
+      (w.mas_barato ? '<div class="pbar"><span>Más barato en ' + esc(w.mas_barato.super) + '</span><b>' + eur(w.mas_barato.precio) + '</b></div>' : '') +
+      '<div class="note" style="grid-column:1/-1;margin:0">Puede variar según el súper y las ofertas.</div></div>') : '';
+    var medidores = '';
+    if (RANGO[w.estilo]) medidores += medidorFicha('Intensidad', RANGO[w.estilo], w.estilo.charAt(0).toUpperCase() + w.estilo.slice(1));
+    if (w.estilo || w.dulce) medidores += medidorFicha('Dulzor', w.dulce ? 3 : 1, w.dulce ? 'Dulce' : 'Seco');
+    var sab = (w.sabor || w.temperatura || w.va_con.length) ? ('<div class="sec"><h2>Cómo es</h2>' +
+        (w.sabor ? '<p class="sabor">' + esc(w.sabor) + '</p>' : '') +
+        (medidores ? '<div class="meters">' + medidores + '</div>' : '') +
+        ((w.temperatura || w.apertura) ? '<div class="grid2" style="gap:10px"><div class="stat2">' + IC.termo + '<div><div class="k">Sírvelo a</div><div class="v">' + esc(w.temperatura || '—') + '</div></div></div><div class="stat2">' + IC.reloj + '<div><div class="k">Ábrelo</div><div class="v">' + esc(w.apertura || '—') + '</div></div></div></div>' : '') +
         ((w.platos || []).length ? '<div><div class="label" style="margin-bottom:8px">Ideal para</div><div class="tags">' + w.platos.map(function(p){ return '<span class="tg">' + esc(p.nombre) + '</span>'; }).join('') + '</div></div>' : '') +
         (w.va_con.length ? '<div><div class="label" style="margin-bottom:8px">Va bien con</div><div class="tags">' + w.va_con.map(function(t){ return '<span class="tg w">' + esc(t) + '</span>'; }).join('') + '</div></div>' : '') +
       '</div>') : '';
     var s = w.sugerencias || {};
     var haySug = (s.misma && s.misma.length) || (s.parecidos && s.parecidos.length) || (s.descubrir && s.descubrir.length);
     $('#ficha-body').innerHTML =
-      '<div class="px" style="padding-top:8px;display:flex;gap:18px;align-items:center">' + visual +
-        '<div style="display:flex;flex-direction:column;gap:6px">' +
-          '<span class="soon" style="font-size:12px">' + badge + '</span>' +
-          '<h1 style="font-size:26px;line-height:1.1">' + esc(w.nombre) + '</h1>' +
-          '<div style="font-size:14px;color:var(--muted)">' + esc([w.bodega, w.denominacion].filter(Boolean).join(' · ')) + '</div>' +
-        '</div></div>' +
-      '<div class="px tags" style="padding-top:18px">' + (w.etiquetas || []).map(function(t){ return '<span class="tg">' + esc(t) + '</span>'; }).join('') + '</div>' +
-      '<div class="px" style="padding-top:20px">' + sab + priceBlock + '</div>' +
+      '<div class="stage" id="stage" style="--vc:' + vc + '"><div class="stage-luz" aria-hidden="true"></div><div class="stage-suelo" aria-hidden="true"></div>' + visual + '</div>' +
+      '<div class="px ficha-titulo">' + (badge ? '<span class="soon">' + badge + '</span>' : '') +
+        '<h1>' + esc(w.nombre) + '</h1>' +
+        '<div class="sub">' + esc([w.bodega, w.denominacion].filter(Boolean).join(' · ')) + '</div>' +
+        '<div class="tags" style="justify-content:center;margin-top:14px">' + (w.etiquetas || []).map(function(t){ return '<span class="tg">' + esc(t) + '</span>'; }).join('') + '</div></div>' +
+      '<div class="px" style="padding-top:20px">' + priceBlock + '</div>' +
+      '<div class="px" style="padding-top:14px">' + sab + '</div>' +
       (haySug ? '<div class="px" style="padding-top:28px"><h2 style="font-size:22px">Si te gusta, mira también</h2></div>' : '') +
       sugRow('De la misma bodega', s.misma) +
       sugRow('Parecidos y más baratos', s.parecidos, true) +
@@ -1018,12 +1114,24 @@
       '<div id="ficha-ops"></div>' +
       '<div class="px" style="padding-top:28px"><h2 style="font-size:22px">En mi bodega</h2></div>' +
       '<div class="px" style="padding-top:12px"><div class="box" id="bodbox"></div></div>' +
-      '<div class="bottom-actions" style="padding-top:20px">' +
+      '<div class="bottom-actions" style="padding-top:20px;padding-bottom:calc(110px + var(--safe-b))">' +
         '<p class="note" style="text-align:center;margin:8px 0 0">Consumo responsable. Solo para mayores de 18 años.</p>' +
         creditoFoto(w) +
-      '</div>';
-    pintarBodBox();
+      '</div>' + dockHTML(w);
+    pintarBodBox(); iniciarStage();
     cargarOpinionesFicha(w.id);
+  }
+  function iniciarStage(){
+    var st = $('#stage'), b = st && st.querySelector('.bottle-big'); if (!b) return;
+    function mover(x, y){
+      var r = st.getBoundingClientRect();
+      var nx = Math.max(-1, Math.min(1, (x - r.left) / r.width * 2 - 1)), ny = Math.max(-1, Math.min(1, (y - r.top) / r.height * 2 - 1));
+      b.style.setProperty('--ry', (nx * 14).toFixed(1) + 'deg'); b.style.setProperty('--rx', (-ny * 6).toFixed(1) + 'deg');
+      st.style.setProperty('--lx', (50 + nx * 14).toFixed(1) + '%');
+    }
+    function soltar(){ b.style.setProperty('--ry', '0deg'); b.style.setProperty('--rx', '0deg'); st.style.setProperty('--lx', '50%'); }
+    st.addEventListener('pointermove', function(e){ mover(e.clientX, e.clientY); });
+    st.addEventListener('pointerleave', soltar); st.addEventListener('pointerup', soltar); st.addEventListener('pointercancel', soltar);
   }
   function renderFueraCatalogo(d){
     state.ficha = null; pintarBotonGuardar();
@@ -1094,7 +1202,7 @@
       state.lista = {}; state.listaLista = d.vinos || [];
       state.listaLista.forEach(function(v){ state.lista[v.id] = v; });
       pintarLista();
-      if (state.ficha) pintarBodBox();
+      if (state.ficha){ pintarBodBox(); pintarDock(); }
     }).catch(function(){ /* sin tabla todavía: la lista queda vacía */ });
   }
   function guardarLista(id, cambios){
@@ -1566,6 +1674,21 @@
       }
     }
   });
+
+
+  // ---------- Efecto de onda al tocar un botón ----------
+  document.addEventListener('pointerdown', function(e){
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var b = e.target.closest('button'); if (!b || b.disabled || b.closest('.hoja-x') === null && b.classList.contains('hoja-x')) return;
+    if (b.classList.contains('plain') || b.closest('.stage')) return;
+    var cs = getComputedStyle(b); if (cs.position === 'static') b.style.position = 'relative';
+    var r = b.getBoundingClientRect(), wrap = document.createElement('span'), dot = document.createElement('span');
+    wrap.className = 'rp-wrap'; wrap.setAttribute('aria-hidden', 'true'); dot.className = 'rp';
+    dot.style.left = (e.clientX - r.left) + 'px'; dot.style.top = (e.clientY - r.top) + 'px';
+    dot.style.setProperty('--rs', Math.max(8, Math.ceil(Math.max(r.width, r.height) / 8)));
+    wrap.appendChild(dot); b.appendChild(wrap);
+    setTimeout(function(){ if (wrap.parentNode) wrap.remove(); }, 650);
+  }, { passive: true });
 
   // ---------- Menú «Más»: perfil, gustos y lista de la compra ----------
   function iconoMas(d){ return '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; }

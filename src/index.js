@@ -420,6 +420,8 @@ async function ficha(env, id, superPedido) {
     imagen: v.imagen || null,
     tipo: v.tipo,
     elaboracion: v.elaboracion,
+    estilo: v.estilo || null,
+    dulce: !!v.dulce,
     ejemplo: !!v.ejemplo,
     precio: aqui ? { super: aqui.super, precio: aqui.precio } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null),
     mas_barato: masBarato ? { super: masBarato.super, precio: masBarato.precio } : null,
