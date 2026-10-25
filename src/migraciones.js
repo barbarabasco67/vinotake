@@ -23,6 +23,7 @@ import sql34 from '../sql/34-carrefour-blancos-resto.sql';
 import sql35 from '../sql/35-carrefour-tintos-rioja.sql';
 import sql36 from '../sql/36-carrefour-tintos-ribera.sql';
 import sql37 from '../sql/37-carrefour-tintos-do-varias.sql';
+import sql38 from '../sql/38-carrefour-generosos-internacionales-sin-alcohol.sql';
 
 const LISTA = [
   ['15-alcampo-tintos', sql15],
@@ -47,7 +48,8 @@ const LISTA = [
   ['34-carrefour-blancos-resto', sql34],
   ['35-carrefour-tintos-rioja', sql35],
   ['36-carrefour-tintos-ribera', sql36],
-  ['37-carrefour-tintos-do-varias', sql37]
+  ['37-carrefour-tintos-do-varias', sql37],
+  ['38-carrefour-generosos-internacionales-sin-alcohol', sql38]
 ];
 
 // Separa un archivo SQL en sentencias (respeta comillas y comentarios de línea).
