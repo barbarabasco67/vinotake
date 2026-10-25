@@ -24,7 +24,7 @@ export default {
   // Cada 15 minutos busca unas pocas fotos de vinos que aún no tienen (Open Food Facts).
   async scheduled(event, env, ctx) {
     ctx.waitUntil(aplicarMigraciones(env).then(r => r.length && console.log('migraciones', r.join(', '))).catch(e => console.error('migraciones', e)));
-    ctx.waitUntil(rellenarFotos(env, 6).then(r => console.log('fotos', JSON.stringify(r))).catch(e => console.error('fotos', e)));
+    ctx.waitUntil(rellenarFotos(env, 8).then(r => console.log('fotos', JSON.stringify(r))).catch(e => console.error('fotos', e)));
   }
 };
 
