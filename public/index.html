@@ -1993,11 +1993,24 @@
     }
     return [l1.toUpperCase(), l2.toUpperCase()];
   }
+  // Solo se admiten fotos de botella entera (alta y estrecha). Si no, se dibuja nuestra botella: todas se ven iguales.
+  document.addEventListener('load', function(e){
+    var im = e.target;
+    if (!im || im.tagName !== 'IMG' || !im.classList.contains('bot-img')) return;
+    if (im.naturalWidth && im.naturalHeight / im.naturalWidth >= 2.2) return;
+    try {
+      var v = JSON.parse(im.getAttribute('data-v') || '{}');
+      var h = v.h || im.height || 160; v.imagen = null;
+      var t = document.createElement('div'); t.innerHTML = botellaSVG(v, h);
+      if (t.firstChild) im.replaceWith(t.firstChild);
+    } catch (x) { im.style.display = 'none'; }
+  }, true);
   function botellaSVG(v, h){
     v = v || {};
     var w = Math.round(h * 60 / 160);
     if (v.imagen && /^https:\/\//.test(v.imagen)) {
-      return '<img class="bot-img" src="' + esc(v.imagen) + '" alt="" width="' + Math.round(h * 0.55) + '" height="' + h + '" style="height:' + h + 'px;width:' + Math.round(h * 0.55) + 'px" loading="lazy">';
+      var dv = esc(JSON.stringify({ nombre: v.nombre, tipo: v.tipo, color: v.color, bodega: v.bodega, denominacion: v.denominacion, id: v.id, h: h }));
+      return '<img class="bot-img" data-v="' + dv + '" src="' + esc(v.imagen) + '" alt="" width="' + Math.round(h * 0.55) + '" height="' + h + '" style="height:' + h + 'px;width:' + Math.round(h * 0.55) + 'px" loading="lazy">';
     }
     var id = 'b' + (++botId);
     var t = String(v.tipo || '').toLowerCase();
