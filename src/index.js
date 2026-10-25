@@ -184,6 +184,9 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
   // Con gustos guardados, se reordena según la persona (siempre entre vinos que van con el plato).
   const g = await cargarGustos(env, dispositivoValido(b.dispositivo));
   const tieneGustos = g.prefs.tipos.length || g.prefs.evitar.length || g.prefs.estilo || g.prefs.dulce !== null || g.perfil && g.perfil.puntuados;
+  // "Más de 10 €": primero los de 10 € o más (los baratos solo si no hay otros).
+  const minimo = presupuesto === 'mas10' ? 10 : 0;
+  if (minimo) lista = lista.filter(v => v.precio >= minimo).concat(lista.filter(v => v.precio < minimo).sort((a, b2) => b2.precio - a.precio));
   const enPresupuesto = v => max === null || v.precio <= max;
   const primero = l => l.find(enPresupuesto) || l.slice().sort((a, b2) => a.precio - b2.precio)[0];
   const original = primero(lista);
