@@ -42,6 +42,7 @@ async function api(request, env, url) {
   if (method === 'POST' && path === '/api/gustos') return gustosGuardar(env, await body(request));
   if (method === 'GET' && path === '/api/bodega') return bodegaListar(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/bodega') return bodegaGuardar(env, await body(request));
+  if (method === 'GET' && path === '/api/comparar') return comparar(env, url.searchParams.get('a'), url.searchParams.get('b'), url.searchParams.get('super'));
   if (method === 'GET' && path === '/api/lista') return listaVer(env, url.searchParams.get('d'), url.searchParams.get('super'));
   if (method === 'POST' && path === '/api/lista') return listaGuardar(env, await body(request));
   if (method === 'POST' && path === '/api/lista/vaciar') return listaVaciar(env, await body(request));
@@ -576,6 +577,72 @@ async function bodegaGuardar(env, b) {
     ).bind(d, vinoId, nuevo.cantidad, nuevo.deseo, nuevo.puntuacion, nuevo.nota || null).run();
   }
   return json({ ok: true, vino_id: vinoId, cantidad: nuevo.cantidad, deseo: !!nuevo.deseo, puntuacion: nuevo.puntuacion, nota: nuevo.nota || '' });
+}
+
+// ---------- Copa a copa: comparar dos vinos ----------
+const RANGO_ESTILO = { suave: 1, equilibrado: 2, intenso: 3 };
+function euros(n) { return Number(n).toFixed(2).replace('.', ',') + ' €'; }
+
+async function comparar(env, a, b, superPedido) {
+  const ids = [limpiar(a, 80), limpiar(b, 80)];
+  if (!ids[0] || !ids[1]) return json({ error: 'Elige dos vinos para compararlos.' }, 400);
+  if (ids[0] === ids[1]) return json({ error: 'Elige dos vinos distintos.' }, 400);
+  const superId = await superValido(env, superPedido);
+  const vinos = [];
+  for (const id of ids) {
+    const v = await env.DB.prepare(
+      `SELECT v.id, v.nombre, v.bodega, v.denominacion, v.tipo, v.uva, v.elaboracion, v.grados, v.estilo, v.dulce,
+              v.temperatura, v.apertura, v.va_con, v.color, COALESCE(p.precio, v.precio_ref) AS precio
+         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+        WHERE v.id = ? AND v.activo = 1`
+    ).bind(superId, id).first();
+    if (!v) return json({ error: 'No encontramos uno de los vinos.' }, 404);
+    const r = await env.DB.prepare('SELECT AVG(puntuacion) AS media, COUNT(*) AS n FROM resenas WHERE vino_id = ? AND oculto = 0').bind(id).first().catch(() => null);
+    vinos.push({
+      id: v.id, nombre: v.nombre, bodega: v.bodega, denominacion: v.denominacion, tipo: v.tipo, uva: v.uva,
+      elaboracion: v.elaboracion, grados: v.grados, estilo: v.estilo, dulce: !!v.dulce, temperatura: v.temperatura,
+      va_con: v.va_con ? v.va_con.split('|').map(x => x.trim()).filter(Boolean).slice(0, 4) : [],
+      color: v.color || '#3A2226', precio: v.precio,
+      media: r && r.media ? Math.round(r.media * 10) / 10 : null, votos: r ? r.n : 0
+    });
+  }
+  const [x, y] = vinos;
+  const frases = [];
+  if (x.precio != null && y.precio != null) {
+    const dif = Math.abs(x.precio - y.precio);
+    if (dif < 0.5) frases.push('Cuestan prácticamente lo mismo.');
+    else {
+      const barato = x.precio < y.precio ? x : y, caro = barato === x ? y : x;
+      frases.push(barato.nombre + ' es ' + euros(dif) + ' más barato (un ' + Math.round(dif / caro.precio * 100) + ' % menos).');
+    }
+  }
+  if (x.tipo && y.tipo && x.tipo !== y.tipo) {
+    frases.push('Uno es ' + x.tipo.toLowerCase() + ' y el otro ' + y.tipo.toLowerCase() + ': se piden con comidas distintas.');
+  } else if (RANGO_ESTILO[x.estilo] && RANGO_ESTILO[y.estilo] && x.estilo !== y.estilo) {
+    const suave = RANGO_ESTILO[x.estilo] < RANGO_ESTILO[y.estilo] ? x : y, fuerte = suave === x ? y : x;
+    frases.push(suave.nombre + ' es más suave y fácil de beber; ' + fuerte.nombre + ' tiene más cuerpo e intensidad.');
+  } else if (x.estilo && x.estilo === y.estilo) {
+    frases.push('Los dos son de estilo ' + x.estilo + '.');
+  }
+  if (x.dulce !== y.dulce) frases.push((x.dulce ? x : y).nombre + ' es dulce; ' + (x.dulce ? y : x).nombre + ' es seco.');
+  if (x.media != null && y.media != null && x.media !== y.media) {
+    const top = x.media > y.media ? x : y;
+    frases.push('Los Takers puntúan mejor a ' + top.nombre + ' (' + String(top.media).replace('.', ',') + ' de 5).');
+  }
+  // Para quién es cada uno
+  const elige = [];
+  const motivo = (v, o) => {
+    if (v.precio != null && o.precio != null && v.precio + 0.5 <= o.precio) return 'buscas ahorrar';
+    if (RANGO_ESTILO[v.estilo] > (RANGO_ESTILO[o.estilo] || 0) && v.tipo === o.tipo) return 'quieres más cuerpo';
+    if (RANGO_ESTILO[v.estilo] < (RANGO_ESTILO[o.estilo] || 9) && v.tipo === o.tipo) return 'prefieres algo suave';
+    if (v.media != null && (o.media == null || v.media > o.media)) return 'te fías de los Takers';
+    if (v.precio != null && o.precio != null && v.precio >= o.precio + 0.5) return 'te apetece darte un capricho';
+    return null;
+  };
+  const mx = motivo(x, y), my = motivo(y, x);
+  if (mx) elige.push({ id: x.id, texto: 'Elige ' + x.nombre + ' si ' + mx + '.' });
+  if (my && my !== mx) elige.push({ id: y.id, texto: 'Elige ' + y.nombre + ' si ' + my + '.' });
+  return json({ vinos, veredicto: frases, elige, super: superId });
 }
 
 // ---------- Lista de la compra (por dispositivo) ----------
