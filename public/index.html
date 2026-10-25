@@ -105,16 +105,13 @@
   .cmp-slot{position:relative}
   .cmp-slot.gana{border-color:var(--amarillo);box-shadow:0 0 0 2px var(--amarillo-line),0 10px 28px rgba(232,184,74,.18)}
   .cmp-slot.pierde{opacity:.62}
-  .cmp-slot .corona{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--amarillo);color:#2A1E08;font-weight:800;font-size:11px;letter-spacing:.8px;text-transform:uppercase;padding:4px 10px;border-radius:999px;white-space:nowrap}
-  .cmb-top{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:14px;border-radius:18px;background:linear-gradient(160deg,rgba(232,184,74,.18),rgba(122,31,54,.30));border:1px solid var(--amarillo-line);color:var(--ink);text-align:left;width:100%;font:inherit;cursor:pointer}
-  .cmb-top .pts{font-size:26px;font-weight:800;color:var(--amarillo);letter-spacing:1px;flex-shrink:0}
-  .cmb-top .t1{font-weight:800;font-size:16px;line-height:1.2}
-  .cmb-top .t2{font-size:12px;color:var(--ink2);margin-top:2px}
+  .cmp-slot .corona{display:flex;align-items:center;gap:5px;position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--amarillo);color:#2A1E08;font-weight:800;font-size:11px;letter-spacing:.8px;text-transform:uppercase;padding:4px 10px;border-radius:999px;white-space:nowrap}
   .cmb-r{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--border);opacity:0;transform:translateY(8px);animation:cmbIn .45s ease forwards}
   .cmb-r .n{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
   .cmb-r .g{font-weight:700;font-size:15px}
   .cmb-r .d{font-size:12px;color:var(--muted);margin-top:2px}
   .cmb-fin{margin-top:14px;padding:22px 16px;border-radius:22px;text-align:center;background:linear-gradient(160deg,rgba(232,184,74,.16),rgba(122,31,54,.28));border:1px solid var(--amarillo-line);opacity:0;animation:cmbIn .6s ease forwards}
+  .cmb-fin .tit svg{vertical-align:-3px}
   .cmb-fin .tit{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--amarillo)}
   .cmb-fin .nom{font-size:24px;font-weight:800;line-height:1.15;margin:8px 0 4px}
   .cmb-fin .pts{font-size:34px;font-weight:800;color:var(--amarillo);margin:2px 0 6px;letter-spacing:2px}
@@ -1222,6 +1219,14 @@
       renderCmp(d);
     }).catch(function(err){ $('#cmp-res').innerHTML = '<div class="empty">' + esc(err.message) + '</div>'; });
   }
+  function trofeoSVG(n){
+    return '<svg width="' + n + '" height="' + n + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-' + Math.round(n * .18) + 'px"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a1 1 0 0 0-1 1c0 2.2 1.6 3.6 4 3.8"/><path d="M16 6h3a1 1 0 0 1 1 1c0 2.2-1.6 3.6-4 3.8"/><path d="M12 13v4"/><path d="M8.5 20h7M10 17h4"/></svg>';
+  }
+  function asaltoSVG(gana){
+    return gana
+      ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>'
+      : '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ACA2A0" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 10h7M8.5 14h7"/></svg>';
+  }
   function renderCmp(d){
     var x = d.vinos[0], y = d.vinos[1];
     function par(label, va, vb, gan, raw){
@@ -1266,30 +1271,26 @@
         var g = a.ganador ? por[a.ganador] : null;
         return '<div class="cmb-r" style="animation-delay:' + (i * 0.35) + 's"><div style="flex:1;min-width:0"><div class="n">Asalto ' + (i + 1) + ' · ' + esc(a.nombre) + '</div>' +
           '<div class="g">' + (g ? esc(g.nombre) : 'Empate') + '</div><div class="d">' + esc(a.detalle) + '</div></div>' +
-          '<span aria-hidden="true" style="font-size:22px">' + (g ? '🥊' : '🤝') + '</span></div>';
+          '<span aria-hidden="true">' + asaltoSVG(!!g) + '</span></div>';
       }).join('') + '</div>';
       var gan = c.ganador ? por[c.ganador] : null;
       cmb += '<div class="cmb-fin" style="animation-delay:' + (c.asaltos.length * 0.35 + 0.2) + 's">' +
-        '<div class="tit">' + (gan ? 'Ganador del combate' : 'Combate nulo') + '</div>' +
+        '<div class="tit">' + (gan ? '<span style="color:var(--amarillo)">' + trofeoSVG(18) + '</span> Ganador del combate' : 'Combate nulo') + '</div>' +
         (gan ? '<div aria-hidden="true" style="margin-top:10px">' + botellaSVG(gan, 84) + '</div>' : '') +
-        '<div class="nom">' + (gan ? '🏆 ' + esc(gan.nombre) : 'Empate técnico') + '</div>' +
+        '<div class="nom">' + (gan ? esc(gan.nombre) : 'Empate técnico') + '</div>' +
         '<div class="pts" aria-label="Resultado ' + c.puntos[0] + ' a ' + c.puntos[1] + '">' + c.puntos[0] + ' – ' + c.puntos[1] + '</div>' +
         '<div style="font-size:14px;color:var(--ink2);line-height:1.45">' + esc(c.frase) + '</div></div>';
     }
-    var top = '';
     if (c){
       var g2 = c.ganador ? por[c.ganador] : null;
-      top = '<button type="button" class="cmb-top" data-cmbir aria-label="Ver el combate completo"><span class="pts" aria-hidden="true">' + c.puntos[0] + '–' + c.puntos[1] + '</span>' +
-        '<span style="flex:1;min-width:0"><span class="t1" style="display:block">' + (g2 ? '🏆 Gana ' + esc(g2.nombre) : '🤝 Empate técnico') + '</span>' +
-        '<span class="t2" style="display:block">' + esc(c.frase) + ' Ver el combate ↓</span></span></button>';
       document.querySelectorAll('#cmp-slots [data-cmpslot]').forEach(function(el, i){
         var v = i === 0 ? x : y; el.classList.remove('gana', 'pierde');
         var viejo = el.querySelector('.corona'); if (viejo) viejo.remove();
-        if (g2 && v.id === g2.id){ el.classList.add('gana'); el.insertAdjacentHTML('afterbegin', '<span class="corona">🏆 Ganador</span>'); }
+        if (g2 && v.id === g2.id){ el.classList.add('gana'); el.insertAdjacentHTML('afterbegin', '<span class="corona">' + trofeoSVG(13) + ' Ganador</span>'); }
         else if (g2) el.classList.add('pierde');
       });
     }
-    $('#cmp-res').innerHTML = top + '<div class="box" style="padding-top:6px;padding-bottom:6px">' + filas + '</div>' + botones + ver + cmb;
+    $('#cmp-res').innerHTML = '<div class="box" style="padding-top:6px;padding-bottom:6px">' + filas + '</div>' + botones + ver + cmb;
   }
   function abrirCmpHoja(k){
     var ya = {}; var sug = [];
@@ -1309,11 +1310,6 @@
         (v.precio != null && typeof v.precio !== 'object' ? '<span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span>' : '') + '</button>';
     }).join('') : '<div class="empty">No encontramos ese vino. Prueba con otra palabra.</div>');
   }
-  document.addEventListener('click', function(e){
-    if (!e.target.closest('[data-cmbir]')) return;
-    var t = document.querySelector('#cmp-res .cmb-fin') || document.querySelector('#cmp-res .cmb-r');
-    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
   var cmpTimer;
   document.addEventListener('input', function(e){
     if (!e.target || e.target.id !== 'cmp-q') return;
