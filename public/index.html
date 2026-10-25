@@ -1295,6 +1295,8 @@
         else if (g2) el.classList.add('pierde');
       });
     }
+    state.cmpDatos = d;
+    if (c) cmb += '<div style="margin-top:14px"><button class="cta" data-share="combate">Compartir el combate</button></div>';
     $('#cmp-res').innerHTML = '<div class="box" style="padding-top:6px;padding-bottom:6px">' + filas + '</div>' + botones + ver + cmb;
   }
   function abrirCmpHoja(k){
@@ -1422,10 +1424,90 @@
       img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     });
   }
-  function abrirTarjeta(){
-    var w = state.ficha; if (!w) return;
-    state.tarjeta.w = w;
-    abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0 0 12px">Compartir este vino</h2>' +
+  function trofeoCanvas(ctx, cx, cy, s, color){
+    var rutas = ['M8 4h8v5a4 4 0 0 1-8 0z','M8 6H5a1 1 0 0 0-1 1c0 2.2 1.6 3.6 4 3.8','M16 6h3a1 1 0 0 1 1 1c0 2.2-1.6 3.6-4 3.8','M12 13v4','M8.5 20h7M10 17h4'];
+    ctx.save(); ctx.translate(cx - 12 * s, cy - 12 * s); ctx.scale(s, s);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.8; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    rutas.forEach(function(r){ ctx.stroke(new Path2D(r)); });
+    ctx.restore();
+  }
+  function cargarBotellaImg(v, hpx){
+    return new Promise(function(res){
+      var svg = botellaSVG(Object.assign({}, v, { imagen: null }), 400).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+      var im = new Image(); im.onload = function(){ res(im); }; im.onerror = function(){ res(null); };
+      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  }
+  function dibujarCombate(d, fmtId){
+    var f = FORMATOS_TARJETA[fmtId], W = f.w, H = f.h, historia = fmtId === 'historia';
+    var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    var ctx = cv.getContext('2d');
+    var fuente = 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+    var fondo = ctx.createLinearGradient(0, 0, W * .4, H);
+    fondo.addColorStop(0, '#1B1215'); fondo.addColorStop(.55, '#2A1219'); fondo.addColorStop(1, '#4A1626');
+    ctx.fillStyle = fondo; ctx.fillRect(0, 0, W, H);
+    var x = d.vinos[0], y = d.vinos[1], c = d.combate;
+    var gan = c.ganador === x.id ? 0 : c.ganador === y.id ? 1 : -1;
+    var hb = historia ? 640 : 440, wb = hb * 60 / 160, by = historia ? 430 : 330;
+    var cxs = [W * .27, W * .73];
+    var brillo = ctx.createRadialGradient(W / 2, by + hb * .5, 40, W / 2, by + hb * .5, W * .75);
+    brillo.addColorStop(0, 'rgba(232,184,74,.22)'); brillo.addColorStop(1, 'rgba(232,184,74,0)');
+    ctx.fillStyle = brillo; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#E8B84A'; ctx.font = '800 38px ' + fuente;
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
+    ctx.fillText('VINOTAKE', W / 2 + 5, historia ? 130 : 110);
+    ctx.font = '700 34px ' + fuente; ctx.fillStyle = 'rgba(245,240,236,.7)';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '8px';
+    ctx.fillText('VINO VS VINO', W / 2 + 4, historia ? 200 : 170);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    return Promise.all([cargarBotellaImg(x), cargarBotellaImg(y)]).then(function(ims){
+      [x, y].forEach(function(v, i){
+        var cx = cxs[i], esGan = gan === i, atenuar = gan >= 0 && !esGan;
+        ctx.save(); ctx.globalAlpha = atenuar ? .5 : 1;
+        if (esGan){ ctx.shadowColor = 'rgba(232,184,74,.55)'; ctx.shadowBlur = 70; }
+        else { ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 24; }
+        if (ims[i]) ctx.drawImage(ims[i], cx - wb / 2, by, wb, hb);
+        ctx.restore();
+        ctx.save(); ctx.globalAlpha = atenuar ? .6 : 1;
+        var ty = by + hb + 70;
+        ctx.fillStyle = '#F5F0EC'; ctx.font = '800 ' + (historia ? 46 : 40) + 'px ' + fuente;
+        var lns = lineasTexto(ctx, v.nombre, 450, 3);
+        lns.forEach(function(l, k){ ctx.fillText(l, cx, ty + k * (historia ? 54 : 48)); });
+        if (v.precio != null){ ctx.fillStyle = esGan ? '#E8B84A' : 'rgba(245,240,236,.7)'; ctx.font = '700 38px ' + fuente; ctx.fillText(eur(v.precio), cx, ty + lns.length * (historia ? 54 : 48) + 18); }
+        ctx.restore();
+        if (esGan){
+          var by2 = by - 78;
+          ctx.fillStyle = '#E8B84A'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(cx - 150, by2 - 38, 300, 64, 32) : ctx.rect(cx - 150, by2 - 38, 300, 64); ctx.fill();
+          trofeoCanvas(ctx, cx - 92, by2 - 6, 1.5, '#2A1E08');
+          ctx.fillStyle = '#2A1E08'; ctx.font = '800 28px ' + fuente; ctx.textAlign = 'left';
+          if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
+          ctx.fillText('GANADOR', cx - 62, by2 + 4);
+          if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+          ctx.textAlign = 'center';
+        }
+      });
+      // VS
+      ctx.fillStyle = '#7A1F36'; ctx.beginPath(); ctx.arc(W / 2, by + hb * .45, 62, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 6; ctx.strokeStyle = '#1B1215'; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '800 44px ' + fuente; ctx.fillText('VS', W / 2, by + hb * .45 + 16);
+      // marcador
+      var sy = H - (historia ? 330 : 250);
+      ctx.fillStyle = '#E8B84A'; ctx.font = '800 ' + (historia ? 150 : 120) + 'px ' + fuente;
+      ctx.fillText(c.puntos[0] + ' – ' + c.puntos[1], W / 2, sy);
+      ctx.fillStyle = 'rgba(245,240,236,.85)'; ctx.font = '500 34px ' + fuente;
+      var fr = lineasTexto(ctx, c.frase, W - 200, 2);
+      fr.forEach(function(l, k){ ctx.fillText(l, W / 2, sy + 62 + k * 46); });
+      ctx.fillStyle = 'rgba(245,240,236,.5)'; ctx.font = '600 30px ' + fuente;
+      ctx.fillText('Compáralos en vino.picfy.es', W / 2, H - (historia ? 90 : 52));
+      return cv;
+    });
+  }
+  function abrirTarjeta(tipo){
+    tipo = tipo || 'vino';
+    var w = tipo === 'combate' ? state.cmpDatos : state.ficha; if (!w) return;
+    state.tarjeta.tipo = tipo; state.tarjeta.w = w;
+    abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0 0 12px">' + (tipo === 'combate' ? 'Compartir el combate' : 'Compartir este vino') + '</h2>' +
       '<div class="seg" role="tablist" aria-label="Formato de la tarjeta" id="tj-fmt" style="margin-bottom:12px;grid-template-columns:1fr 1fr">' +
         Object.keys(FORMATOS_TARJETA).map(function(k){ return '<button role="tab" data-tjfmt="' + k + '" class="' + (state.tarjeta.fmt === k ? 'on' : '') + '" aria-selected="' + (state.tarjeta.fmt === k) + '">' + FORMATOS_TARJETA[k].nombre + '</button>'; }).join('') + '</div>' +
       '<div id="tj-prev" style="display:flex;justify-content:center;min-height:120px"><div class="spin" style="margin:40px auto"></div></div>' +
@@ -1434,22 +1516,24 @@
   }
   function pintarTarjeta(){
     var w = state.tarjeta.w; if (!w) return;
-    var pedido = w.id + state.tarjeta.fmt; state.tarjeta.pedido = pedido; state.tarjeta.blob = null;
+    var esC = state.tarjeta.tipo === 'combate';
+    var pedido = (esC ? 'c' + w.vinos[0].id + w.vinos[1].id : w.id) + state.tarjeta.fmt; state.tarjeta.pedido = pedido; state.tarjeta.blob = null;
     var fuentes = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-    fuentes.then(function(){ return dibujarTarjeta(w, state.tarjeta.fmt); }).then(function(cv){
+    fuentes.then(function(){ return esC ? dibujarCombate(w, state.tarjeta.fmt) : dibujarTarjeta(w, state.tarjeta.fmt); }).then(function(cv){
       if (state.tarjeta.pedido !== pedido) return;
       var prev = $('#tj-prev'); if (!prev) return;
       var f = FORMATOS_TARJETA[state.tarjeta.fmt];
-      prev.innerHTML = '<img alt="Vista previa de la tarjeta de ' + esc(w.nombre) + '" src="' + cv.toDataURL('image/png') + '" style="max-height:46vh;max-width:100%;width:auto;height:auto;aspect-ratio:' + f.w + '/' + f.h + ';border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)">';
+      prev.innerHTML = '<img alt="Vista previa de la tarjeta" src="' + cv.toDataURL('image/png') + '" style="max-height:46vh;max-width:100%;width:auto;height:auto;aspect-ratio:' + f.w + '/' + f.h + ';border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)">';
       cv.toBlob(function(b){ if (state.tarjeta.pedido === pedido) state.tarjeta.blob = b; }, 'image/png');
     });
   }
   function archivoTarjeta(){
     var b = state.tarjeta.blob, w = state.tarjeta.w; if (!b || !w) return null;
-    return new File([b], 'vinotake-' + w.id + '.png', { type: 'image/png' });
+    return new File([b], 'vinotake-' + (state.tarjeta.tipo === 'combate' ? 'combate-' + w.vinos[0].id + '-vs-' + w.vinos[1].id : w.id) + '.png', { type: 'image/png' });
   }
   document.addEventListener('click', function(e){
-    if (e.target.closest('[data-share="ficha"]')){ abrirTarjeta(); return; }
+    if (e.target.closest('[data-share="ficha"]')){ abrirTarjeta('vino'); return; }
+    if (e.target.closest('[data-share="combate"]')){ abrirTarjeta('combate'); return; }
     var fm = e.target.closest('[data-tjfmt]');
     if (fm){
       state.tarjeta.fmt = fm.getAttribute('data-tjfmt');
@@ -1464,9 +1548,17 @@
     }
     if (e.target.closest('#tj-compartir')){
       var f = archivoTarjeta(), w = state.tarjeta.w; if (!f){ toast('Preparando la imagen…'); return; }
-      var texto = w.nombre + ' · ' + (w.precio && w.precio.precio != null ? 'desde ' + eur(w.precio.precio) + ' · ' : '') + 'lo he visto en Vinotake: https://vino.picfy.es';
+      var texto, titulo;
+      if (state.tarjeta.tipo === 'combate'){
+        var cb = w.combate, g = cb.ganador ? (cb.ganador === w.vinos[0].id ? w.vinos[0] : w.vinos[1]) : null;
+        titulo = w.vinos[0].nombre + ' contra ' + w.vinos[1].nombre;
+        texto = titulo + ': ' + (g ? 'gana ' + g.nombre + ' ' : 'empate ') + cb.puntos[0] + '–' + cb.puntos[1] + '. Compáralos en Vinotake: https://vino.picfy.es';
+      } else {
+        titulo = w.nombre;
+        texto = w.nombre + ' · ' + (w.precio && w.precio.precio != null ? 'desde ' + eur(w.precio.precio) + ' · ' : '') + 'lo he visto en Vinotake: https://vino.picfy.es';
+      }
       if (navigator.canShare && navigator.canShare({ files: [f] })){
-        navigator.share({ files: [f], text: texto, title: w.nombre }).catch(function(err){ if (err && err.name !== 'AbortError') toast('No se ha podido compartir'); });
+        navigator.share({ files: [f], text: texto, title: titulo }).catch(function(err){ if (err && err.name !== 'AbortError') toast('No se ha podido compartir'); });
       } else if (navigator.share){
         navigator.share({ text: texto, url: 'https://vino.picfy.es' }).catch(function(){});
       } else {
