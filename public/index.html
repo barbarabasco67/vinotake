@@ -1993,25 +1993,10 @@
     }
     return [l1.toUpperCase(), l2.toUpperCase()];
   }
-  // Solo se admiten fotos de botella entera (alta y estrecha). Si no, se dibuja nuestra botella: todas se ven iguales.
-  document.addEventListener('load', function(e){
-    var im = e.target;
-    if (!im || im.tagName !== 'IMG' || !im.classList.contains('bot-img')) return;
-    if (im.naturalWidth && im.naturalHeight / im.naturalWidth >= 2.2) return;
-    try {
-      var v = JSON.parse(im.getAttribute('data-v') || '{}');
-      var h = v.h || im.height || 160; v.imagen = null;
-      var t = document.createElement('div'); t.innerHTML = botellaSVG(v, h);
-      if (t.firstChild) im.replaceWith(t.firstChild);
-    } catch (x) { im.style.display = 'none'; }
-  }, true);
   function botellaSVG(v, h){
     v = v || {};
     var w = Math.round(h * 60 / 160);
-    if (v.imagen && /^https:\/\//.test(v.imagen)) {
-      var dv = esc(JSON.stringify({ nombre: v.nombre, tipo: v.tipo, color: v.color, bodega: v.bodega, denominacion: v.denominacion, id: v.id, h: h }));
-      return '<img class="bot-img" data-v="' + dv + '" src="' + esc(v.imagen) + '" alt="" width="' + Math.round(h * 0.55) + '" height="' + h + '" style="height:' + h + 'px;width:' + Math.round(h * 0.55) + 'px" loading="lazy">';
-    }
+    var foto = (v.imagen && /^https:\/\//.test(v.imagen)) ? v.imagen : null;
     var id = 'b' + (++botId);
     var t = String(v.tipo || '').toLowerCase();
     var forma, labelY, capH, capColor;
@@ -2043,10 +2028,14 @@
         '<rect x="0" y="' + (capH - 2) + '" width="60" height="2" fill="#000" opacity=".25"/>' +
         '<rect x="16" y="' + (capH + 22) + '" width="3.5" height="' + (148 - capH - 22) + '" rx="1.75" fill="#fff" opacity=".2"/>' +
         '<rect x="13" y="' + labelY + '" width="34" height="38" rx="2" fill="#F2EBDD"/>' +
-        (detalle ? '<rect x="15" y="' + (labelY + 2) + '" width="30" height="34" rx="1" fill="none" stroke="#7B1E34" stroke-width=".5" opacity=".6"/>' : '') +
-        (detalle ? '<text x="30" y="' + (labelY + 17) + '" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="700" font-size="' + fs1.toFixed(2) + '" fill="#2A1B1E" letter-spacing=".2">' + esc(m[0]) + '</text>' : '<rect x="18" y="' + (labelY + 12) + '" width="24" height="4" rx="1" fill="#2A1B1E" opacity=".75"/>') +
-        (detalle && m[1] ? '<text x="30" y="' + (labelY + 27) + '" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="600" font-size="' + fs2.toFixed(2) + '" fill="#7B1E34" letter-spacing=".3">' + esc(m[1]) + '</text>' : '') +
-        (!detalle ? '<rect x="21" y="' + (labelY + 21) + '" width="18" height="3" rx="1" fill="#7B1E34" opacity=".8"/>' : '') +
+        (foto ? '<clipPath id="' + id + 'f"><rect x="13" y="' + (labelY - 4) + '" width="34" height="46" rx="2"/></clipPath>' +
+          '<rect x="13" y="' + (labelY - 4) + '" width="34" height="46" rx="2" fill="#F2EBDD"/>' +
+          '<image href="' + esc(foto) + '" x="13" y="' + (labelY - 4) + '" width="34" height="46" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + id + 'f)"/>' +
+          '<rect x="13" y="' + (labelY - 4) + '" width="34" height="46" rx="2" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width=".6"/>' : '') +
+        (detalle && !foto ? '<rect x="15" y="' + (labelY + 2) + '" width="30" height="34" rx="1" fill="none" stroke="#7B1E34" stroke-width=".5" opacity=".6"/>' : '') +
+        (detalle && !foto ? '<text x="30" y="' + (labelY + 17) + '" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="700" font-size="' + fs1.toFixed(2) + '" fill="#2A1B1E" letter-spacing=".2">' + esc(m[0]) + '</text>' : (foto ? '' : '<rect x="18" y="' + (labelY + 12) + '" width="24" height="4" rx="1" fill="#2A1B1E" opacity=".75"/>')) +
+        (detalle && m[1] && !foto ? '<text x="30" y="' + (labelY + 27) + '" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="600" font-size="' + fs2.toFixed(2) + '" fill="#7B1E34" letter-spacing=".3">' + esc(m[1]) + '</text>' : '') +
+        (!detalle && !foto ? '<rect x="21" y="' + (labelY + 21) + '" width="18" height="3" rx="1" fill="#7B1E34" opacity=".8"/>' : '') +
       '</g>' +
       '<path d="' + forma + '" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1"/>' +
       '</svg>';
