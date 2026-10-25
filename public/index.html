@@ -102,6 +102,14 @@
   .cmp-dots{display:inline-flex;gap:4px;vertical-align:middle;margin-right:6px}
   .cmp-dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18);display:block}
   .cmp-dots i.on{background:currentColor}
+  .cmp-slot{position:relative}
+  .cmp-slot.gana{border-color:var(--amarillo);box-shadow:0 0 0 2px var(--amarillo-line),0 10px 28px rgba(232,184,74,.18)}
+  .cmp-slot.pierde{opacity:.62}
+  .cmp-slot .corona{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--amarillo);color:#2A1E08;font-weight:800;font-size:11px;letter-spacing:.8px;text-transform:uppercase;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .cmb-top{display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:14px;border-radius:18px;background:linear-gradient(160deg,rgba(232,184,74,.18),rgba(122,31,54,.30));border:1px solid var(--amarillo-line);color:var(--ink);text-align:left;width:100%;font:inherit;cursor:pointer}
+  .cmb-top .pts{font-size:26px;font-weight:800;color:var(--amarillo);letter-spacing:1px;flex-shrink:0}
+  .cmb-top .t1{font-weight:800;font-size:16px;line-height:1.2}
+  .cmb-top .t2{font-size:12px;color:var(--ink2);margin-top:2px}
   .cmb-r{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--border);opacity:0;transform:translateY(8px);animation:cmbIn .45s ease forwards}
   .cmb-r .n{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
   .cmb-r .g{font-weight:700;font-size:15px}
@@ -1268,7 +1276,20 @@
         '<div class="pts" aria-label="Resultado ' + c.puntos[0] + ' a ' + c.puntos[1] + '">' + c.puntos[0] + ' – ' + c.puntos[1] + '</div>' +
         '<div style="font-size:14px;color:var(--ink2);line-height:1.45">' + esc(c.frase) + '</div></div>';
     }
-    $('#cmp-res').innerHTML = '<div class="box" style="padding-top:6px;padding-bottom:6px">' + filas + '</div>' + botones + ver + cmb;
+    var top = '';
+    if (c){
+      var g2 = c.ganador ? por[c.ganador] : null;
+      top = '<button type="button" class="cmb-top" data-cmbir aria-label="Ver el combate completo"><span class="pts" aria-hidden="true">' + c.puntos[0] + '–' + c.puntos[1] + '</span>' +
+        '<span style="flex:1;min-width:0"><span class="t1" style="display:block">' + (g2 ? '🏆 Gana ' + esc(g2.nombre) : '🤝 Empate técnico') + '</span>' +
+        '<span class="t2" style="display:block">' + esc(c.frase) + ' Ver el combate ↓</span></span></button>';
+      document.querySelectorAll('#cmp-slots [data-cmpslot]').forEach(function(el, i){
+        var v = i === 0 ? x : y; el.classList.remove('gana', 'pierde');
+        var viejo = el.querySelector('.corona'); if (viejo) viejo.remove();
+        if (g2 && v.id === g2.id){ el.classList.add('gana'); el.insertAdjacentHTML('afterbegin', '<span class="corona">🏆 Ganador</span>'); }
+        else if (g2) el.classList.add('pierde');
+      });
+    }
+    $('#cmp-res').innerHTML = top + '<div class="box" style="padding-top:6px;padding-bottom:6px">' + filas + '</div>' + botones + ver + cmb;
   }
   function abrirCmpHoja(k){
     var ya = {}; var sug = [];
@@ -1288,6 +1309,11 @@
         (v.precio != null && typeof v.precio !== 'object' ? '<span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span>' : '') + '</button>';
     }).join('') : '<div class="empty">No encontramos ese vino. Prueba con otra palabra.</div>');
   }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('[data-cmbir]')) return;
+    var t = document.querySelector('#cmp-res .cmb-fin') || document.querySelector('#cmp-res .cmb-r');
+    if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
   var cmpTimer;
   document.addEventListener('input', function(e){
     if (!e.target || e.target.id !== 'cmp-q') return;
