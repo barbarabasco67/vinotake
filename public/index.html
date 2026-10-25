@@ -102,6 +102,16 @@
   .cmp-dots{display:inline-flex;gap:4px;vertical-align:middle;margin-right:6px}
   .cmp-dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.18);display:block}
   .cmp-dots i.on{background:currentColor}
+  .cmb-r{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--border);opacity:0;transform:translateY(8px);animation:cmbIn .45s ease forwards}
+  .cmb-r .n{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+  .cmb-r .g{font-weight:700;font-size:15px}
+  .cmb-r .d{font-size:12px;color:var(--muted);margin-top:2px}
+  .cmb-fin{margin-top:14px;padding:22px 16px;border-radius:22px;text-align:center;background:linear-gradient(160deg,rgba(232,184,74,.16),rgba(122,31,54,.28));border:1px solid var(--amarillo-line);opacity:0;animation:cmbIn .6s ease forwards}
+  .cmb-fin .tit{font-size:12px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--amarillo)}
+  .cmb-fin .nom{font-size:24px;font-weight:800;line-height:1.15;margin:8px 0 4px}
+  .cmb-fin .pts{font-size:34px;font-weight:800;color:var(--amarillo);margin:2px 0 6px;letter-spacing:2px}
+  @keyframes cmbIn{to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.cmb-r,.cmb-fin{animation-duration:.01s;animation-delay:0s!important}}
   .cmp-ver li{margin:0 0 8px;line-height:1.45}
   .tabbar{position:fixed;z-index:15;left:50%;transform:translateX(-50%);bottom:calc(6px + var(--safe-b));width:calc(min(480px,100vw) - 20px);
     display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;padding:4px;border-radius:999px;
@@ -1240,7 +1250,25 @@
       ver = '<h2 style="font-size:20px;margin:22px 0 10px">El veredicto de la copa</h2><div class="box"><ul class="cmp-ver" style="margin:0;padding-left:18px">' +
         d.veredicto.concat(d.elige.map(function(e){ return e.texto; })).map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>';
     }
-    $('#cmp-res').innerHTML = '<div class="box" style="padding-top:6px;padding-bottom:6px">' + filas + '</div>' + botones + ver;
+    var cmb = '';
+    var c = d.combate;
+    if (c){
+      var por = { }; por[x.id] = x; por[y.id] = y;
+      cmb = '<h2 style="font-size:20px;margin:26px 0 12px">El combate</h2><div class="stack" style="gap:8px">' + c.asaltos.map(function(a, i){
+        var g = a.ganador ? por[a.ganador] : null;
+        return '<div class="cmb-r" style="animation-delay:' + (i * 0.35) + 's"><div style="flex:1;min-width:0"><div class="n">Asalto ' + (i + 1) + ' · ' + esc(a.nombre) + '</div>' +
+          '<div class="g">' + (g ? esc(g.nombre) : 'Empate') + '</div><div class="d">' + esc(a.detalle) + '</div></div>' +
+          '<span aria-hidden="true" style="font-size:22px">' + (g ? '🥊' : '🤝') + '</span></div>';
+      }).join('') + '</div>';
+      var gan = c.ganador ? por[c.ganador] : null;
+      cmb += '<div class="cmb-fin" style="animation-delay:' + (c.asaltos.length * 0.35 + 0.2) + 's">' +
+        '<div class="tit">' + (gan ? 'Ganador del combate' : 'Combate nulo') + '</div>' +
+        (gan ? '<div aria-hidden="true" style="margin-top:10px">' + botellaSVG(gan, 84) + '</div>' : '') +
+        '<div class="nom">' + (gan ? '🏆 ' + esc(gan.nombre) : 'Empate técnico') + '</div>' +
+        '<div class="pts" aria-label="Resultado ' + c.puntos[0] + ' a ' + c.puntos[1] + '">' + c.puntos[0] + ' – ' + c.puntos[1] + '</div>' +
+        '<div style="font-size:14px;color:var(--ink2);line-height:1.45">' + esc(c.frase) + '</div></div>';
+    }
+    $('#cmp-res').innerHTML = '<div class="box" style="padding-top:6px;padding-bottom:6px">' + filas + '</div>' + botones + ver + cmb;
   }
   function abrirCmpHoja(k){
     var ya = {}; var sug = [];

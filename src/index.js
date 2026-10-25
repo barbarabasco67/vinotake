@@ -598,7 +598,9 @@ async function comparar(env, a, b, superPedido) {
     ).bind(superId, id).first();
     if (!v) return json({ error: 'No encontramos uno de los vinos.' }, 404);
     const r = await env.DB.prepare('SELECT AVG(puntuacion) AS media, COUNT(*) AS n FROM resenas WHERE vino_id = ? AND oculto = 0').bind(id).first().catch(() => null);
+    const np = await env.DB.prepare('SELECT COUNT(*) AS n FROM maridajes WHERE vino_id = ?').bind(id).first().catch(() => null);
     vinos.push({
+      n_platos: np ? np.n : 0,
       id: v.id, nombre: v.nombre, bodega: v.bodega, denominacion: v.denominacion, tipo: v.tipo, uva: v.uva,
       elaboracion: v.elaboracion, grados: v.grados, estilo: v.estilo, dulce: !!v.dulce, temperatura: v.temperatura,
       va_con: v.va_con ? v.va_con.split('|').map(x => x.trim()).filter(Boolean).slice(0, 4) : [],
@@ -642,7 +644,36 @@ async function comparar(env, a, b, superPedido) {
   const mx = motivo(x, y), my = motivo(y, x);
   if (mx) elige.push({ id: x.id, texto: 'Elige ' + x.nombre + ' si ' + mx + '.' });
   if (my && my !== mx) elige.push({ id: y.id, texto: 'Elige ' + y.nombre + ' si ' + my + '.' });
-  return json({ vinos, veredicto: frases, elige, super: superId });
+  // El combate: cuatro asaltos y un ganador.
+  const asaltos = [];
+  let pa = 0, pb = 0;
+  const asalto = (nombre, ganador, detalle) => {
+    asaltos.push({ nombre, ganador: ganador ? ganador.id : null, detalle });
+    if (ganador === x) pa++; else if (ganador === y) pb++;
+  };
+  if (x.precio != null && y.precio != null) {
+    const g = Math.abs(x.precio - y.precio) < 0.5 ? null : (x.precio < y.precio ? x : y);
+    asalto('Precio', g, euros(x.precio) + ' contra ' + euros(y.precio));
+  }
+  if (x.media != null && y.media != null) {
+    asalto('Los Takers', x.media === y.media ? null : (x.media > y.media ? x : y), String(x.media).replace('.', ',') + ' contra ' + String(y.media).replace('.', ',') + ' estrellas');
+  }
+  asalto('Versatilidad', Math.abs(x.n_platos - y.n_platos) < 1 ? null : (x.n_platos > y.n_platos ? x : y), x.n_platos + ' contra ' + y.n_platos + ' platos con los que va bien');
+  if (RANGO_ESTILO[x.estilo] && RANGO_ESTILO[y.estilo]) {
+    asalto('Carácter', x.estilo === y.estilo ? null : (RANGO_ESTILO[x.estilo] > RANGO_ESTILO[y.estilo] ? x : y), 'estilo ' + x.estilo + ' contra ' + y.estilo);
+  }
+  if (pa === pb && x.precio != null && y.precio != null && Math.abs(x.precio - y.precio) >= 0.5) {
+    asalto('Desempate · La cartera', x.precio < y.precio ? x : y, 'a igualdad de puntos, gana el que menos cuesta');
+  }
+  const ganadorC = pa === pb ? null : (pa > pb ? x : y);
+  const dif = Math.abs(pa - pb), total = pa + pb;
+  let frase;
+  if (!ganadorC) frase = 'Tablas: los dos salen de pie y con la copa llena.';
+  else if (dif === total) frase = 'Victoria por KO: ' + ganadorC.nombre + ' no ha dejado ni una gota.';
+  else if (dif >= 2) frase = 'Victoria clara por puntos para ' + ganadorC.nombre + '.';
+  else frase = 'Victoria ajustadísima de ' + ganadorC.nombre + ': se ha decidido en la última copa.';
+  return json({ vinos, veredicto: frases, elige, super: superId,
+    combate: { asaltos, ganador: ganadorC ? ganadorC.id : null, puntos: [pa, pb], frase } });
 }
 
 // ---------- Lista de la compra (por dispositivo) ----------
