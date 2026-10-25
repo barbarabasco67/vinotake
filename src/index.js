@@ -477,6 +477,7 @@ async function ficha(env, id, superPedido) {
     ejemplo: !!v.ejemplo,
     precio: aqui ? { super: aqui.super, precio: aqui.precio } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null),
     mas_barato: masBarato ? { super: masBarato.super, precio: masBarato.precio } : null,
+    comparativa: precios.map(p => ({ id: p.super_id, super: p.super, precio: p.precio })),
     sugerencias
   }, 200, 60);
 }
