@@ -406,7 +406,8 @@ async function ficha(env, id, superPedido) {
   ).bind(id).all()).results;
 
   const aqui = precios.find(p => p.super_id === superId) || null;
-  const masBarato = precios.find(p => p.super_id !== superId && (!aqui || p.precio < aqui.precio)) || null;
+  const masBarato = aqui ? (precios.find(p => p.super_id !== superId && p.precio < aqui.precio) || null) : null;
+  const masBaratoReal = precios[0] || null; // el precio real más bajo que conocemos
 
   const rel = (await env.DB.prepare(
     `SELECT r.tipo, r.nota, r.patrocinado, v.id, v.nombre, v.tipo AS vtipo, v.color,
@@ -475,7 +476,7 @@ async function ficha(env, id, superPedido) {
     media: valo && valo.media ? Math.round(valo.media * 10) / 10 : null,
     votos: valo ? valo.n : 0,
     ejemplo: !!v.ejemplo,
-    precio: aqui ? { super: aqui.super, precio: aqui.precio } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null),
+    precio: aqui ? { super: aqui.super, precio: aqui.precio } : (masBaratoReal ? { super: masBaratoReal.super, precio: masBaratoReal.precio, desde: true } : (v.precio_ref ? { super: null, precio: v.precio_ref } : null)),
     mas_barato: masBarato ? { super: masBarato.super, precio: masBarato.precio } : null,
     comparativa: precios.map(p => ({ id: p.super_id, super: p.super, precio: p.precio })),
     sugerencias

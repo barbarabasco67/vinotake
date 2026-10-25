@@ -1146,7 +1146,7 @@
       (w.mas_barato ? '<span class="pbar">Más barato en ' + esc(w.mas_barato.super) + ': <b>' + eur(w.mas_barato.precio) + '</b></span>' : '') + '</div>' +
       '<div class="note" style="margin:6px 0 0;text-align:center">Puede variar según el súper y las ofertas.</div>') : '';
     var compBlock = '';
-    if (!fromPhoto && w.comparativa && w.comparativa.length > 1){
+    if (!fromPhoto && w.comparativa && w.comparativa.length >= 1){
       var minP = w.comparativa[0].precio;
       compBlock = '<div class="comp"><div class="comp-t">Precio en cada súper</div>' + w.comparativa.map(function(c){
         var best = c.precio === minP, dif = c.precio - minP;
