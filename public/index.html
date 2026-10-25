@@ -120,14 +120,14 @@
   .cmp-ver li{margin:0 0 8px;line-height:1.45}
 
   /* ===== Ficha del vino: la botella en el escenario ===== */
-  .stage{position:relative;height:430px;margin-top:-56px;display:flex;align-items:center;justify-content:center;overflow:hidden;--lx:50%;
+  .escenario{position:relative;height:430px;margin-top:-56px;display:flex;align-items:center;justify-content:center;overflow:hidden;--lx:50%;
     background:radial-gradient(ellipse 70% 62% at var(--lx) 44%, color-mix(in srgb, var(--vc) 55%, #5a4a40) 0%, color-mix(in srgb, var(--vc) 30%, var(--bg)) 52%, var(--bg) 100%)}
-  .stage::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,17,.55) 0%,rgba(18,16,17,0) 26%,rgba(18,16,17,0) 70%,var(--bg) 100%);pointer-events:none;z-index:1}
-  .stage-luz{position:absolute;top:-10px;left:var(--lx);width:340px;height:420px;transform:translateX(-50%);pointer-events:none;
+  .escenario::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,16,17,.55) 0%,rgba(18,16,17,0) 26%,rgba(18,16,17,0) 70%,var(--bg) 100%);pointer-events:none;z-index:1}
+  .escenario-luz{position:absolute;top:-10px;left:var(--lx);width:340px;height:420px;transform:translateX(-50%);pointer-events:none;
     background:conic-gradient(from 180deg at 50% 0%, transparent 168deg, rgba(255,236,200,.20) 180deg, transparent 192deg);filter:blur(10px);opacity:.9}
-  .stage-luz::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 40%,rgba(255,240,215,.32) 50%,transparent 60%);transform:translateX(-120%);animation:barrido 1.5s .35s ease-out forwards;mix-blend-mode:screen}
+  .escenario-luz::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 40%,rgba(255,240,215,.32) 50%,transparent 60%);transform:translateX(-120%);animation:barrido 1.5s .35s ease-out forwards;mix-blend-mode:screen}
   @keyframes barrido{to{transform:translateX(120%)}}
-  .stage-suelo{position:absolute;left:50%;bottom:62px;width:230px;height:34px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at center,rgba(0,0,0,.65),transparent 70%);filter:blur(6px);z-index:1}
+  .escenario-suelo{position:absolute;left:50%;bottom:62px;width:230px;height:34px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at center,rgba(0,0,0,.65),transparent 70%);filter:blur(6px);z-index:1}
   .bottle-big{position:relative;z-index:2;margin-top:38px;--rx:0deg;--ry:0deg;transform:perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));transition:transform .25s ease-out;
     filter:drop-shadow(0 22px 26px rgba(0,0,0,.55));animation:sube .9s cubic-bezier(.2,.8,.2,1) both}
   .bottle-float{animation:flota 6s ease-in-out 1s infinite alternate}
@@ -1100,7 +1100,7 @@
     var s = w.sugerencias || {};
     var haySug = (s.misma && s.misma.length) || (s.parecidos && s.parecidos.length) || (s.descubrir && s.descubrir.length);
     $('#ficha-body').innerHTML =
-      '<div class="stage" id="stage" style="--vc:' + vc + '"><div class="stage-luz" aria-hidden="true"></div><div class="stage-suelo" aria-hidden="true"></div>' + visual + '</div>' +
+      '<div class="escenario" id="stage" style="--vc:' + vc + '"><div class="escenario-luz" aria-hidden="true"></div><div class="escenario-suelo" aria-hidden="true"></div>' + visual + '</div>' +
       '<div class="px ficha-titulo">' + (badge ? '<span class="soon">' + badge + '</span>' : '') +
         '<h1>' + esc(w.nombre) + '</h1>' +
         '<div class="sub">' + esc([w.bodega, w.denominacion].filter(Boolean).join(' · ')) + '</div>' +
@@ -1680,7 +1680,7 @@
   document.addEventListener('pointerdown', function(e){
     if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var b = e.target.closest('button'); if (!b || b.disabled || b.closest('.hoja-x') === null && b.classList.contains('hoja-x')) return;
-    if (b.classList.contains('plain') || b.closest('.stage')) return;
+    if (b.classList.contains('plain') || b.closest('.escenario')) return;
     var cs = getComputedStyle(b); if (cs.position === 'static') b.style.position = 'relative';
     var r = b.getBoundingClientRect(), wrap = document.createElement('span'), dot = document.createElement('span');
     wrap.className = 'rp-wrap'; wrap.setAttribute('aria-hidden', 'true'); dot.className = 'rp';
