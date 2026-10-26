@@ -1,0 +1,67 @@
+INSERT OR REPLACE INTO supermercados (id, nombre, orden) VALUES ('ahorramas', 'Ahorramas', 6);
+
+-- Vinotake · Ahorramas · tintos Ribera del Duero (precios copiados de ahorramas.com)
+
+INSERT OR REPLACE INTO vinos (id, nombre, bodega, denominacion, tipo, uva, elaboracion, sabor, temperatura, apertura, va_con, color, precio_ref, ejemplo, estilo, dulce) VALUES
+  ('saga-roble', 'Saga Roble', 'Saga', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Potente y frutal, con fruta negra y un toque de madera.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 3.70, 0, 'intenso', 0),
+  ('saga-crianza', 'Saga Crianza', 'Saga', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Crianza', 'Con cuerpo y redondo, con fruta negra, especias y madera.', '16 °C', '10 minutos antes', 'Legumbres|Pollo|Embutido|Quesos', '#3A2226', 4.25, 0, 'intenso', 0),
+  ('mayor-de-castilla-crianza', 'Mayor de Castilla Crianza', 'Mayor de Castilla', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Crianza', 'Con cuerpo y redondo, con fruta negra, especias y madera.', '16 °C', '10 minutos antes', 'Legumbres|Pollo|Embutido|Quesos', '#3A2226', 7.00, 0, 'intenso', 0),
+  ('cepa-gavilan-crianza', 'Cepa Gavilán Crianza', 'Cepa Gavilán', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Crianza', 'Con cuerpo y redondo, con fruta negra, especias y madera.', '16 °C', '10 minutos antes', 'Legumbres|Pollo|Embutido|Quesos', '#3A2226', 13.50, 0, 'intenso', 0),
+  ('portocelo-ribera', 'Portocelo', 'Portocelo', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Joven', 'Frutal y con cuerpo, con fruta negra fresca.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 4.95, 0, 'equilibrado', 0),
+  ('coleccion-880-roble', 'Colección 880 Roble', 'Colección 880', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Potente y frutal, con fruta negra y un toque de madera.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 6.59, 0, 'intenso', 0),
+  ('castillo-monje-roble', 'Castillo Monje Roble', 'Castillo Monje', 'D.O. Ribera del Duero', 'Tinto', 'Tempranillo', 'Roble', 'Potente y frutal, con fruta negra y un toque de madera.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 3.25, 0, 'intenso', 0),
+  ('tamaron-tempranillo', 'Tamarón Tempranillo', 'Tamarón', 'IGP Vino de la Tierra de Castilla y León', 'Tinto', 'Tempranillo', 'Joven', 'Frutal y con cuerpo, con fruta negra fresca.', '14–16 °C', 'Al momento', 'Legumbres|Pizza|Pasta|Pollo', '#4A2530', 2.79, 0, 'equilibrado', 0);
+
+INSERT OR REPLACE INTO precios (vino_id, super_id, precio) VALUES
+  ('saga-roble', 'ahorramas', 3.70),
+  ('saga-crianza', 'ahorramas', 4.25),
+  ('mayor-de-castilla-crianza', 'ahorramas', 7.00),
+  ('cepa-gavilan-crianza', 'ahorramas', 13.50),
+  ('portocelo-ribera', 'ahorramas', 4.95),
+  ('coleccion-880-roble', 'ahorramas', 6.59),
+  ('castillo-monje-roble', 'ahorramas', 3.25),
+  ('tamaron-tempranillo', 'ahorramas', 2.79),
+  ('protos-roble', 'ahorramas', 8.99),
+  ('mayor-de-castilla-roble', 'ahorramas', 3.50),
+  ('vina-mayor-roble', 'ahorramas', 6.99),
+  ('celeste-roble', 'ahorramas', 8.69),
+  ('cepa-21', 'ahorramas', 19.50),
+  ('arzuaga-crianza', 'ahorramas', 22.99),
+  ('protos-crianza', 'ahorramas', 18.95),
+  ('pesquera-crianza', 'ahorramas', 21.45),
+  ('fuentespina-crianza', 'ahorramas', 7.95),
+  ('tonteo-joven', 'ahorramas', 5.99);
+
+INSERT OR REPLACE INTO maridajes (plato_id, vino_id, orden, motivo, nota) VALUES
+  ('lentejas', 'saga-roble', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'saga-roble', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'saga-roble', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'saga-roble', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'saga-crianza', 40, 'Con cuerpo y taninos suaves: aguanta un guiso contundente.', 'Crianza o reserva'),
+  ('pollo', 'saga-crianza', 41, 'Suave y redondo: acompaña un pollo asado sin taparlo.', 'Crianza o reserva'),
+  ('embutido', 'saga-crianza', 42, 'Fruta y madera que casan con jamón y embutidos.', 'Crianza o reserva'),
+  ('quesos', 'saga-crianza', 43, 'Fruta y madera bien integradas: acompaña quesos curados.', 'Crianza o reserva'),
+  ('lentejas', 'mayor-de-castilla-crianza', 40, 'Con cuerpo y taninos suaves: aguanta un guiso contundente.', 'Crianza o reserva'),
+  ('pollo', 'mayor-de-castilla-crianza', 41, 'Suave y redondo: acompaña un pollo asado sin taparlo.', 'Crianza o reserva'),
+  ('embutido', 'mayor-de-castilla-crianza', 42, 'Fruta y madera que casan con jamón y embutidos.', 'Crianza o reserva'),
+  ('quesos', 'mayor-de-castilla-crianza', 43, 'Fruta y madera bien integradas: acompaña quesos curados.', 'Crianza o reserva'),
+  ('lentejas', 'cepa-gavilan-crianza', 40, 'Con cuerpo y taninos suaves: aguanta un guiso contundente.', 'Crianza o reserva'),
+  ('pollo', 'cepa-gavilan-crianza', 41, 'Suave y redondo: acompaña un pollo asado sin taparlo.', 'Crianza o reserva'),
+  ('embutido', 'cepa-gavilan-crianza', 42, 'Fruta y madera que casan con jamón y embutidos.', 'Crianza o reserva'),
+  ('quesos', 'cepa-gavilan-crianza', 43, 'Fruta y madera bien integradas: acompaña quesos curados.', 'Crianza o reserva'),
+  ('lentejas', 'portocelo-ribera', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'portocelo-ribera', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'portocelo-ribera', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'portocelo-ribera', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'coleccion-880-roble', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'coleccion-880-roble', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'coleccion-880-roble', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'coleccion-880-roble', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'castillo-monje-roble', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'castillo-monje-roble', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'castillo-monje-roble', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'castillo-monje-roble', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal'),
+  ('lentejas', 'tamaron-tempranillo', 40, 'Jugoso y frutal, va muy bien con legumbres y guisos.', 'Joven y frutal'),
+  ('pizza', 'tamaron-tempranillo', 41, 'Frutal y fácil: acompaña bien al queso y al tomate.', 'Joven y frutal'),
+  ('pasta', 'tamaron-tempranillo', 42, 'Fruta y frescura para salsas de tomate y boloñesa.', 'Joven y frutal'),
+  ('pollo', 'tamaron-tempranillo', 43, 'Frutal y ligero para pollo o cerdo.', 'Joven y frutal');
