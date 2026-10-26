@@ -210,7 +210,12 @@
   .ps-vacio .c{width:64px;height:64px;border-radius:32px;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--muted)}
   .ps-vacio b{font-size:18px}
   .ps-fab{position:fixed;right:16px;bottom:calc(18px + var(--safe-b));z-index:15;width:58px;height:58px;border-radius:29px;border:1px solid rgba(255,255,255,.18);background:var(--burdeos);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.45)}
-  #s-perfil.active .ps-fab{display:flex}
+  #s-perfil.active .ps-fab,#s-takers.active .ps-fab{display:flex}
+  #s-takers .ps-fab{bottom:calc(84px + var(--safe-b))}
+  .tk-chips{display:flex;gap:8px;overflow-x:auto;padding:0 20px 4px;scrollbar-width:none}
+  .tk-chips button{flex:0 0 auto;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--border-hi);background:transparent;color:var(--muted);font-size:14px;cursor:pointer}
+  .tk-chips button.on{background:var(--burdeos);color:#fff;border-color:transparent}
+  .tk-tipo{font-size:11px;font-weight:600;color:var(--amarillo);border:1px solid rgba(232,184,74,.4);border-radius:10px;padding:1px 8px;margin-left:auto;white-space:nowrap}
   .logros{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .logro{padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
   .logro.on{border-color:rgba(232,184,74,.55);background:rgba(232,184,74,.07)}
@@ -721,18 +726,22 @@
 
   <!-- 10 · TAKERS (comunidad, próximamente) -->
   <section class="screen" id="s-takers" aria-label="Takers, la comunidad de Vinotake">
-    <div class="px" style="padding-top:28px">
-      <h1 style="font-size:30px;line-height:1.1">Takers</h1>
-      <p class="lead" style="margin-top:6px">La comunidad de Vinotake: lo que se lleva y lo que bebe la gente.</p>
+    <div class="px" style="padding-top:28px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+      <div>
+        <h1 style="font-size:30px;line-height:1.1">Takers</h1>
+        <p class="lead" style="margin-top:6px">Lo que recomienda y bebe la gente. Toca a alguien para ver su perfil.</p>
+      </div>
+      <button class="iconbtn avatar-btn" id="tk-mi-perfil" data-go="perfil" aria-label="Mi perfil"></button>
     </div>
+    <div class="px" style="padding-top:18px"><div class="seg" id="tk-seg" role="tablist" aria-label="Secciones de la comunidad">
+      <button data-tk="inicio" role="tab" class="on" aria-selected="true">Inicio</button>
+      <button data-tk="siguiendo" role="tab" aria-selected="false">Siguiendo</button>
+      <button data-tk="preguntas" role="tab" aria-selected="false">Preguntas</button>
+      <button data-tk="ranking" role="tab" aria-selected="false">Retos</button>
+    </div></div>
     <div class="px" style="padding-top:18px" id="tk-yo"></div>
     <div class="px" style="padding-top:14px" id="tk-reto"></div>
-    <div class="px" style="padding-top:22px"><div class="seg" id="tk-seg" role="tablist" aria-label="Secciones de la comunidad">
-      <button data-tk="opiniones" role="tab" class="on" aria-selected="true">Opiniones</button>
-      <button data-tk="preguntas" role="tab" aria-selected="false">Preguntas</button>
-      <button data-tk="siguiendo" role="tab" aria-selected="false">Siguiendo</button>
-      <button data-tk="ranking" role="tab" aria-selected="false">Ranking</button>
-    </div></div>
+    <button class="ps-fab" id="tk-fab" aria-label="Publicar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
     <div id="tk-panel" style="padding-top:14px"><div class="px"><div class="empty">Cargando la comunidad…</div></div></div>
     <div class="spacer"></div>
     <nav class="tabbar" aria-label="Navegación principal">
@@ -1557,7 +1566,7 @@
 
   function tarjetaRec(o, conAutor){
     return '<article class="tk-card">' +
-      '<div style="display:flex;align-items:center;gap:8px">' + (conAutor && o.autor ? autorTk(o.autor, o.creado) : '<span class="note" style="flex:1;margin:0">' + haceTiempo(o.creado) + '</span>') +
+      '<div style="display:flex;align-items:center;gap:8px">' + (conAutor && o.autor ? autorTk(o.autor, o.creado) : '<span class="note" style="flex:1;margin:0">' + haceTiempo(o.creado) + '</span>') + (conAutor ? '<span class="tk-tipo">Recomienda</span>' : '') +
         '<button class="tk-menu" data-tk-menu="recomendacion" data-id="' + o.id + '"' + (o.mia ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button></div>' +
       (o.foto ? '<img class="tk-foto" src="' + esc(o.foto) + '" alt="Foto de ' + esc(o.vino.nombre) + '" loading="lazy">' : '') +
       '<button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span></button>' +
@@ -1607,6 +1616,24 @@
       });
     }).catch(function(){});
   }
+  var FEED_CHIPS = [['todo', 'Todo'], ['recomendaciones', 'Recomendaciones'], ['valoraciones', 'Valoraciones'], ['opiniones', 'Opiniones']];
+  function cargarFeed(reset){
+    var f = state.tk.feed; if (f.cargando) return; f.cargando = true;
+    if (reset){ f.items = []; f.antes = null; f.mas = false; }
+    pintarFeed();
+    api('/api/takers/feed?d=' + encodeURIComponent(state.dispositivo) + '&tipo=' + f.tipo + (f.antes ? '&antes=' + encodeURIComponent(f.antes) : '')).then(function(r){
+      f.items = f.items.concat(r.items || []); f.mas = r.mas; f.antes = r.antes; f.cargado = true; f.cargando = false; pintarFeed();
+    }).catch(function(err){ f.cargando = false; f.cargado = true; if (state.tk.tab === 'inicio') $('#tk-panel').innerHTML = '<div class="px"><div class="empty">' + esc(err.message) + '</div></div>'; });
+  }
+  function pintarFeed(){
+    if (state.tk.tab !== 'inicio') return;
+    var f = state.tk.feed;
+    var vacios = { todo: 'Aún no hay publicaciones. ¡Estrena la comunidad con una recomendación!', recomendaciones: 'Todavía nadie ha recomendado un vino. Sé el primero con el botón +.', valoraciones: 'Aún no hay valoraciones.', opiniones: 'Aún no hay opiniones.' };
+    $('#tk-panel').innerHTML = '<div class="tk-chips" role="tablist" aria-label="Filtrar publicaciones">' + FEED_CHIPS.map(function(c){ return '<button data-feedtipo="' + c[0] + '" class="' + (f.tipo === c[0] ? 'on' : '') + '" aria-selected="' + (f.tipo === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="px stack" style="padding-top:12px">' +
+        (f.items.length ? f.items.map(function(o){ return o.tipo === 'recomendacion' ? tarjetaRec(o, true) : tarjetaOpinion(o, true); }).join('') : (f.cargando ? '<div class="empty">Cargando…</div>' : '<div class="empty">' + vacios[f.tipo] + '</div>')) +
+        (f.mas ? '<button class="ghost" id="tk-feed-mas">Ver más</button>' : '') + '</div>';
+  }
   function cargarSiguiendo(){
     $('#tk-panel').innerHTML = '<div class="px"><div class="empty">Cargando…</div></div>';
     api('/api/takers/siguiendo?d=' + encodeURIComponent(state.dispositivo)).then(function(r){
@@ -1632,6 +1659,17 @@
       return;
     }
     if (e.target.closest('#tk-recomendar')){ recomendarConFoto(); return; }
+    var ft = e.target.closest('[data-feedtipo]');
+    if (ft){ state.tk.feed.tipo = ft.getAttribute('data-feedtipo'); cargarFeed(true); return; }
+    if (e.target.closest('#tk-feed-mas')){ cargarFeed(false); return; }
+    if (e.target.closest('#tk-fab')){
+      abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0">¿Qué quieres compartir?</h2>' +
+        '<button class="cta" id="tk-f-rec">Recomendar un vino con foto</button><button class="ghost" id="tk-f-op">Valorar u opinar de un vino</button><button class="ghost" id="tk-f-preg">Preguntar a la comunidad</button><button class="ghost" data-hoja-cerrar>Cancelar</button>');
+      $('#tk-f-rec').addEventListener('click', function(){ cerrarHoja(); recomendarConFoto(); });
+      $('#tk-f-op').addEventListener('click', function(){ cerrarHoja(); escribirOpinion(); });
+      $('#tk-f-preg').addEventListener('click', function(){ cerrarHoja(); state.tk.tab = 'preguntas'; pintarTakers(); var t = $('#tk-preg-txt'); if (t){ t.scrollIntoView({ block: 'center' }); t.focus(); } });
+      return;
+    }
     var sg = e.target.closest('#tk-seguir');
     if (sg){
       var sigo = sg.getAttribute('data-sigo') === '1';
@@ -2798,7 +2836,7 @@
   });
 
   // ---------- Takers: la comunidad ----------
-  state.tk = { tab: 'opiniones', datos: null, verTodas: false };
+  state.tk = { tab: 'inicio', datos: null, verTodas: false, feed: { tipo: 'todo', items: [], mas: false, antes: null, cargado: false } };
   var AV_COLORES = ['#7B1E34', '#2E6A47', '#8A6A1F', '#5A2A3A', '#2F4F5A', '#6B3A1E'];
   var ICON_BRINDIS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-14 7 9)"><path d="M4 3h6l-.6 5.5a2.4 2.4 0 0 1-4.8 0z"/><path d="M7 11v7"/><path d="M4.5 18h5"/></g><g transform="rotate(14 17 9)"><path d="M14 3h6l-.6 5.5a2.4 2.4 0 0 1-4.8 0z"/><path d="M17 11v7"/><path d="M14.5 18h5"/></g></svg>';
   var ICON_MAS = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
@@ -3010,7 +3048,7 @@
   // ----- Pintar -----
   function cargarTakers(){
     return api('/api/takers?d=' + encodeURIComponent(state.dispositivo) + '&super=' + encodeURIComponent(state.superId || '')).then(function(d){
-      state.tk.datos = d; pintarTakers();
+      state.tk.datos = d; state.tk.feed.cargado = false; pintarTakers();
     }).catch(function(err){
       if (!state.tk.datos) $('#tk-panel').innerHTML = '<div class="px"><div class="empty">No hemos podido cargar la comunidad. ' + esc(err.message) + '</div></div>';
     });
@@ -3068,7 +3106,7 @@
 
   function tarjetaOpinion(o, conVino){
     return '<article class="tk-card">' +
-      '<div style="display:flex;align-items:center;gap:8px">' + autorTk(o.autor, o.creado) +
+      '<div style="display:flex;align-items:center;gap:8px">' + autorTk(o.autor, o.creado) + (o.tipo ? '<span class="tk-tipo">' + (o.tipo === 'opinion' ? 'Opinión' : 'Valoración') + '</span>' : '') +
         '<button class="tk-menu" data-tk-menu="opinion" data-id="' + o.id + '"' + (o.mia ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button></div>' +
       (conVino ? '<button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span>' +
         '<span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span>' + estrellasTk(o.puntuacion, 13) + '</button>'
@@ -3082,7 +3120,10 @@
 
   function pintarPanelTk(){
     var d = state.tk.datos, h = '';
-    if (state.tk.tab === 'opiniones'){
+    if (state.tk.tab === 'inicio'){
+      h = '';
+      if (!state.tk.feed.cargado) cargarFeed(true); else pintarFeed();
+    } else if (state.tk.tab === 'opiniones-old'){
       h = '<div class="px stack">' +
         '<button class="row-card" id="tk-opinar"><span class="ic">' + estrellaSVG(true, 24) + '</span><span style="flex:1"><span class="t" style="display:block">¿Qué has probado?</span><span class="s" style="display:block">Puntúa un vino y cuenta qué tal · +' + d.puntos.opinion + ' puntos</span></span></button>' +
         (d.opiniones.length ? d.opiniones.map(function(o){ return tarjetaOpinion(o, true); }).join('') : '<div class="empty">Aún no hay opiniones. ¡Estrena la comunidad con la tuya!</div>') +
@@ -3124,7 +3165,9 @@
           '<div class="note" style="margin-top:4px">Niveles: ' + d.niveles.map(function(n){ return esc(n.nombre) + (n.min ? ' (' + n.min + ')' : ''); }).join(' · ') + '</div></div>' +
       '</div>';
     }
-    $('#tk-panel').innerHTML = h;
+    if (state.tk.tab !== 'inicio') $('#tk-panel').innerHTML = h;
+    var ranking = state.tk.tab === 'ranking';
+    $('#tk-yo').style.display = ranking ? '' : 'none'; $('#tk-reto').style.display = ranking ? '' : 'none';
     if (state.tk.tab === 'siguiendo') cargarSiguiendo();
   }
 
@@ -3363,6 +3406,7 @@
   function iniciales(n){ return (n || '').trim().split(/\s+/).slice(0, 2).map(function(p){ return p.charAt(0).toUpperCase(); }).join(''); }
   function pintarAvatar(){
     var b = $('#btn-perfil'), ini = iniciales(state.nombre);
+    setTimeout(function(){ var b2 = $('#tk-mi-perfil'); if (b2){ b2.innerHTML = b.innerHTML; b2.className = b.className; b2.id = 'tk-mi-perfil'; } }, 0);
     if (ini){ b.textContent = ini; b.classList.add('has-name'); b.setAttribute('aria-label', 'Tu perfil: ' + state.nombre); }
     else { b.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'; b.classList.remove('has-name'); b.setAttribute('aria-label', 'Tu perfil'); }
   }

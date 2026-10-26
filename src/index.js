@@ -134,6 +134,7 @@ async function api(request, env, url) {
   m = path.match(/^\/api\/taker\/([a-f0-9]{12})$/);
   if (method === 'GET' && m) return perfilPublico(env, m[1], url.searchParams.get('d'));
   if (method === 'POST' && path === '/api/taker/seguir') return seguir(env, await body(request));
+  if (method === 'GET' && path === '/api/takers/feed') return feedTakers(env, url.searchParams.get('d'), url.searchParams.get('tipo'), url.searchParams.get('antes'));
   if (method === 'GET' && path === '/api/takers/siguiendo') return feedSiguiendo(env, url.searchParams.get('d'));
   if (method === 'POST' && path === '/api/takers/recomendacion') return recomendacionGuardar(env, await body(request));
   m = path.match(/^\/api\/foto\/(\d+)$/);
@@ -1158,6 +1159,43 @@ async function fotoRecomendacion(env, id) {
   return new Response(bin, { headers: { 'content-type': 'image/' + m[1], 'cache-control': 'public, max-age=86400' } });
 }
 
+// Timeline de la comunidad: recomendaciones, valoraciones y opiniones, de lo más nuevo a lo más viejo.
+async function feedTakers(env, dispositivo, tipo, antes) {
+  const d = dispositivoValido(dispositivo);
+  const t = ['recomendaciones', 'valoraciones', 'opiniones'].includes(tipo) ? tipo : 'todo';
+  const hasta = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(String(antes || '')) ? String(antes).replace('T', ' ') : '9999-12-31 00:00:00';
+  const puntos = await mapaPuntos(env);
+  const visible = "COALESCE(pf.publico, 1) != 0";
+  const quiereOp = t === 'todo' || t === 'valoraciones' || t === 'opiniones';
+  const filtroTexto = t === 'valoraciones' ? "AND (r.texto IS NULL OR r.texto = '')" : t === 'opiniones' ? "AND r.texto IS NOT NULL AND r.texto != ''" : '';
+  const [ops, recs] = await Promise.all([
+    quiereOp ? env.DB.prepare(
+      `SELECT r.id, r.dispositivo, r.puntuacion, r.texto, r.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion,
+              pf.nombre AS autor, pf.publico_id AS autor_pid,
+              (SELECT COUNT(*) FROM brindis b WHERE b.resena_id = r.id) AS brindis,
+              EXISTS (SELECT 1 FROM brindis b WHERE b.resena_id = r.id AND b.dispositivo = ?1) AS brindado
+         FROM resenas r JOIN vinos v ON v.id = r.vino_id
+         LEFT JOIN perfiles pf ON pf.dispositivo = r.dispositivo
+        WHERE r.oculto = 0 AND ${visible} AND r.creado < ?2 ${filtroTexto}
+        ORDER BY r.creado DESC LIMIT 31`
+    ).bind(d || '', hasta).all() : { results: [] },
+    t === 'todo' || t === 'recomendaciones' ? env.DB.prepare(
+      `SELECT r.id, r.dispositivo, r.texto, r.foto_id, r.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion,
+              pf.nombre AS autor, pf.publico_id AS autor_pid
+         FROM recomendaciones r JOIN vinos v ON v.id = r.vino_id
+         LEFT JOIN perfiles pf ON pf.dispositivo = r.dispositivo
+        WHERE r.oculto = 0 AND ${visible} AND r.creado < ?1
+        ORDER BY r.creado DESC LIMIT 31`
+    ).bind(hasta).all() : { results: [] }
+  ]);
+  const todos = [
+    ...ops.results.map(r => ({ tipo: r.texto ? 'opinion' : 'valoracion', ...opinionPublica(r, d, puntos) })),
+    ...recs.results.map(r => ({ tipo: 'recomendacion', ...recPublica(r, r.dispositivo === d, autorPublico(r.autor, r.dispositivo, puntos, r.autor_pid)) }))
+  ].sort((x, y) => String(y.creado).localeCompare(String(x.creado)));
+  const items = todos.slice(0, 30);
+  return json({ items, mas: todos.length > 30, antes: items.length ? items[items.length - 1].creado : null });
+}
+
 // Lo último de la gente a la que sigues.
 async function feedSiguiendo(env, dispositivo) {
   const d = dispositivoValido(dispositivo);
@@ -1186,7 +1224,7 @@ async function feedSiguiendo(env, dispositivo) {
     ).bind(d).all()
   ]);
   const items = [
-    ...ops.results.map(r => ({ tipo: 'opinion', ...opinionPublica(r, d, puntos) })),
+    ...ops.results.map(r => ({ tipo: r.texto ? 'opinion' : 'valoracion', ...opinionPublica(r, d, puntos) })),
     ...recs.results.map(r => ({ tipo: 'recomendacion', ...recPublica(r, false, autorPublico(r.autor, r.dispositivo, puntos, r.autor_pid)) }))
   ].sort((x, y) => String(y.creado).localeCompare(String(x.creado))).slice(0, 30);
   return json({ siguiendo: n.n, items });
