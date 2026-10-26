@@ -187,9 +187,13 @@
   .comp-d{font-size:12px;color:var(--muted);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:2px 9px}
   .ps-top{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 0;gap:8px}
   .ps-top .h{font-weight:600;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ps-acc{display:flex;gap:2px}
+  .ps-acc{display:flex;gap:2px;width:96px;justify-content:flex-end}
+  .ps-top>:first-child{width:96px;display:flex;justify-content:flex-start}
   .ps-cab{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 20px 0;text-align:center}
   .ps-cab h1{font-size:26px;line-height:1.1;overflow-wrap:anywhere}
+  .ps-av{position:relative;display:inline-block;margin-top:6px}
+  .ps-burbuja{position:absolute;left:84%;top:-4px;display:flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 12px;border-radius:20px;border:1.5px solid #8E2F45;background:var(--bg,#121011);color:var(--ink);font-size:13px;font-weight:600}
+  .ps-burbuja svg{color:var(--amarillo)}
   .ps-stats{display:flex;justify-content:center;padding:14px 8px 0}
   .ps-stats>div{flex:1;text-align:center;padding:4px 0;border-left:1px solid var(--border)}
   .ps-stats>div:first-child{border-left:0}
@@ -197,6 +201,8 @@
   .ps-stats span{font-size:13px;color:var(--muted)}
   .ps-tabs{display:flex;margin-top:18px;border-bottom:1px solid var(--border)}
   .ps-tabs button{flex:1;min-height:48px;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .tk-tabs{margin-top:0}
+  .tk-tabs button{font-size:15px;font-weight:600;min-height:44px}
   .ps-tabs button.on{color:var(--ink);border-bottom-color:#8E2F45}
   .ps-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px 12px 0}
   .ps-tile{position:relative;border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--border);min-height:150px}
@@ -732,11 +738,10 @@
     <div class="px" style="padding-top:28px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
       <div>
         <h1 style="font-size:30px;line-height:1.1">Takers</h1>
-        <p class="lead" style="margin-top:6px">Lo que recomienda y bebe la gente. Toca a alguien para ver su perfil.</p>
       </div>
       <button class="iconbtn avatar-btn" id="tk-mi-perfil" data-go="perfil" aria-label="Mi perfil"></button>
     </div>
-    <div class="px" style="padding-top:18px"><div class="seg" id="tk-seg" role="tablist" aria-label="Secciones de la comunidad">
+    <div style="padding-top:8px"><div class="ps-tabs tk-tabs" id="tk-seg" role="tablist" aria-label="Secciones de la comunidad">
       <button data-tk="inicio" role="tab" class="on" aria-selected="true">Inicio</button>
       <button data-tk="siguiendo" role="tab" aria-selected="false">Siguiendo</button>
       <button data-tk="preguntas" role="tab" aria-selected="false">Preguntas</button>
@@ -1493,6 +1498,7 @@
     grid: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>',
     marca: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v16l-5-4-5 4z"/></svg>',
     medalla: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>',
+    compartir: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 12v7h14v-7"/></svg>',
     lapiz: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/></svg>',
     ajustes: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
     atras: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
@@ -1503,17 +1509,17 @@
   function perfilSocial(t, cont){
     state.psData = { t: t, cont: cont };
     var yo = !!t.es_yo;
-    var top = '<div class="ps-top"><button class="iconbtn plain" data-back aria-label="Volver">' + IC.atras + '</button>' +
+    var cmp = '<button class="iconbtn plain" id="ps-compartir" aria-label="Compartir perfil">' + IC.compartir + '</button>';
+    var top = '<div class="ps-top">' + (yo ? '<button class="iconbtn plain" id="ps-editar" aria-label="Editar perfil">' + IC.lapiz + '</button>' : '<button class="iconbtn plain" data-back aria-label="Volver">' + IC.atras + '</button>') +
       '<span class="h">' + esc(arrobaDe(t.nombre)) + '</span>' +
-      '<span class="ps-acc">' + (yo ? '<button class="iconbtn plain" id="ps-editar" aria-label="Editar perfil">' + IC.lapiz + '</button><button class="iconbtn plain" data-go="ajustes" aria-label="Ajustes">' + IC.ajustes + '</button>' : '<span style="width:44px"></span>') + '</span></div>';
+      '<span class="ps-acc">' + (yo ? cmp + '<button class="iconbtn plain" data-go="ajustes" aria-label="Ajustes">' + IC.ajustes + '</button>' : cmp) + '</span></div>';
     if (t.privado){
       cont.innerHTML = top + '<div class="ps-cab">' + avatarTk({ nombre: t.nombre }, 96) + '<h1>' + esc(t.nombre) + ' ' + IC.candado + '</h1></div><div class="ps-vacio"><b>Perfil privado</b><span class="note">Este Taker ha decidido no mostrar su perfil.</span></div>';
       return;
     }
     var st = t.stats, pubs = st.opiniones + st.recomendaciones;
-    var cab = '<div class="ps-cab">' + avatarTk({ nombre: t.nombre }, 96) +
-      '<h1>' + esc(t.nombre) + (yo && !t.publico ? ' ' + IC.candado : '') + '</h1>' +
-      '<div class="note" style="margin:0"><span style="color:var(--amarillo);font-weight:600">' + esc(t.nivel) + '</span> · ' + t.puntos + ' puntos</div></div>' +
+    var cab = '<div class="ps-cab"><div class="ps-av">' + avatarTk({ nombre: t.nombre }, 112) + '<span class="ps-burbuja">' + IC.medalla.replace('width="24" height="24"', 'width="16" height="16"') + esc(t.nivel) + '</span></div>' +
+      '<h1>' + esc(t.nombre) + (yo && !t.publico ? ' ' + IC.candado : '') + '</h1></div>' +
       '<div class="ps-stats"><div><b>' + pubs + '</b><span>Publicaciones</span></div><div><b id="tk-n-seg">' + t.seguidores + '</b><span>Seguidores</span></div><div><b>' + t.siguiendo + '</b><span>Seguidos</span></div></div>' +
       '<div class="ps-cab" style="padding-top:12px">' +
         (t.bio ? '<p style="margin:0;line-height:1.45">' + esc(t.bio) + '</p>' : (yo ? '<button class="linkbtn" id="ps-bio" style="color:#D9738A;font-weight:600">+ Añadir descripción</button>' : '')) +
@@ -1667,6 +1673,11 @@
     if (lgb && state.psData){
       var lg = state.psData.t.logros.filter(function(l){ return (l.id || l.nombre) === lgb.getAttribute('data-logro'); })[0];
       if (lg){ abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0">' + esc(lg.nombre) + '</h2><p class="note" style="margin:0">' + esc(lg.desc) + '</p><button class="ghost" data-hoja-cerrar>Cerrar</button>'); return; }
+    }
+    if (e.target.closest('#ps-compartir')){
+      var nm = state.psData && state.psData.t ? state.psData.t.nombre : 'Vinotake';
+      if (navigator.share) navigator.share({ title: nm + ' en Vinotake', text: 'Mira el perfil de ' + nm + ' en Vinotake', url: location.origin }).catch(function(){});
+      return;
     }
     if (e.target.closest('#tk-recomendar')){ recomendarConFoto(); return; }
     var ft = e.target.closest('[data-feedtipo]');
