@@ -610,7 +610,7 @@ async function bodegaListar(env, dispositivo, superPedido) {
   if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
   const superId = await superValido(env, superPedido);
   const { results } = await env.DB.prepare(
-    `SELECT b.vino_id AS id, b.cantidad, b.deseo, b.puntuacion, b.nota, b.actualizado,
+    `SELECT b.vino_id AS id, b.cantidad, b.deseo, b.puntuacion, b.nota, b.actualizado, b.comprado_en, b.abierto_en,
             v.nombre, v.tipo, v.denominacion, v.color, v.va_con,
             COALESCE(p.precio, v.precio_ref) AS precio
        FROM bodega b
@@ -622,10 +622,19 @@ async function bodegaListar(env, dispositivo, superPedido) {
   return json({
     vinos: results.map(r => ({
       id: r.id, nombre: r.nombre, tipo: r.tipo, denominacion: r.denominacion, color: r.color || '#3A2226',
-      precio: r.precio, cantidad: r.cantidad || 0, deseo: !!r.deseo, puntuacion: r.puntuacion, nota: r.nota || '',
+      precio: r.precio, cantidad: r.cantidad || 0, deseo: !!r.deseo, puntuacion: r.puntuacion, nota: r.nota || '', comprado_en: r.comprado_en || null, abierto_en: r.abierto_en || null,
       va_con: r.va_con ? r.va_con.split('|').slice(0, 3) : []
     }))
   });
+}
+
+function hoyMadrid() { return new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' }); }
+function fechaValida(v) {
+  const t = String(v || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) return null;
+  const f = new Date(t + 'T12:00:00Z');
+  if (isNaN(f) || f.toISOString().slice(0, 10) !== t || t < '2000-01-01' || t > '2100-01-01') return null;
+  return t;
 }
 
 async function bodegaGuardar(env, b) {
@@ -635,30 +644,35 @@ async function bodegaGuardar(env, b) {
   const existe = await env.DB.prepare('SELECT id FROM vinos WHERE id = ?').bind(vinoId).first();
   if (!existe) return json({ error: 'Ese vino no está en el catálogo.' }, 404);
 
-  const actual = await env.DB.prepare('SELECT cantidad, deseo, puntuacion, nota FROM bodega WHERE dispositivo = ? AND vino_id = ?')
-    .bind(d, vinoId).first() || { cantidad: 0, deseo: 0, puntuacion: null, nota: '' };
+  const actual = await env.DB.prepare('SELECT cantidad, deseo, puntuacion, nota, comprado_en, abierto_en FROM bodega WHERE dispositivo = ? AND vino_id = ?')
+    .bind(d, vinoId).first() || { cantidad: 0, deseo: 0, puntuacion: null, nota: '', comprado_en: null, abierto_en: null };
 
   const nuevo = {
     cantidad: 'cantidad' in b ? Math.max(0, Math.min(99, parseInt(b.cantidad, 10) || 0)) : actual.cantidad,
     deseo: 'deseo' in b ? (b.deseo ? 1 : 0) : actual.deseo,
     puntuacion: 'puntuacion' in b ? (b.puntuacion === null ? null : Math.max(1, Math.min(5, parseInt(b.puntuacion, 10) || 1))) : actual.puntuacion,
-    nota: 'nota' in b ? limpiar(b.nota, 500) : (actual.nota || '')
+    nota: 'nota' in b ? limpiar(b.nota, 500) : (actual.nota || ''),
+    comprado_en: 'comprado_en' in b ? fechaValida(b.comprado_en) : (actual.comprado_en || null),
+    abierto_en: 'abierto_en' in b ? fechaValida(b.abierto_en) : (actual.abierto_en || null)
   };
+  // Si suma botellas y no hay fecha de compra, se apunta la de hoy.
+  if (nuevo.cantidad > (actual.cantidad || 0) && !nuevo.comprado_en && !('comprado_en' in b)) nuevo.comprado_en = hoyMadrid();
 
-  if (!nuevo.cantidad && !nuevo.deseo && nuevo.puntuacion === null && !nuevo.nota) {
+  if (!nuevo.cantidad && !nuevo.deseo && nuevo.puntuacion === null && !nuevo.nota && !nuevo.abierto_en) {
     await env.DB.prepare('DELETE FROM bodega WHERE dispositivo = ? AND vino_id = ?').bind(d, vinoId).run();
   } else {
     const hay = await env.DB.prepare('SELECT 1 AS x FROM bodega WHERE dispositivo = ? AND vino_id = ?').bind(d, vinoId).first();
     if (!hay) { const lim = await prem().limiteBodega(env, d); if (lim) return lim; }
     await env.DB.prepare(
-      `INSERT INTO bodega (dispositivo, vino_id, cantidad, deseo, puntuacion, nota)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO bodega (dispositivo, vino_id, cantidad, deseo, puntuacion, nota, comprado_en, abierto_en)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (dispositivo, vino_id) DO UPDATE SET
          cantidad = excluded.cantidad, deseo = excluded.deseo, puntuacion = excluded.puntuacion,
-         nota = excluded.nota, actualizado = CURRENT_TIMESTAMP`
-    ).bind(d, vinoId, nuevo.cantidad, nuevo.deseo, nuevo.puntuacion, nuevo.nota || null).run();
+         nota = excluded.nota, comprado_en = excluded.comprado_en, abierto_en = excluded.abierto_en,
+         actualizado = CURRENT_TIMESTAMP`
+    ).bind(d, vinoId, nuevo.cantidad, nuevo.deseo, nuevo.puntuacion, nuevo.nota || null, nuevo.comprado_en, nuevo.abierto_en).run();
   }
-  return json({ ok: true, vino_id: vinoId, cantidad: nuevo.cantidad, deseo: !!nuevo.deseo, puntuacion: nuevo.puntuacion, nota: nuevo.nota || '' });
+  return json({ ok: true, vino_id: vinoId, cantidad: nuevo.cantidad, deseo: !!nuevo.deseo, puntuacion: nuevo.puntuacion, nota: nuevo.nota || '', comprado_en: nuevo.comprado_en, abierto_en: nuevo.abierto_en });
 }
 
 // ---------- Vino VS: comparar dos vinos ----------
@@ -817,10 +831,10 @@ async function listaABodega(env, b) {
   if (!results.length) return json({ ok: true, movidos: 0 });
   await env.DB.batch(results.flatMap(r => [
     env.DB.prepare(
-      `INSERT INTO bodega (dispositivo, vino_id, cantidad) VALUES (?, ?, ?)
+      `INSERT INTO bodega (dispositivo, vino_id, cantidad, comprado_en) VALUES (?, ?, ?, ?)
        ON CONFLICT (dispositivo, vino_id) DO UPDATE SET cantidad = MIN(99, cantidad + excluded.cantidad),
-         deseo = 0, actualizado = CURRENT_TIMESTAMP`
-    ).bind(d, r.vino_id, r.cantidad),
+         comprado_en = excluded.comprado_en, deseo = 0, actualizado = CURRENT_TIMESTAMP`
+    ).bind(d, r.vino_id, r.cantidad, hoyMadrid()),
     env.DB.prepare('DELETE FROM lista WHERE dispositivo = ? AND vino_id = ?').bind(d, r.vino_id)
   ]));
   return json({ ok: true, movidos: results.length });

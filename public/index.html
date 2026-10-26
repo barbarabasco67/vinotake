@@ -1292,8 +1292,8 @@
         id: id, nombre: state.ficha.nombre, tipo: (state.ficha.etiquetas || [])[0] || '', denominacion: state.ficha.denominacion,
         color: state.ficha.color, precio: state.ficha.precio ? state.ficha.precio.precio : null, va_con: (state.ficha.va_con || []).slice(0, 3)
       } : Object.assign({ id: id }, info || {}));
-      base.cantidad = r.cantidad; base.deseo = r.deseo; base.puntuacion = r.puntuacion; base.nota = r.nota;
-      if (!r.cantidad && !r.deseo && r.puntuacion == null && !r.nota) delete state.bodega[id];
+      base.cantidad = r.cantidad; base.deseo = r.deseo; base.puntuacion = r.puntuacion; base.nota = r.nota; base.comprado_en = r.comprado_en; base.abierto_en = r.abierto_en;
+      if (!r.cantidad && !r.deseo && r.puntuacion == null && !r.nota && !r.abierto_en) delete state.bodega[id];
       else state.bodega[id] = base;
       if (!r.cantidad && state.bodSel === id) state.bodSel = null;
       pintarBodBox(); renderBodega();
@@ -2353,6 +2353,14 @@
     b.style.visibility = state.ficha ? 'visible' : 'hidden';
   }
 
+  function hoyISO(){ var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function fmtDia(iso){
+    var d = new Date(iso + 'T12:00:00');
+    return isNaN(d) ? '' : d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function fechasBod(v){
+    return [v.comprado_en ? 'Comprado ' + fmtDia(v.comprado_en) : '', v.abierto_en ? 'Abierto ' + fmtDia(v.abierto_en) : ''].filter(Boolean).join(' · ');
+  }
   function pintarBodBox(){
     pintarBotonGuardar();
     var box = $('#bodbox'); if (!box || !state.ficha) return;
@@ -2363,6 +2371,9 @@
     box.innerHTML = '<div class="bodbox">' +
       '<div class="bodrow"><span style="font-weight:600">Botellas en casa</span>' +
         '<div class="stepper"><button type="button" data-bod="menos" aria-label="Una botella menos">−</button><span aria-live="polite">' + (it.cantidad || 0) + '</span><button type="button" data-bod="mas" aria-label="Una botella más">+</button></div></div>' +
+      ((it.cantidad > 0 || it.comprado_en || it.abierto_en)
+        ? '<div class="bodrow"><label for="bod-compra" style="font-weight:600">Comprado el</label><input type="date" id="bod-compra" class="pw-input" style="width:auto;text-transform:none" max="' + hoyISO() + '" value="' + esc(it.comprado_en || '') + '"></div>' +
+          '<div class="bodrow"><label for="bod-abierto" style="font-weight:600">Abierto el</label><input type="date" id="bod-abierto" class="pw-input" style="width:auto;text-transform:none" max="' + hoyISO() + '" value="' + esc(it.abierto_en || '') + '"></div>' : '') +
       '<div class="bodrow"><span style="font-weight:600">¿Lo quieres probar?</span>' +
         '<button type="button" class="toggle' + (it.deseo ? ' on' : '') + '" data-bod="deseo" aria-pressed="' + !!it.deseo + '">' + (it.deseo ? 'En Por probar' : 'Quiero probarlo') + '</button></div>' +
       '<div class="bodrow"><span style="font-weight:600">Lista de la compra</span>' +
@@ -2395,6 +2406,12 @@
     else if (acc === 'quitar-nota') guardarBodega(id, { puntuacion: null });
   });
   document.addEventListener('change', function(e){
+    if (e.target && (e.target.id === 'bod-compra' || e.target.id === 'bod-abierto') && state.ficha){
+      var campo = e.target.id === 'bod-compra' ? 'comprado_en' : 'abierto_en', cambio = {};
+      cambio[campo] = e.target.value || null;
+      guardarBodega(state.ficha.id, cambio).then(function(r){ if (r) toast('Fecha guardada'); });
+      return;
+    }
     if (e.target && e.target.id === 'bodnota' && state.ficha){
       guardarBodega(state.ficha.id, { nota: e.target.value.trim() }).then(function(r){ if (r) toast('Nota guardada'); });
     }
@@ -3239,7 +3256,7 @@
     var grupos = {
       casa: todos.filter(function(v){ return v.cantidad > 0; }),
       deseo: todos.filter(function(v){ return v.deseo; }),
-      probado: todos.filter(function(v){ return v.puntuacion; }).sort(function(a, b){ return b.puntuacion - a.puntuacion; })
+      probado: todos.filter(function(v){ return v.puntuacion || v.abierto_en; }).sort(function(a, b){ return (b.puntuacion || 0) - (a.puntuacion || 0); })
     };
     ['casa', 'deseo', 'probado'].forEach(function(k){ $('#cnt-' + k).textContent = grupos[k].length; });
     document.querySelectorAll('#bod-tabs [data-bodtab]').forEach(function(b){
@@ -3250,21 +3267,21 @@
     var vacio = {
       casa: 'Aún no tienes botellas apuntadas. Abre la ficha de un vino y suma las que tengas en casa.',
       deseo: 'Guarda aquí los vinos que quieras comprar. Pulsa el marcador en la ficha de cualquier vino.',
-      probado: 'Puntúa los vinos que pruebes y aquí tendrás tu ranking personal.'
+      probado: 'Puntúa los vinos que pruebes, o apunta cuándo los abres, y aquí tendrás tu historial.'
     };
     if (!lista.length){ $('#bod-lista').innerHTML = '<div class="empty">' + vacio[state.bodTab] + '</div>'; return; }
     $('#bod-lista').innerHTML = lista.map(function(v){
       var estrellas = '';
       if (v.puntuacion){ for (var i = 1; i <= 5; i++) estrellas += i <= v.puntuacion ? '★' : '☆'; }
-      var extra = state.bodTab === 'casa' ? (v.va_con && v.va_con.length ? 'Va con: ' + v.va_con.join(', ') : '')
-        : state.bodTab === 'probado' ? (v.nota || '') : [v.tipo, v.denominacion].filter(Boolean).join(' · ');
+      var extra = state.bodTab === 'casa' ? (fechasBod(v) || (v.va_con && v.va_con.length ? 'Va con: ' + v.va_con.join(', ') : ''))
+        : state.bodTab === 'probado' ? ([v.abierto_en ? 'Abierto ' + fmtDia(v.abierto_en) : '', v.nota || ''].filter(Boolean).join(' · ')) : [v.tipo, v.denominacion].filter(Boolean).join(' · ');
       return '<button class="bcard" data-wine="' + esc(v.id) + '">' +
         '<span class="mini-bot" aria-hidden="true">' + botellaSVG(v, 56) + '</span>' +
         '<span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span>' +
           '<span class="s" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(extra) + '</span></span>' +
         '<span class="meta">' +
           (state.bodTab === 'casa' ? '<span class="badge-n">' + v.cantidad + (v.cantidad === 1 ? ' botella' : ' botellas') + '</span>' : '') +
-          (state.bodTab === 'probado' ? '<span class="stars-mini" aria-label="' + v.puntuacion + ' de 5">' + estrellas + '</span>' : '') +
+          (state.bodTab === 'probado' && v.puntuacion ? '<span class="stars-mini" aria-label="' + v.puntuacion + ' de 5">' + estrellas + '</span>' : '') +
           (v.precio != null ? '<span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span>' : '') +
         '</span></button>';
     }).join('');

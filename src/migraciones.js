@@ -32,6 +32,7 @@ import sql43 from '../sql/43-dia-rosados.sql';
 import sql44 from '../sql/44-premium.sql';
 import sql45 from '../sql/45-ahorramas-ribera.sql';
 import sql46 from '../sql/46-ahorramas-tintos.sql';
+import sql47 from '../sql/47-bodega-fechas.sql';
 
 const LISTA = [
   ['15-alcampo-tintos', sql15],
@@ -65,7 +66,8 @@ const LISTA = [
   ['43-dia-rosados', sql43],
   ['44-premium', sql44],
   ['45-ahorramas-ribera', sql45],
-  ['46-ahorramas-tintos', sql46]
+  ['46-ahorramas-tintos', sql46],
+  ['47-bodega-fechas', sql47]
 ];
 
 // Separa un archivo SQL en sentencias (respeta comillas y comentarios de línea).
