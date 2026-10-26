@@ -185,6 +185,32 @@
   .comp-c.best .comp-p{color:var(--verde-txt)}
   .comp-tag{font-size:11px;color:var(--verde-txt);background:var(--verde-soft);border:1px solid var(--verde-line);border-radius:999px;padding:2px 9px}
   .comp-d{font-size:12px;color:var(--muted);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:2px 9px}
+  .ps-top{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 0;gap:8px}
+  .ps-top .h{font-weight:600;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ps-acc{display:flex;gap:2px}
+  .ps-cab{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 20px 0;text-align:center}
+  .ps-cab h1{font-size:26px;line-height:1.1;overflow-wrap:anywhere}
+  .ps-stats{display:flex;justify-content:center;padding:14px 8px 0}
+  .ps-stats>div{flex:1;text-align:center;padding:4px 0;border-left:1px solid var(--border)}
+  .ps-stats>div:first-child{border-left:0}
+  .ps-stats b{display:block;font-size:22px}
+  .ps-stats span{font-size:13px;color:var(--muted)}
+  .ps-tabs{display:flex;margin-top:18px;border-bottom:1px solid var(--border)}
+  .ps-tabs button{flex:1;min-height:48px;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .ps-tabs button.on{color:var(--ink);border-bottom-color:#8E2F45}
+  .ps-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:12px 12px 0}
+  .ps-tile{position:relative;border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--border);min-height:150px}
+  .ps-open{display:flex;flex-direction:column;gap:8px;width:100%;height:100%;padding:0;border:0;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit}
+  .ps-open img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block}
+  .ps-cap{padding:8px 10px 10px;font-size:13px;line-height:1.3}
+  .ps-cap b{display:block;font-weight:600}
+  .ps-txt{padding:12px 12px 0;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+  .ps-menu{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.45);color:#fff;width:34px;height:34px}
+  .ps-vacio{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:44px 28px 0}
+  .ps-vacio .c{width:64px;height:64px;border-radius:32px;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  .ps-vacio b{font-size:18px}
+  .ps-fab{position:fixed;right:16px;bottom:calc(18px + var(--safe-b));z-index:15;width:58px;height:58px;border-radius:29px;border:1px solid rgba(255,255,255,.18);background:var(--burdeos);color:#fff;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  #s-perfil.active .ps-fab{display:flex}
   .logros{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .logro{padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
   .logro.on{border-color:rgba(232,184,74,.55);background:rgba(232,184,74,.07)}
@@ -727,13 +753,18 @@
   </section>
 
   <section class="screen" id="s-taker" aria-label="Perfil de un Taker">
-    <div class="topbar"><button class="iconbtn plain" data-back aria-label="Volver"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
     <div id="taker-body"></div>
     <div class="spacer"></div>
   </section>
 
-  <!-- 9 · PERFIL -->
   <section class="screen" id="s-perfil" aria-label="Tu perfil">
+    <div id="perfil-body"></div>
+    <div class="spacer"></div>
+    <button class="ps-fab" id="ps-nuevo" aria-label="Publicar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  </section>
+
+  <!-- 9 · PERFIL -->
+  <section class="screen" id="s-ajustes" aria-label="Ajustes y datos">
     <div class="topbar"><button class="iconbtn plain" data-back aria-label="Volver"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
     <div class="px" style="padding-top:8px;display:flex;align-items:center;gap:16px">
       <div class="avatar" id="perfil-avatar" aria-hidden="true"></div>
@@ -928,7 +959,8 @@
     document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
     var el = document.getElementById('s-' + name) || document.getElementById('s-home');
     if (name === 'gustos' && typeof cargarGustosPantalla === 'function') cargarGustosPantalla();
-    if (name === 'perfil' && typeof cargarPerfil === 'function') cargarPerfil();
+    if (name === 'ajustes' && typeof cargarPerfil === 'function') cargarPerfil();
+    if (name === 'perfil' && typeof cargarPerfilPropio === 'function') cargarPerfilPropio();
     if (name === 'home' && el.id === 's-home') cargarTop();
     if (name === 'home' && typeof pintarHistorial === 'function') pintarHistorial();
     if (name === 'home' && state.cata) cargarCata();
@@ -1438,50 +1470,89 @@
   // ---------- Perfil público de un Taker ----------
   var ICO_LOGRO = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>';
   function abrirTaker(pid){
+    if (pid && pid === state.miPid){ show('perfil'); return; }
     $('#taker-body').innerHTML = '<div class="px"><p class="note">Cargando…</p></div>';
     show('taker');
-    api('/api/taker/' + encodeURIComponent(pid) + '?d=' + encodeURIComponent(state.dispositivo)).then(pintarTaker).catch(function(err){
+    api('/api/taker/' + encodeURIComponent(pid) + '?d=' + encodeURIComponent(state.dispositivo)).then(function(t){ perfilSocial(t, $('#taker-body')); }).catch(function(err){
       $('#taker-body').innerHTML = '<div class="px"><div class="empty">' + esc(err.message) + '</div></div>';
     });
   }
-  function pintarTaker(t){
-    var av = avatarTk({ nombre: t.nombre }, 72);
+  var IC = {
+    grid: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>',
+    marca: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v16l-5-4-5 4z"/></svg>',
+    medalla: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>',
+    lapiz: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/></svg>',
+    ajustes: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+    atras: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
+    candado: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
+  };
+  state.psTab = 'pubs';
+  function arrobaDe(n){ return '@' + String(n || 'taker').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ''); }
+  function perfilSocial(t, cont){
+    state.psData = { t: t, cont: cont };
+    var yo = !!t.es_yo;
+    var top = '<div class="ps-top"><button class="iconbtn plain" data-back aria-label="Volver">' + IC.atras + '</button>' +
+      '<span class="h">' + esc(arrobaDe(t.nombre)) + '</span>' +
+      '<span class="ps-acc">' + (yo ? '<button class="iconbtn plain" id="ps-editar" aria-label="Editar perfil">' + IC.lapiz + '</button><button class="iconbtn plain" data-go="ajustes" aria-label="Ajustes">' + IC.ajustes + '</button>' : '<span style="width:44px"></span>') + '</span></div>';
     if (t.privado){
-      $('#taker-body').innerHTML = '<div class="px" style="padding-top:8px;display:flex;gap:16px;align-items:center">' + av + '<h1 style="font-size:26px;line-height:1.1">' + esc(t.nombre) + '</h1></div><div class="px" style="padding-top:20px"><div class="empty">Este Taker tiene el perfil privado.</div></div>';
+      cont.innerHTML = top + '<div class="ps-cab">' + avatarTk({ nombre: t.nombre }, 96) + '<h1>' + esc(t.nombre) + ' ' + IC.candado + '</h1></div><div class="ps-vacio"><b>Perfil privado</b><span class="note">Este Taker ha decidido no mostrar su perfil.</span></div>';
       return;
     }
-    var desde = t.desde ? new Date(String(t.desde).replace(' ', 'T') + 'Z').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }) : '';
-    var prog = t.siguiente ? '<div class="note" style="margin:4px 0 0">Faltan ' + t.siguiente.faltan + ' puntos para ' + esc(t.siguiente.nombre) + '</div>' : '';
-    var ganados = t.logros.filter(function(l){ return l.conseguido; }).length;
-    var h = '<div class="px" style="padding-top:8px;display:flex;gap:16px;align-items:center">' + av +
-        '<div style="min-width:0"><h1 style="font-size:26px;line-height:1.1;overflow-wrap:anywhere">' + esc(t.nombre) + '</h1>' +
-        '<div class="note" style="margin:4px 0 0"><span style="color:var(--amarillo);font-weight:600">' + esc(t.nivel) + '</span> · ' + t.puntos + ' puntos' + (desde ? ' · desde ' + esc(desde) : '') + '</div>' +
-        '<div class="note" style="margin:4px 0 0"><b id="tk-n-seg">' + plural(t.seguidores, 'seguidor', 'seguidores') + '</b> · ' + t.siguiendo + ' siguiendo</div></div></div>' +
-      (t.es_yo ? '' : '<div class="px" style="padding-top:12px"><button class="' + (t.yo_sigo ? 'ghost' : 'cta') + '" id="tk-seguir" data-id="' + esc(t.id) + '" data-sigo="' + (t.yo_sigo ? 1 : 0) + '" style="min-height:48px">' + (t.yo_sigo ? 'Siguiendo' : 'Seguir') + '</button></div>') +
-      (t.es_yo ? '<div class="px" style="padding-top:12px"><button class="cta" id="tk-recomendar" style="min-height:48px">Recomendar un vino con foto</button></div>' : '') +
-      (t.bio ? '<div class="px" style="padding-top:12px"><p style="margin:0;line-height:1.45">' + esc(t.bio) + '</p></div>' : '') +
-      (t.es_yo ? '<div class="px" style="padding-top:8px">' + prog + (t.publico ? '' : '<div class="note" style="margin:4px 0 0">Ahora mismo solo lo ves tú: tu perfil está oculto.</div>') + '</div>' : '') +
-      '<div class="px" style="padding-top:16px"><div class="box"><div class="tk-stats">' +
-        '<div><b>' + t.stats.opiniones + '</b><span>opiniones</span></div>' +
-        '<div><b>' + (t.stats.media != null ? String(t.stats.media).replace('.', ',') : '–') + '</b><span>nota media</span></div>' +
-        '<div><b>' + t.stats.brindis + '</b><span>brindis</span></div></div></div></div>' +
-      '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Logros <span class="note" style="font-size:14px">' + ganados + ' de ' + t.logros.length + '</span></h2></div>' +
-      '<div class="px" style="padding-top:12px"><div class="logros">' + t.logros.map(function(l){
+    var st = t.stats, pubs = st.opiniones + st.recomendaciones;
+    var cab = '<div class="ps-cab">' + avatarTk({ nombre: t.nombre }, 96) +
+      '<h1>' + esc(t.nombre) + (yo && !t.publico ? ' ' + IC.candado : '') + '</h1>' +
+      '<div class="note" style="margin:0"><span style="color:var(--amarillo);font-weight:600">' + esc(t.nivel) + '</span> · ' + t.puntos + ' puntos</div></div>' +
+      '<div class="ps-stats"><div><b>' + pubs + '</b><span>Publicaciones</span></div><div><b id="tk-n-seg">' + t.seguidores + '</b><span>Seguidores</span></div><div><b>' + t.siguiendo + '</b><span>Seguidos</span></div></div>' +
+      '<div class="ps-cab" style="padding-top:12px">' +
+        (t.bio ? '<p style="margin:0;line-height:1.45">' + esc(t.bio) + '</p>' : (yo ? '<button class="linkbtn" id="ps-bio" style="color:#D9738A;font-weight:600">+ Añadir descripción</button>' : '')) +
+        (yo ? (t.publico ? '' : '<span class="note" style="margin:0">Tu perfil está oculto: solo lo ves tú.</span>') :
+          '<button class="' + (t.yo_sigo ? 'ghost' : 'cta') + '" id="tk-seguir" data-id="' + esc(t.id) + '" data-sigo="' + (t.yo_sigo ? 1 : 0) + '" style="min-height:46px;width:100%;margin-top:8px">' + (t.yo_sigo ? 'Siguiendo' : 'Seguir') + '</button>') +
+      '</div>';
+    var tabs = [['pubs', IC.grid, 'Publicaciones']].concat(yo ? [['guardados', IC.marca, 'Por probar']] : []).concat([['logros', IC.medalla, 'Logros']]);
+    if (!tabs.some(function(x){ return x[0] === state.psTab; })) state.psTab = 'pubs';
+    var tb = '<div class="ps-tabs" role="tablist">' + tabs.map(function(x){ return '<button role="tab" data-pstab="' + x[0] + '" aria-label="' + x[2] + '" aria-selected="' + (state.psTab === x[0]) + '" class="' + (state.psTab === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>';
+    cont.innerHTML = top + cab + tb + '<div id="ps-panel"></div>';
+    pintarPanelPs();
+  }
+  function pintarPanelPs(){
+    var d = state.psData; if (!d) return;
+    var t = d.t, yo = !!t.es_yo, h = '', panel = d.cont.querySelector('#ps-panel'); if (!panel) return;
+    if (state.psTab === 'pubs'){
+      var items = t.opiniones.map(function(o){ return { k: 'o', x: o }; }).concat(t.recomendaciones.map(function(o){ return { k: 'r', x: o }; }))
+        .sort(function(a, b){ return String(b.x.creado).localeCompare(String(a.x.creado)); });
+      if (!items.length) h = '<div class="ps-vacio"><span class="c">' + IC.grid + '</span><b>' + (yo ? 'Aún no has publicado' : 'Aún no ha publicado') + '</b><span class="note">' + (yo ? 'Comparte tu primera recomendación con el botón +. Tus opiniones y fotos aparecerán aquí.' : 'Cuando publique algo, lo verás aquí.') + '</span></div>';
+      else h = '<div class="ps-grid">' + items.map(function(it){
+        var o = it.x, tipo = it.k === 'o' ? 'opinion' : 'recomendacion';
+        var menu = '<button class="tk-menu ps-menu" data-tk-menu="' + tipo + '" data-id="' + o.id + '"' + (yo ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button>';
+        if (it.k === 'r' && o.foto) return '<div class="ps-tile"><button class="ps-open" data-wine="' + esc(o.vino.id) + '"><img src="' + esc(o.foto) + '" alt="Foto de ' + esc(o.vino.nombre) + '" loading="lazy"><span class="ps-cap"><b>' + esc(o.vino.nombre) + '</b>' + (o.texto ? esc(o.texto) : '') + '</span></button>' + menu + '</div>';
+        return '<div class="ps-tile"><button class="ps-open" data-wine="' + esc(o.vino.id) + '"><span class="ps-txt"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 52) + '</span>' + (it.k === 'o' ? estrellasTk(o.puntuacion, 13) : '') + '</span><span class="ps-cap"><b>' + esc(o.vino.nombre) + '</b>' + (o.texto ? esc(o.texto) : '') + '</span></button>' + menu + '</div>';
+      }).join('') + '</div>';
+    } else if (state.psTab === 'guardados'){
+      var lista = Object.keys(state.bodega || {}).map(function(k){ return state.bodega[k]; }).filter(function(v){ return v.deseo; });
+      h = lista.length ? '<div class="px stack" style="padding-top:12px">' + lista.map(function(v){
+        return '<button class="bcard" data-wine="' + esc(v.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(v, 56) + '</span><span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span><span class="s" style="display:block">' + esc([v.tipo, v.denominacion].filter(Boolean).join(' · ')) + '</span></span>' + (v.precio != null ? '<span class="meta"><span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span></span>' : '') + '</button>';
+      }).join('') + '</div>' : '<div class="ps-vacio"><span class="c">' + IC.marca + '</span><b>Nada guardado todavía</b><span class="note">Pulsa el marcador en la ficha de un vino para guardarlo aquí.</span></div>';
+    } else {
+      var ganados = t.logros.filter(function(l){ return l.conseguido; }).length;
+      h = '<div class="px" style="padding-top:16px"><div class="note" style="margin:0 0 10px">' + ganados + ' de ' + t.logros.length + ' logros</div><div class="logros">' + t.logros.map(function(l){
         return '<div class="logro' + (l.conseguido ? ' on' : '') + '">' + ICO_LOGRO + '<span class="lg-n">' + esc(l.nombre) + '</span><span class="lg-d">' + esc(l.desc) + '</span>' +
           (l.conseguido ? '' : '<span class="lg-bar" aria-hidden="true"><i style="width:' + Math.round(100 * l.valor / l.meta) + '%"></i></span><span class="lg-d">' + l.valor + ' de ' + l.meta + '</span>') + '</div>';
-      }).join('') + '</div></div>' +
-      '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Opiniones</h2></div><div class="px stack" style="padding-top:12px">' +
-        (t.opiniones.length ? t.opiniones.map(function(o){
-          return '<article class="tk-card"><button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span>' + estrellasTk(o.puntuacion, 14) + '</button>' +
-            (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') +
-            '<span class="note">' + haceTiempo(o.creado) + (o.brindis ? ' · ' + plural(o.brindis, 'brindis', 'brindis') : '') + '</span></article>';
-        }).join('') : '<div class="empty">' + (t.es_yo ? 'Aún no has opinado de ningún vino. Hazlo desde Takers o desde la ficha de un vino.' : 'Todavía no ha opinado de ningún vino.') + '</div>') + '</div>' +
-      (t.recomendaciones.length ? '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Recomendaciones</h2></div><div class="px stack" style="padding-top:12px">' + t.recomendaciones.map(function(o){ return tarjetaRec(o, false); }).join('') + '</div>' : '') +
-      (t.consejos.length ? '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Consejos a la comunidad</h2></div><div class="px stack" style="padding-top:12px">' + t.consejos.map(function(o){
-          return '<article class="tk-card"><div class="note" style="margin:0">Para: ' + esc(o.pregunta) + '</div><button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span></button>' +
-            (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') + '</article>';
-        }).join('') + '</div>' : '');
-    $('#taker-body').innerHTML = h; state.tkPid = t.id;
+      }).join('') + '</div></div>';
+    }
+    panel.innerHTML = h;
+    state.tkPid = t.id;
+  }
+  function cargarPerfilPropio(){
+    var cont = $('#perfil-body');
+    return api('/api/perfil?d=' + encodeURIComponent(state.dispositivo)).then(function(p){
+      state.miPid = p.publico_id || null;
+      if (!p.nombre || !p.publico_id){
+        cont.innerHTML = '<div class="ps-top"><button class="iconbtn plain" data-back aria-label="Volver">' + IC.atras + '</button><span class="h">Tu perfil</span><button class="iconbtn plain" data-go="ajustes" aria-label="Ajustes">' + IC.ajustes + '</button></div>' +
+          '<div class="ps-vacio"><span class="c">' + IC.grid + '</span><b>Crea tu perfil</b><span class="note">Ponte un nombre y tendrás tu página: tus opiniones, recomendaciones con foto y logros. Otros Takers podrán seguirte.</span><button class="cta" data-go="ajustes" style="margin-top:8px">Elegir mi nombre</button></div>';
+        return;
+      }
+      return api('/api/taker/' + encodeURIComponent(p.publico_id) + '?d=' + encodeURIComponent(state.dispositivo)).then(function(t){ perfilSocial(t, cont); });
+    }).catch(function(err){ cont.innerHTML = '<div class="px" style="padding-top:20px"><div class="empty">' + esc(err.message) + '</div></div>'; });
   }
 
   function tarjetaRec(o, conAutor){
@@ -1505,6 +1576,14 @@
       img.src = url;
     });
   }
+  function editarBio(){
+    abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0">Sobre ti</h2><p class="lead" style="margin:0">Lo verán los demás en tu perfil.</p>' +
+      '<div class="field"><input id="ps-bio-in" type="text" maxlength="140" placeholder="Ej.: tintos de Ribera y mucho jamón" value="' + esc((state.psData && state.psData.t.bio) || '') + '"></div>' +
+      '<button class="cta" id="ps-bio-ok">Guardar</button><button class="ghost" data-hoja-cerrar>Cancelar</button>');
+    $('#ps-bio-ok').addEventListener('click', function(){
+      api('/api/perfil', { dispositivo: state.dispositivo, bio: $('#ps-bio-in').value.trim() }).then(function(){ cerrarHoja(); cargarPerfilPropio(); }).catch(function(err){ toast(err.message); });
+    });
+  }
   function recomendarConFoto(){
     elegirVino('¿Qué vino recomiendas?', 'Búscalo y cuéntanos por qué.').then(function(v){
       var foto = null;
@@ -1523,7 +1602,7 @@
         var btn = this; btn.disabled = true;
         api('/api/takers/recomendacion', { dispositivo: state.dispositivo, vino_id: v.id, texto: $('#rec-txt').value.trim(), imagen: foto }).then(function(){
           cerrarHoja(); toast('Recomendación publicada');
-          if (state.miPid) abrirTaker(state.miPid);
+          show('perfil');
         }).catch(function(err){ btn.disabled = false; toast(err.message); });
       });
     }).catch(function(){});
@@ -1540,7 +1619,18 @@
   }
   document.addEventListener('click', function(e){
     var b = e.target.closest('[data-taker]'); if (b){ abrirTaker(b.getAttribute('data-taker')); return; }
-    if (e.target.closest('#perfil-ver-publico') && state.miPid) abrirTaker(state.miPid);
+    if (e.target.closest('#perfil-ver-publico')){ show('perfil'); return; }
+    var pt = e.target.closest('[data-pstab]');
+    if (pt){ state.psTab = pt.getAttribute('data-pstab'); if (state.psData) perfilSocial(state.psData.t, state.psData.cont); return; }
+    if (e.target.closest('#ps-editar')){ show('ajustes'); return; }
+    if (e.target.closest('#ps-bio')){ editarBio(); return; }
+    if (e.target.closest('#ps-nuevo')){
+      abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0">¿Qué quieres publicar?</h2>' +
+        '<button class="cta" id="ps-n-rec">Recomendar un vino con foto</button><button class="ghost" id="ps-n-op">Opinar de un vino</button><button class="ghost" data-hoja-cerrar>Cancelar</button>');
+      $('#ps-n-rec').addEventListener('click', function(){ cerrarHoja(); recomendarConFoto(); });
+      $('#ps-n-op').addEventListener('click', function(){ cerrarHoja(); escribirOpinion(); });
+      return;
+    }
     if (e.target.closest('#tk-recomendar')){ recomendarConFoto(); return; }
     var sg = e.target.closest('#tk-seguir');
     if (sg){
@@ -2911,6 +3001,7 @@
         else if ($('#s-pregunta').classList.contains('active') && state.tk.pregunta) abrirPregunta(state.tk.pregunta.id, true);
         cargarTakers();
         if ($('#s-taker').classList.contains('active') && state.tkPid) abrirTaker(state.tkPid);
+        if ($('#s-perfil').classList.contains('active')) cargarPerfilPropio();
         if (state.ficha && $('#s-ficha').classList.contains('active')) cargarOpinionesFicha(state.ficha.id);
       }).catch(function(err){ toast(err.message); });
     });
