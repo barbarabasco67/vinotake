@@ -540,7 +540,7 @@
         </button>
       </div>
       <div class="store" style="margin-top:8px">
-        <label for="store1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Estás en</label>
+        <label for="store1"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Tu súper (opcional)</label>
         <select id="store1" class="store-select"><option>Mercadona</option><option>Carrefour</option><option>Lidl</option><option>Dia</option><option>Alcampo</option></select>
       </div>
     </div>
@@ -905,7 +905,7 @@
     var el = document.getElementById('s-' + name) || document.getElementById('s-home');
     if (name === 'gustos' && typeof cargarGustosPantalla === 'function') cargarGustosPantalla();
     if (name === 'perfil' && typeof cargarPerfil === 'function') cargarPerfil();
-    if (name === 'home' && el.id === 's-home' && state.superId) cargarTop();
+    if (name === 'home' && el.id === 's-home') cargarTop();
     if (name === 'home' && typeof pintarHistorial === 'function') pintarHistorial();
     if (name === 'home' && state.cata) cargarCata();
     if (name === 'takers') cargarTakers();
@@ -938,7 +938,7 @@
       state.supers = d.supers || [];
       state.presupuestos = d.presupuestos || [];
       var guardado = store('super');
-      state.superId = (guardado && superNombre(guardado)) ? guardado : (state.supers[0] ? state.supers[0].id : null);
+      state.superId = (guardado && superNombre(guardado)) ? guardado : null;
       pintarSupers();
       renderChips();
     });
@@ -946,14 +946,14 @@
 
   function pintarSupers(){
     document.querySelectorAll('.store-select').forEach(function(s){
-      s.innerHTML = state.supers.map(function(x){ return '<option value="' + esc(x.id) + '">' + esc(x.nombre) + '</option>'; }).join('');
-      s.value = state.superId;
+      s.innerHTML = '<option value="">Cualquier súper</option>' + state.supers.map(function(x){ return '<option value="' + esc(x.id) + '">' + esc(x.nombre) + '</option>'; }).join('');
+      s.value = state.superId || '';
     });
   }
   document.querySelectorAll('.store-select').forEach(function(s){
     s.addEventListener('change', function(){
-      state.superId = s.value; store('super', s.value);
-      document.querySelectorAll('.store-select').forEach(function(o){ o.value = state.superId; });
+      state.superId = s.value || null; store('super', s.value);
+      document.querySelectorAll('.store-select').forEach(function(o){ o.value = state.superId || ''; });
       cargarTop();
     });
   });

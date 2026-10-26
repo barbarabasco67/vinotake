@@ -79,7 +79,7 @@ async function api(request, env, url) {
     const { results } = await env.DB.prepare(
       `SELECT v.id, v.nombre, v.bodega, v.denominacion, v.tipo, v.elaboracion, v.uva, v.estilo, v.dulce, v.color, v.imagen,
               COALESCE(p.precio, v.precio_ref) AS precio, CASE WHEN p.precio IS NOT NULL THEN 1 ELSE 0 END AS en_super
-         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
         WHERE v.activo = 1 ORDER BY v.nombre`
     ).bind(superId).all();
     return json({ super: sup ? sup.nombre : '', vinos: results.map(r => ({ ...r, dulce: !!r.dulce, en_super: !!r.en_super })) }, 200, 60);
@@ -241,7 +241,7 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
             COALESCE(p.precio, v.precio_ref) AS precio
        FROM maridajes m
        JOIN vinos v ON v.id = m.vino_id AND v.activo = 1
-       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
       WHERE m.plato_id = ?
       ORDER BY m.orden`
   ).bind(superId, plato.id).all();
@@ -275,7 +275,7 @@ async function recomendarCore(env, b, visibles, tipoConsulta) {
   const fuera = lista.filter(v => !(max === null || v.precio <= max)).sort((a, b2) => a.precio - b2.precio);
   const orden = dentro.concat(fuera);
   const mejor = orden[0];
-  const alternativas = orden.slice(1, 3);
+  const alternativas = orden.slice(1, 6);
 
   let ahorro = null;
   const masBarato = alternativas.filter(a => a.precio < mejor.precio).sort((a, b2) => a.precio - b2.precio)[0];
@@ -358,7 +358,7 @@ Responde SOLO con este JSON, sin texto alrededor:
   if (fuera.tipo) {
     parecidos = (await env.DB.prepare(
       `SELECT v.id, v.nombre, v.tipo, v.color, v.denominacion, COALESCE(p.precio, v.precio_ref) AS precio
-         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
         WHERE v.activo = 1 AND v.tipo = ?
         ORDER BY CASE WHEN v.denominacion = ? THEN 0 WHEN v.uva = ? THEN 1 ELSE 2 END, precio
         LIMIT 3`
@@ -428,7 +428,7 @@ async function ficha(env, id, superPedido) {
             COALESCE(p.precio, v.precio_ref) AS precio
        FROM relacionados r
        JOIN vinos v ON v.id = r.rel_id AND v.activo = 1
-       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
       WHERE r.vino_id = ?
       ORDER BY r.orden`
   ).bind(superId, id).all()).results;
@@ -444,7 +444,7 @@ async function ficha(env, id, superPedido) {
   // Si no hay sugerencias puestas a mano, se calculan solas a partir del catálogo.
   const precioEste = aqui ? aqui.precio : v.precio_ref;
   const cols = `v.id, v.nombre, v.tipo, v.denominacion, v.elaboracion, v.uva, v.color, COALESCE(p.precio, v.precio_ref) AS precio`;
-  const joinPrecio = `LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?`;
+  const joinPrecio = `LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))`;
   if (!sugerencias.misma.length && v.bodega) {
     sugerencias.misma = (await env.DB.prepare(
       `SELECT ${cols} FROM vinos v ${joinPrecio} WHERE v.bodega = ? AND v.id != ? AND v.activo = 1 ORDER BY precio LIMIT 4`
@@ -544,7 +544,7 @@ async function buscar(env, q, superPedido) {
   const superId = await superValido(env, superPedido);
   const { results } = await env.DB.prepare(
     `SELECT v.id, v.nombre, v.bodega, v.tipo, v.denominacion, v.color, COALESCE(p.precio, v.precio_ref) AS precio
-       FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+       FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
       WHERE v.activo = 1`
   ).bind(superId).all();
   const palabras = t.split(/\s+/).filter(Boolean);
@@ -571,7 +571,7 @@ async function mejorValorados(env, superPedido) {
     `SELECT ${cols}, AVG(b.puntuacion) AS media, COUNT(*) AS votos,
             (SUM(b.puntuacion) + 2 * 3.5) / (COUNT(*) + 2) AS score
        FROM bodega b JOIN vinos v ON v.id = b.vino_id AND v.activo = 1
-       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
       WHERE b.puntuacion IS NOT NULL
       GROUP BY v.id
       ORDER BY score DESC, votos DESC
@@ -589,7 +589,7 @@ async function mejorValorados(env, superPedido) {
   const seleccion = await conImagen(
     `SELECT ${cols}, SUM(CASE WHEN m.orden <= 2 THEN 1 ELSE 0 END) AS destacados
        FROM vinos v JOIN maridajes m ON m.vino_id = v.id
-       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
       WHERE v.activo = 1
       GROUP BY v.id
       ORDER BY destacados DESC, precio
@@ -615,7 +615,7 @@ async function bodegaListar(env, dispositivo, superPedido) {
             COALESCE(p.precio, v.precio_ref) AS precio
        FROM bodega b
        JOIN vinos v ON v.id = b.vino_id
-       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
       WHERE b.dispositivo = ?
       ORDER BY b.actualizado DESC`
   ).bind(superId, d).all();
@@ -675,7 +675,7 @@ async function comparar(env, a, b, superPedido) {
     const v = await env.DB.prepare(
       `SELECT v.id, v.nombre, v.bodega, v.denominacion, v.tipo, v.uva, v.elaboracion, v.grados, v.estilo, v.dulce,
               v.temperatura, v.apertura, v.va_con, v.color, COALESCE(p.precio, v.precio_ref) AS precio
-         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
         WHERE v.id = ? AND v.activo = 1`
     ).bind(superId, id).first();
     if (!v) return json({ error: 'No encontramos uno de los vinos.' }, 404);
@@ -768,7 +768,7 @@ async function listaVer(env, dispositivo, superPedido) {
             COALESCE(p.precio, v.precio_ref) AS precio
        FROM lista l
        JOIN vinos v ON v.id = l.vino_id AND v.activo = 1
-       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+       LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
       WHERE l.dispositivo = ?
       ORDER BY l.comprado, l.creado DESC`
   ).bind(superId, d).all();
@@ -928,7 +928,7 @@ async function gustosVer(env, dispositivo, superPedido) {
     const max = g.prefs.presupuesto ? PRESUPUESTOS[g.prefs.presupuesto].max : null;
     const todos = (await env.DB.prepare(
       `SELECT v.id, v.nombre, v.tipo, v.denominacion, v.uva, v.estilo, v.dulce, v.color, COALESCE(p.precio, v.precio_ref) AS precio
-         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = ?
+         FROM vinos v LEFT JOIN precios p ON p.vino_id = v.id AND p.super_id = COALESCE(NULLIF(?, ''), (SELECT q.super_id FROM precios q WHERE q.vino_id = v.id ORDER BY q.precio, q.super_id LIMIT 1))
         WHERE v.activo = 1`
     ).bind(superId).all()).results;
     paraTi = todos
@@ -1046,13 +1046,13 @@ async function platoPorTexto(env, texto) {
   return null;
 }
 
+// Elegir súper es opcional: sin súper (o con uno desconocido) devuelve null y se usa el precio más bajo conocido.
 async function superValido(env, id) {
   if (id) {
     const s = await env.DB.prepare('SELECT id FROM supermercados WHERE id = ?').bind(String(id)).first();
     if (s) return s.id;
   }
-  const primero = await env.DB.prepare('SELECT id FROM supermercados ORDER BY orden LIMIT 1').first();
-  return primero ? primero.id : null;
+  return null;
 }
 
 function normalizar(s) {
