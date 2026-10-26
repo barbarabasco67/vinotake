@@ -194,6 +194,7 @@
   .logro .lg-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.1);width:100%;overflow:hidden}
   .logro .lg-bar i{display:block;height:100%;background:linear-gradient(90deg,#8E2F45,#E8B84A)}
   .tk-autor[data-taker]{cursor:pointer}
+  .tk-foto{width:100%;max-height:380px;object-fit:cover;border-radius:14px;display:block;background:var(--surface-2)}
   .tk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
   .tk-stats b{display:block;font-size:22px}
   .tk-stats span{font-size:12px;color:var(--muted)}
@@ -703,6 +704,7 @@
     <div class="px" style="padding-top:22px"><div class="seg" id="tk-seg" role="tablist" aria-label="Secciones de la comunidad">
       <button data-tk="opiniones" role="tab" class="on" aria-selected="true">Opiniones</button>
       <button data-tk="preguntas" role="tab" aria-selected="false">Preguntas</button>
+      <button data-tk="siguiendo" role="tab" aria-selected="false">Siguiendo</button>
       <button data-tk="ranking" role="tab" aria-selected="false">Ranking</button>
     </div></div>
     <div id="tk-panel" style="padding-top:14px"><div class="px"><div class="empty">Cargando la comunidad…</div></div></div>
@@ -1453,7 +1455,10 @@
     var ganados = t.logros.filter(function(l){ return l.conseguido; }).length;
     var h = '<div class="px" style="padding-top:8px;display:flex;gap:16px;align-items:center">' + av +
         '<div style="min-width:0"><h1 style="font-size:26px;line-height:1.1;overflow-wrap:anywhere">' + esc(t.nombre) + '</h1>' +
-        '<div class="note" style="margin:4px 0 0"><span style="color:var(--amarillo);font-weight:600">' + esc(t.nivel) + '</span> · ' + t.puntos + ' puntos' + (desde ? ' · desde ' + esc(desde) : '') + '</div></div></div>' +
+        '<div class="note" style="margin:4px 0 0"><span style="color:var(--amarillo);font-weight:600">' + esc(t.nivel) + '</span> · ' + t.puntos + ' puntos' + (desde ? ' · desde ' + esc(desde) : '') + '</div>' +
+        '<div class="note" style="margin:4px 0 0"><b id="tk-n-seg">' + plural(t.seguidores, 'seguidor', 'seguidores') + '</b> · ' + t.siguiendo + ' siguiendo</div></div></div>' +
+      (t.es_yo ? '' : '<div class="px" style="padding-top:12px"><button class="' + (t.yo_sigo ? 'ghost' : 'cta') + '" id="tk-seguir" data-id="' + esc(t.id) + '" data-sigo="' + (t.yo_sigo ? 1 : 0) + '" style="min-height:48px">' + (t.yo_sigo ? 'Siguiendo' : 'Seguir') + '</button></div>') +
+      (t.es_yo ? '<div class="px" style="padding-top:12px"><button class="cta" id="tk-recomendar" style="min-height:48px">Recomendar un vino con foto</button></div>' : '') +
       (t.bio ? '<div class="px" style="padding-top:12px"><p style="margin:0;line-height:1.45">' + esc(t.bio) + '</p></div>' : '') +
       (t.es_yo ? '<div class="px" style="padding-top:8px">' + prog + (t.publico ? '' : '<div class="note" style="margin:4px 0 0">Ahora mismo solo lo ves tú: tu perfil está oculto.</div>') + '</div>' : '') +
       '<div class="px" style="padding-top:16px"><div class="box"><div class="tk-stats">' +
@@ -1471,15 +1476,80 @@
             (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') +
             '<span class="note">' + haceTiempo(o.creado) + (o.brindis ? ' · ' + plural(o.brindis, 'brindis', 'brindis') : '') + '</span></article>';
         }).join('') : '<div class="empty">' + (t.es_yo ? 'Aún no has opinado de ningún vino. Hazlo desde Takers o desde la ficha de un vino.' : 'Todavía no ha opinado de ningún vino.') + '</div>') + '</div>' +
-      (t.recomendaciones.length ? '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Recomendaciones</h2></div><div class="px stack" style="padding-top:12px">' + t.recomendaciones.map(function(o){
+      (t.recomendaciones.length ? '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Recomendaciones</h2></div><div class="px stack" style="padding-top:12px">' + t.recomendaciones.map(function(o){ return tarjetaRec(o, false); }).join('') + '</div>' : '') +
+      (t.consejos.length ? '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Consejos a la comunidad</h2></div><div class="px stack" style="padding-top:12px">' + t.consejos.map(function(o){
           return '<article class="tk-card"><div class="note" style="margin:0">Para: ' + esc(o.pregunta) + '</div><button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span></button>' +
             (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') + '</article>';
         }).join('') + '</div>' : '');
-    $('#taker-body').innerHTML = h;
+    $('#taker-body').innerHTML = h; state.tkPid = t.id;
+  }
+
+  function tarjetaRec(o, conAutor){
+    return '<article class="tk-card">' +
+      '<div style="display:flex;align-items:center;gap:8px">' + (conAutor && o.autor ? autorTk(o.autor, o.creado) : '<span class="note" style="flex:1;margin:0">' + haceTiempo(o.creado) + '</span>') +
+        '<button class="tk-menu" data-tk-menu="recomendacion" data-id="' + o.id + '"' + (o.mia ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button></div>' +
+      (o.foto ? '<img class="tk-foto" src="' + esc(o.foto) + '" alt="Foto de ' + esc(o.vino.nombre) + '" loading="lazy">' : '') +
+      '<button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span></button>' +
+      (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') + '</article>';
+  }
+  function comprimirFoto(file){
+    return new Promise(function(resolve, reject){
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function(){
+        var k = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
+        var c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('No hemos podido abrir la foto. Prueba con otra.')); };
+      img.src = url;
+    });
+  }
+  function recomendarConFoto(){
+    elegirVino('¿Qué vino recomiendas?', 'Búscalo y cuéntanos por qué.').then(function(v){
+      var foto = null;
+      abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0">' + esc(v.nombre) + '</h2>' +
+        '<div id="rec-prev" style="display:none"><img class="tk-foto" alt="Tu foto" id="rec-img"></div>' +
+        '<input type="file" accept="image/*" id="rec-file" class="hidden-input" aria-hidden="true" tabindex="-1">' +
+        '<button class="ghost" id="rec-foto-btn" type="button">Añadir una foto</button>' +
+        '<textarea id="rec-txt" class="bodnota" maxlength="200" placeholder="¿Por qué lo recomiendas? Ej.: perfecto con un buen jamón"></textarea>' +
+        '<button class="cta" id="rec-pub">Publicar</button><button class="ghost" data-hoja-cerrar>Cancelar</button>');
+      $('#rec-foto-btn').addEventListener('click', function(){ $('#rec-file').click(); });
+      $('#rec-file').addEventListener('change', function(){
+        var f = this.files && this.files[0]; if (!f) return;
+        comprimirFoto(f).then(function(d){ foto = d; $('#rec-img').src = d; $('#rec-prev').style.display = ''; $('#rec-foto-btn').textContent = 'Cambiar la foto'; }).catch(function(err){ toast(err.message); });
+      });
+      $('#rec-pub').addEventListener('click', function(){
+        var btn = this; btn.disabled = true;
+        api('/api/takers/recomendacion', { dispositivo: state.dispositivo, vino_id: v.id, texto: $('#rec-txt').value.trim(), imagen: foto }).then(function(){
+          cerrarHoja(); toast('Recomendación publicada');
+          if (state.miPid) abrirTaker(state.miPid);
+        }).catch(function(err){ btn.disabled = false; toast(err.message); });
+      });
+    }).catch(function(){});
+  }
+  function cargarSiguiendo(){
+    $('#tk-panel').innerHTML = '<div class="px"><div class="empty">Cargando…</div></div>';
+    api('/api/takers/siguiendo?d=' + encodeURIComponent(state.dispositivo)).then(function(r){
+      if (state.tk.tab !== 'siguiendo') return;
+      $('#tk-panel').innerHTML = '<div class="px stack">' +
+        (!r.siguiendo ? '<div class="empty">Aún no sigues a nadie. Toca el nombre de un Taker en una opinión y pulsa Seguir.</div>'
+          : !r.items.length ? '<div class="empty">Las personas que sigues todavía no han publicado nada.</div>'
+          : r.items.map(function(o){ return o.tipo === 'opinion' ? tarjetaOpinion(o, true) : tarjetaRec(o, true); }).join('')) + '</div>';
+    }).catch(function(err){ $('#tk-panel').innerHTML = '<div class="px"><div class="empty">' + esc(err.message) + '</div></div>'; });
   }
   document.addEventListener('click', function(e){
     var b = e.target.closest('[data-taker]'); if (b){ abrirTaker(b.getAttribute('data-taker')); return; }
     if (e.target.closest('#perfil-ver-publico') && state.miPid) abrirTaker(state.miPid);
+    if (e.target.closest('#tk-recomendar')){ recomendarConFoto(); return; }
+    var sg = e.target.closest('#tk-seguir');
+    if (sg){
+      var sigo = sg.getAttribute('data-sigo') === '1';
+      api('/api/taker/seguir', { dispositivo: state.dispositivo, id: sg.getAttribute('data-id'), seguir: !sigo }).then(function(r){
+        sg.setAttribute('data-sigo', r.siguiendo ? 1 : 0); sg.textContent = r.siguiendo ? 'Siguiendo' : 'Seguir'; sg.className = r.siguiendo ? 'ghost' : 'cta';
+        $('#tk-n-seg').textContent = plural(r.seguidores, 'seguidor', 'seguidores');
+      }).catch(function(err){ toast(err.message); });
+    }
   });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-taker]')) abrirTaker(e.target.getAttribute('data-taker'));
@@ -2840,6 +2910,7 @@
         if (tipo === 'pregunta' && mia){ show('takers'); }
         else if ($('#s-pregunta').classList.contains('active') && state.tk.pregunta) abrirPregunta(state.tk.pregunta.id, true);
         cargarTakers();
+        if ($('#s-taker').classList.contains('active') && state.tkPid) abrirTaker(state.tkPid);
         if (state.ficha && $('#s-ficha').classList.contains('active')) cargarOpinionesFicha(state.ficha.id);
       }).catch(function(err){ toast(err.message); });
     });
@@ -2941,6 +3012,8 @@
             '</span></button>';
         }).join('') : '<div class="empty">Todavía no hay preguntas. Haz la primera.</div>') +
       '</div>';
+    } else if (state.tk.tab === 'siguiendo'){
+      h = '';
     } else {
       var rk = d.ranking;
       h = '<div class="px stack">' +
@@ -2961,6 +3034,7 @@
       '</div>';
     }
     $('#tk-panel').innerHTML = h;
+    if (state.tk.tab === 'siguiendo') cargarSiguiendo();
   }
 
   // ----- Detalle de una pregunta -----
