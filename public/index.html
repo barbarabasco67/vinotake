@@ -185,6 +185,18 @@
   .comp-c.best .comp-p{color:var(--verde-txt)}
   .comp-tag{font-size:11px;color:var(--verde-txt);background:var(--verde-soft);border:1px solid var(--verde-line);border-radius:999px;padding:2px 9px}
   .comp-d{font-size:12px;color:var(--muted);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:2px 9px}
+  .logros{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .logro{padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+  .logro.on{border-color:rgba(232,184,74,.55);background:rgba(232,184,74,.07)}
+  .logro .lg-n{font-weight:600;font-size:14px;line-height:1.25}
+  .logro .lg-d{font-size:12px;line-height:1.35;color:var(--muted)}
+  .logro:not(.on) svg{opacity:.4}
+  .logro .lg-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.1);width:100%;overflow:hidden}
+  .logro .lg-bar i{display:block;height:100%;background:linear-gradient(90deg,#8E2F45,#E8B84A)}
+  .tk-autor[data-taker]{cursor:pointer}
+  .tk-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+  .tk-stats b{display:block;font-size:22px}
+  .tk-stats span{font-size:12px;color:var(--muted)}
   .pw-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
   .pw-lista li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.4}
   .pw-lista svg{flex-shrink:0;margin-top:2px}
@@ -712,6 +724,12 @@
     <div class="bottom-actions" style="padding-top:20px"><button class="cta" id="btn-responder">Recomendar un vino</button></div>
   </section>
 
+  <section class="screen" id="s-taker" aria-label="Perfil de un Taker">
+    <div class="topbar"><button class="iconbtn plain" data-back aria-label="Volver"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
+    <div id="taker-body"></div>
+    <div class="spacer"></div>
+  </section>
+
   <!-- 9 · PERFIL -->
   <section class="screen" id="s-perfil" aria-label="Tu perfil">
     <div class="topbar"><button class="iconbtn plain" data-back aria-label="Volver"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button></div>
@@ -722,6 +740,10 @@
     <div class="px" style="padding-top:20px"><div class="box">
       <div><label class="label" for="perfil-nombre" style="margin-bottom:8px">¿Cómo te llamamos?</label>
         <div class="field" style="border-width:1px;border-color:var(--line)"><input id="perfil-nombre" type="text" maxlength="40" placeholder="Tu nombre (opcional)" autocomplete="given-name" enterkeyhint="done"></div></div>
+      <div><label class="label" for="perfil-bio" style="margin-bottom:8px">Sobre ti (lo ven los demás)</label>
+        <div class="field" style="border-width:1px;border-color:var(--line)"><input id="perfil-bio" type="text" maxlength="140" placeholder="Ej.: tintos de Ribera y mucho jamón" enterkeyhint="done"></div></div>
+      <div class="bodrow"><span style="font-weight:600">Perfil público</span><button type="button" class="toggle on" id="perfil-publico" aria-pressed="true">Visible</button></div>
+      <button class="ghost" id="perfil-ver-publico" type="button" style="display:none">Ver mi perfil público</button>
       <div><label class="label" for="perfil-super" style="margin-bottom:8px">Tu súper habitual</label>
         <div class="store" style="margin-top:0"><span style="font-size:14px">Normalmente compro en</span><select id="perfil-super"></select></div></div>
     </div></div>
@@ -1409,6 +1431,69 @@
     }
   });
 
+
+
+  // ---------- Perfil público de un Taker ----------
+  var ICO_LOGRO = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E8B84A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>';
+  function abrirTaker(pid){
+    $('#taker-body').innerHTML = '<div class="px"><p class="note">Cargando…</p></div>';
+    show('taker');
+    api('/api/taker/' + encodeURIComponent(pid) + '?d=' + encodeURIComponent(state.dispositivo)).then(pintarTaker).catch(function(err){
+      $('#taker-body').innerHTML = '<div class="px"><div class="empty">' + esc(err.message) + '</div></div>';
+    });
+  }
+  function pintarTaker(t){
+    var av = avatarTk({ nombre: t.nombre }, 72);
+    if (t.privado){
+      $('#taker-body').innerHTML = '<div class="px" style="padding-top:8px;display:flex;gap:16px;align-items:center">' + av + '<h1 style="font-size:26px;line-height:1.1">' + esc(t.nombre) + '</h1></div><div class="px" style="padding-top:20px"><div class="empty">Este Taker tiene el perfil privado.</div></div>';
+      return;
+    }
+    var desde = t.desde ? new Date(String(t.desde).replace(' ', 'T') + 'Z').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }) : '';
+    var prog = t.siguiente ? '<div class="note" style="margin:4px 0 0">Faltan ' + t.siguiente.faltan + ' puntos para ' + esc(t.siguiente.nombre) + '</div>' : '';
+    var ganados = t.logros.filter(function(l){ return l.conseguido; }).length;
+    var h = '<div class="px" style="padding-top:8px;display:flex;gap:16px;align-items:center">' + av +
+        '<div style="min-width:0"><h1 style="font-size:26px;line-height:1.1;overflow-wrap:anywhere">' + esc(t.nombre) + '</h1>' +
+        '<div class="note" style="margin:4px 0 0"><span style="color:var(--amarillo);font-weight:600">' + esc(t.nivel) + '</span> · ' + t.puntos + ' puntos' + (desde ? ' · desde ' + esc(desde) : '') + '</div></div></div>' +
+      (t.bio ? '<div class="px" style="padding-top:12px"><p style="margin:0;line-height:1.45">' + esc(t.bio) + '</p></div>' : '') +
+      (t.es_yo ? '<div class="px" style="padding-top:8px">' + prog + (t.publico ? '' : '<div class="note" style="margin:4px 0 0">Ahora mismo solo lo ves tú: tu perfil está oculto.</div>') + '</div>' : '') +
+      '<div class="px" style="padding-top:16px"><div class="box"><div class="tk-stats">' +
+        '<div><b>' + t.stats.opiniones + '</b><span>opiniones</span></div>' +
+        '<div><b>' + (t.stats.media != null ? String(t.stats.media).replace('.', ',') : '–') + '</b><span>nota media</span></div>' +
+        '<div><b>' + t.stats.brindis + '</b><span>brindis</span></div></div></div></div>' +
+      '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Logros <span class="note" style="font-size:14px">' + ganados + ' de ' + t.logros.length + '</span></h2></div>' +
+      '<div class="px" style="padding-top:12px"><div class="logros">' + t.logros.map(function(l){
+        return '<div class="logro' + (l.conseguido ? ' on' : '') + '">' + ICO_LOGRO + '<span class="lg-n">' + esc(l.nombre) + '</span><span class="lg-d">' + esc(l.desc) + '</span>' +
+          (l.conseguido ? '' : '<span class="lg-bar" aria-hidden="true"><i style="width:' + Math.round(100 * l.valor / l.meta) + '%"></i></span><span class="lg-d">' + l.valor + ' de ' + l.meta + '</span>') + '</div>';
+      }).join('') + '</div></div>' +
+      '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Opiniones</h2></div><div class="px stack" style="padding-top:12px">' +
+        (t.opiniones.length ? t.opiniones.map(function(o){
+          return '<article class="tk-card"><button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span>' + estrellasTk(o.puntuacion, 14) + '</button>' +
+            (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') +
+            '<span class="note">' + haceTiempo(o.creado) + (o.brindis ? ' · ' + plural(o.brindis, 'brindis', 'brindis') : '') + '</span></article>';
+        }).join('') : '<div class="empty">' + (t.es_yo ? 'Aún no has opinado de ningún vino. Hazlo desde Takers o desde la ficha de un vino.' : 'Todavía no ha opinado de ningún vino.') + '</div>') + '</div>' +
+      (t.recomendaciones.length ? '<div class="px" style="padding-top:22px"><h2 style="font-size:20px">Recomendaciones</h2></div><div class="px stack" style="padding-top:12px">' + t.recomendaciones.map(function(o){
+          return '<article class="tk-card"><div class="note" style="margin:0">Para: ' + esc(o.pregunta) + '</div><button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span></button>' +
+            (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') + '</article>';
+        }).join('') + '</div>' : '');
+    $('#taker-body').innerHTML = h;
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-taker]'); if (b){ abrirTaker(b.getAttribute('data-taker')); return; }
+    if (e.target.closest('#perfil-ver-publico') && state.miPid) abrirTaker(state.miPid);
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-taker]')) abrirTaker(e.target.getAttribute('data-taker'));
+  });
+  $('#perfil-bio').addEventListener('change', function(){
+    api('/api/perfil', { dispositivo: state.dispositivo, bio: $('#perfil-bio').value.trim() }).then(function(){ toast('Guardado'); }).catch(function(err){ toast(err.message); });
+  });
+  $('#perfil-publico').addEventListener('click', function(){
+    var on = !this.classList.contains('on'), btn = this;
+    api('/api/perfil', { dispositivo: state.dispositivo, publico: on }).then(function(){
+      btn.classList.toggle('on', on); btn.setAttribute('aria-pressed', on); btn.textContent = on ? 'Visible' : 'Oculto';
+      toast(on ? 'Tu perfil es público' : 'Tu perfil está oculto');
+    }).catch(function(err){ toast(err.message); });
+  });
 
   // ---------- Premium ----------
   state.prem = { premium: false };
@@ -2574,8 +2659,8 @@
     for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0;
     return '<span class="tk-av" style="width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.38) + 'px;background:' + AV_COLORES[h % AV_COLORES.length] + '" aria-hidden="true">' + esc(a.iniciales || '?') + '</span>';
   }
-  function autorTk(a, f){
-    return '<span class="tk-autor">' + avatarTk(a, 36) + '<span style="min-width:0"><span class="n">' + esc(a.nombre) + '<span class="lv">' + esc(a.nivel) + '</span></span><span class="t">' + haceTiempo(f) + '</span></span></span>';
+  function autorTk(a, f, sinEnlace){
+    return '<span class="tk-autor"' + (a.id && !sinEnlace ? ' data-taker="' + esc(a.id) + '" role="link" tabindex="0"' : '') + '>' + avatarTk(a, 36) + '<span style="min-width:0"><span class="n">' + esc(a.nombre) + '<span class="lv">' + esc(a.nivel) + '</span></span><span class="t">' + haceTiempo(f) + '</span></span></span>';
   }
   function estrellasTk(n, size){
     var s = ''; for (var i = 1; i <= 5; i++) s += estrellaSVG(i <= n, size || 14);
@@ -2847,7 +2932,7 @@
           '<button class="cta" id="tk-preguntar" style="min-height:50px">Preguntar</button></div>' +
         (d.preguntas.length ? d.preguntas.map(function(q){
           return '<button class="tk-card tk-q" data-preg="' + q.id + '">' +
-            '<span style="display:flex;align-items:center;gap:8px;width:100%">' + autorTk(q.autor, q.creado) + '</span>' +
+            '<span style="display:flex;align-items:center;gap:8px;width:100%">' + autorTk(q.autor, q.creado, true) + '</span>' +
             '<span class="tk-qt">' + esc(q.texto) + '</span>' +
             '<span style="display:flex;align-items:center;gap:10px;width:100%">' +
               (q.vinos.length ? '<span class="tk-qbots" aria-hidden="true">' + q.vinos.map(function(v){ return '<span>' + botellaSVG(v, 40) + '</span>'; }).join('') + '</span>' : '') +
@@ -3124,6 +3209,9 @@
       state.nombre = p.nombre || '';
       $('#perfil-nombre').value = state.nombre;
       sel.value = p.super_id || '';
+      state.miPid = p.publico_id || null; $('#perfil-bio').value = p.bio || '';
+      var tp = $('#perfil-publico'); tp.classList.toggle('on', p.publico); tp.setAttribute('aria-pressed', p.publico); tp.textContent = p.publico ? 'Visible' : 'Oculto';
+      $('#perfil-ver-publico').style.display = state.miPid && p.nombre ? '' : 'none';
       $('#perfil-titulo').textContent = state.nombre ? 'Hola, ' + state.nombre.split(' ')[0] : 'Tu perfil';
       $('#perfil-avatar').innerHTML = iniciales(state.nombre) || '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
       var st = p.stats;

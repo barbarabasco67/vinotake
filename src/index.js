@@ -131,6 +131,8 @@ async function api(request, env, url) {
   if (method === 'GET' && path === '/api/cata') return cataVer(env, url.searchParams.get('d'));
   if (method === 'POST' && path === '/api/cata/responder') return cataResponder(env, await body(request));
   if (method === 'GET' && path === '/api/takers') return takersInicio(env, url.searchParams.get('d'), url.searchParams.get('super'));
+  m = path.match(/^\/api\/taker\/([a-f0-9]{12})$/);
+  if (method === 'GET' && m) return perfilPublico(env, m[1], url.searchParams.get('d'));
   if (method === 'POST' && path === '/api/takers/opinion') return opinionGuardar(env, await body(request));
   if (method === 'POST' && path === '/api/takers/brindis') return alternar(env, await body(request),
     { tabla: 'resenas', votos: 'brindis', col: 'resena_id', campo: 'resena_id', propio: 'No puedes brindar por tu propia opinión.' });
@@ -977,7 +979,7 @@ async function gustosGuardar(env, b) {
 async function perfilVer(env, dispositivo) {
   const d = dispositivoValido(dispositivo);
   if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
-  const p = await env.DB.prepare('SELECT nombre, super_id FROM perfiles WHERE dispositivo = ?').bind(d).first().catch(() => null);
+  const p = await env.DB.prepare('SELECT nombre, super_id, publico_id, bio, publico FROM perfiles WHERE dispositivo = ?').bind(d).first().catch(() => null);
   const s = await env.DB.prepare(
     `SELECT COALESCE(SUM(cantidad), 0) AS botellas,
             COALESCE(SUM(CASE WHEN cantidad > 0 THEN 1 ELSE 0 END), 0) AS vinos_casa,
@@ -989,6 +991,7 @@ async function perfilVer(env, dispositivo) {
   return json({
     nombre: p ? p.nombre || '' : '',
     super_id: p ? p.super_id || null : null,
+    publico_id: p ? p.publico_id || null : null, bio: p ? p.bio || '' : '', publico: p ? p.publico !== 0 : true,
     stats: {
       botellas: s.botellas || 0, vinos_casa: s.vinos_casa || 0, deseo: s.deseo || 0, probados: s.probados || 0,
       media: s.media ? Math.round(s.media * 10) / 10 : null
@@ -999,8 +1002,11 @@ async function perfilVer(env, dispositivo) {
 async function perfilGuardar(env, b) {
   const d = dispositivoValido(b.dispositivo);
   if (!d) return json({ error: 'Falta el identificador del dispositivo.' }, 400);
-  const actual = await env.DB.prepare('SELECT nombre, super_id FROM perfiles WHERE dispositivo = ?').bind(d).first() || {};
+  const actual = await env.DB.prepare('SELECT nombre, super_id, publico_id, bio, publico FROM perfiles WHERE dispositivo = ?').bind(d).first() || {};
   const nombre = 'nombre' in b ? limpiar(b.nombre, 40) : (actual.nombre || '');
+  const bio = 'bio' in b ? limpiar(b.bio, 140) : (actual.bio || '');
+  const publico = 'publico' in b ? (b.publico ? 1 : 0) : (actual.publico === 0 ? 0 : 1);
+  if (bio) { const pb = textoProblema(bio); if (pb) return json({ error: pb }, 400); }
   let superId = actual.super_id || null;
   if ('super_id' in b) {
     const s = b.super_id ? await env.DB.prepare('SELECT id FROM supermercados WHERE id = ?').bind(String(b.super_id)).first() : null;
@@ -1013,10 +1019,68 @@ async function perfilGuardar(env, b) {
     if (otro) return json({ error: 'Ese nombre ya lo usa otro Taker. Prueba con otro.' }, 409);
   }
   await env.DB.prepare(
-    `INSERT INTO perfiles (dispositivo, nombre, super_id) VALUES (?, ?, ?)
-     ON CONFLICT (dispositivo) DO UPDATE SET nombre = excluded.nombre, super_id = excluded.super_id, actualizado = CURRENT_TIMESTAMP`
-  ).bind(d, nombre || null, superId).run();
-  return json({ ok: true, nombre, super_id: superId });
+    `INSERT INTO perfiles (dispositivo, nombre, super_id, publico_id, bio, publico) VALUES (?, ?, ?, lower(hex(randomblob(6))), ?, ?)
+     ON CONFLICT (dispositivo) DO UPDATE SET nombre = excluded.nombre, super_id = excluded.super_id, bio = excluded.bio, publico = excluded.publico,
+       publico_id = COALESCE(perfiles.publico_id, excluded.publico_id), actualizado = CURRENT_TIMESTAMP`
+  ).bind(d, nombre || null, superId, bio || null, publico).run();
+  return json({ ok: true, nombre, super_id: superId, bio, publico: !!publico });
+}
+
+// ---------- Perfil público de un Taker ----------
+const LOGROS = [
+  { id: 'primera', nombre: 'Primera opinión', desc: 'Puntúa tu primer vino', clave: 'opiniones', meta: 1 },
+  { id: 'catador10', nombre: 'Paladar en marcha', desc: '10 opiniones publicadas', clave: 'opiniones', meta: 10 },
+  { id: 'embajador', nombre: 'Embajador', desc: '25 opiniones publicadas', clave: 'opiniones', meta: 25 },
+  { id: 'tipos', nombre: 'Vuelta al vino', desc: 'Opina de 4 tipos de vino distintos', clave: 'tipos', meta: 4 },
+  { id: 'do5', nombre: 'Trotamundos', desc: 'Opina de 5 denominaciones distintas', clave: 'denominaciones', meta: 5 },
+  { id: 'do15', nombre: 'Ruta del vino', desc: 'Opina de 15 denominaciones distintas', clave: 'denominaciones', meta: 15 },
+  { id: 'consejero', nombre: 'Buen consejero', desc: '5 recomendaciones a la comunidad', clave: 'respuestas', meta: 5 },
+  { id: 'brindis10', nombre: 'Aplaudido', desc: 'Recibe 10 brindis', clave: 'brindis', meta: 10 },
+  { id: 'brindis50', nombre: 'Brindis a lo grande', desc: 'Recibe 50 brindis', clave: 'brindis', meta: 50 },
+  { id: 'sumiller', nombre: 'Sumiller', desc: 'Llega a 150 puntos', clave: 'puntos', meta: 150 }
+];
+
+async function perfilPublico(env, pid, dispositivo) {
+  const d = dispositivoValido(dispositivo);
+  const p = await env.DB.prepare('SELECT dispositivo, nombre, bio, publico, creado FROM perfiles WHERE publico_id = ?').bind(pid).first();
+  if (!p || !p.nombre) return json({ error: 'No encontramos a ese Taker.' }, 404);
+  const yo = !!d && d === p.dispositivo;
+  if (p.publico === 0 && !yo) return json({ privado: true, nombre: p.nombre, iniciales: iniciales(p.nombre) });
+  const x = p.dispositivo;
+  const [puntos, c, ops, recs] = await Promise.all([
+    mapaPuntos(env),
+    env.DB.prepare(
+      `SELECT (SELECT COUNT(*) FROM resenas WHERE dispositivo = ?1 AND oculto = 0) AS opiniones,
+              (SELECT AVG(puntuacion) FROM resenas WHERE dispositivo = ?1 AND oculto = 0) AS media,
+              (SELECT COUNT(DISTINCT v.tipo) FROM resenas r JOIN vinos v ON v.id = r.vino_id WHERE r.dispositivo = ?1 AND r.oculto = 0) AS tipos,
+              (SELECT COUNT(DISTINCT v.denominacion) FROM resenas r JOIN vinos v ON v.id = r.vino_id WHERE r.dispositivo = ?1 AND r.oculto = 0) AS denominaciones,
+              (SELECT COUNT(*) FROM respuestas WHERE dispositivo = ?1 AND oculto = 0) AS respuestas,
+              (SELECT COUNT(*) FROM brindis b JOIN resenas r ON r.id = b.resena_id WHERE r.dispositivo = ?1 AND b.dispositivo != ?1) AS brindis`
+    ).bind(x).first(),
+    env.DB.prepare(
+      `SELECT r.id, r.puntuacion, r.texto, r.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion,
+              (SELECT COUNT(*) FROM brindis b WHERE b.resena_id = r.id) AS brindis
+         FROM resenas r JOIN vinos v ON v.id = r.vino_id
+        WHERE r.dispositivo = ? AND r.oculto = 0 ORDER BY r.creado DESC LIMIT 20`
+    ).bind(x).all(),
+    env.DB.prepare(
+      `SELECT r.id, r.texto, r.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion, q.texto AS pregunta
+         FROM respuestas r JOIN vinos v ON v.id = r.vino_id JOIN preguntas q ON q.id = r.pregunta_id
+        WHERE r.dispositivo = ? AND r.oculto = 0 ORDER BY r.creado DESC LIMIT 10`
+    ).bind(x).all()
+  ]);
+  const pts = puntos.get(x) || 0;
+  const valores = { opiniones: c.opiniones || 0, tipos: c.tipos || 0, denominaciones: c.denominaciones || 0, respuestas: c.respuestas || 0, brindis: c.brindis || 0, puntos: pts };
+  const logros = LOGROS.map(l => ({ id: l.id, nombre: l.nombre, desc: l.desc, valor: Math.min(valores[l.clave], l.meta), meta: l.meta, conseguido: valores[l.clave] >= l.meta }));
+  return json({
+    id: pid, es_yo: yo, publico: p.publico !== 0,
+    nombre: p.nombre, iniciales: iniciales(p.nombre), bio: p.bio || '', desde: p.creado,
+    ...nivelDe(pts),
+    stats: { opiniones: valores.opiniones, media: c.media ? Math.round(c.media * 10) / 10 : null, brindis: valores.brindis, recomendaciones: valores.respuestas },
+    logros,
+    opiniones: ops.results.map(o => ({ id: o.id, puntuacion: o.puntuacion, texto: o.texto || '', creado: o.creado, brindis: o.brindis, vino: { id: o.vino_id, nombre: o.nombre, tipo: o.tipo, color: o.color, denominacion: o.denominacion } })),
+    recomendaciones: recs.results.map(o => ({ id: o.id, texto: o.texto || '', pregunta: o.pregunta, creado: o.creado, vino: { id: o.vino_id, nombre: o.nombre, tipo: o.tipo, color: o.color, denominacion: o.denominacion } }))
+  }, 200, 0);
 }
 
 // Borra todo lo guardado de este dispositivo (bodega, gustos y perfil).
@@ -1170,9 +1234,9 @@ async function mapaPuntos(env, desde) {
   return m;
 }
 
-function autorPublico(nombre, disp, puntos) {
+function autorPublico(nombre, disp, puntos, pid) {
   const p = puntos.get(disp) || 0;
-  return { nombre: nombre || 'Taker', iniciales: iniciales(nombre || 'Taker'), nivel: nivelDe(p).nivel };
+  return { id: pid || null, nombre: nombre || 'Taker', iniciales: iniciales(nombre || 'Taker'), nivel: nivelDe(p).nivel };
 }
 
 async function retoActual(env) {
@@ -1184,7 +1248,7 @@ async function retoActual(env) {
 async function propuestasDe(env, retoId, superId, d, puntos) {
   const { results } = await env.DB.prepare(
     `SELECT p.id, p.dispositivo, p.texto, p.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion,
-            COALESCE(pr.precio, v.precio_ref) AS precio, pf.nombre AS autor,
+            COALESCE(pr.precio, v.precio_ref) AS precio, pf.nombre AS autor, pf.publico_id AS autor_pid,
             (SELECT COUNT(*) FROM reto_votos rv WHERE rv.propuesta_id = p.id) AS votos
        FROM reto_propuestas p
        JOIN vinos v ON v.id = p.vino_id
@@ -1196,7 +1260,7 @@ async function propuestasDe(env, retoId, superId, d, puntos) {
   ).bind(superId, retoId).all();
   return results.map(r => ({
     id: r.id, texto: r.texto || '', creado: r.creado, votos: r.votos, mia: r.dispositivo === d,
-    autor: autorPublico(r.autor, r.dispositivo, puntos),
+    autor: autorPublico(r.autor, r.dispositivo, puntos, r.autor_pid),
     vino: { id: r.vino_id, nombre: r.nombre, tipo: r.tipo, color: r.color, denominacion: r.denominacion, precio: r.precio }
   }));
 }
@@ -1247,7 +1311,7 @@ async function takersInicio(env, dispositivo, superPedido) {
   // Opiniones recientes
   const ops = (await env.DB.prepare(
     `SELECT r.id, r.dispositivo, r.puntuacion, r.texto, r.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion,
-            pf.nombre AS autor,
+            pf.nombre AS autor, pf.publico_id AS autor_pid,
             (SELECT COUNT(*) FROM brindis b WHERE b.resena_id = r.id) AS brindis,
             EXISTS (SELECT 1 FROM brindis b WHERE b.resena_id = r.id AND b.dispositivo = ?) AS brindado
        FROM resenas r JOIN vinos v ON v.id = r.vino_id
@@ -1258,7 +1322,7 @@ async function takersInicio(env, dispositivo, superPedido) {
 
   // Preguntas recientes (con las botellas que les han recomendado)
   const preg = (await env.DB.prepare(
-    `SELECT q.id, q.dispositivo, q.texto, q.creado, pf.nombre AS autor,
+    `SELECT q.id, q.dispositivo, q.texto, q.creado, pf.nombre AS autor, pf.publico_id AS autor_pid,
             (SELECT COUNT(*) FROM respuestas a WHERE a.pregunta_id = q.id AND a.oculto = 0) AS respuestas
        FROM preguntas q LEFT JOIN perfiles pf ON pf.dispositivo = q.dispositivo
       WHERE q.oculto = 0
@@ -1273,7 +1337,7 @@ async function takersInicio(env, dispositivo, superPedido) {
   }
   const preguntas = preg.map(q => ({
     id: q.id, texto: q.texto, creado: q.creado, respuestas: q.respuestas, mia: q.dispositivo === d,
-    autor: autorPublico(q.autor, q.dispositivo, puntos),
+    autor: autorPublico(q.autor, q.dispositivo, puntos, q.autor_pid),
     vinos: vinosPreg.filter(v => v.pregunta_id === q.id).slice(0, 3).map(v => ({ id: v.id, nombre: v.nombre, tipo: v.tipo, color: v.color }))
   }));
 
@@ -1300,7 +1364,7 @@ async function takersInicio(env, dispositivo, superPedido) {
 function opinionPublica(r, d, puntos) {
   return {
     id: r.id, puntuacion: r.puntuacion, texto: r.texto || '', creado: r.creado, brindis: r.brindis || 0, brindado: !!r.brindado,
-    mia: r.dispositivo === d, autor: autorPublico(r.autor, r.dispositivo, puntos),
+    mia: r.dispositivo === d, autor: autorPublico(r.autor, r.dispositivo, puntos, r.autor_pid),
     vino: { id: r.vino_id, nombre: r.nombre, tipo: r.tipo, color: r.color, denominacion: r.denominacion }
   };
 }
@@ -1310,7 +1374,7 @@ async function opinionesVino(env, vinoId, dispositivo) {
   const puntos = await mapaPuntos(env);
   const res = (await env.DB.prepare(
     `SELECT r.id, r.dispositivo, r.puntuacion, r.texto, r.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion,
-            pf.nombre AS autor,
+            pf.nombre AS autor, pf.publico_id AS autor_pid,
             (SELECT COUNT(*) FROM brindis b WHERE b.resena_id = r.id) AS brindis,
             EXISTS (SELECT 1 FROM brindis b WHERE b.resena_id = r.id AND b.dispositivo = ?) AS brindado
        FROM resenas r JOIN vinos v ON v.id = r.vino_id
@@ -1377,13 +1441,13 @@ async function preguntaVer(env, id, dispositivo, superPedido) {
   const superId = await superValido(env, superPedido);
   const puntos = await mapaPuntos(env);
   const q = await env.DB.prepare(
-    `SELECT q.id, q.dispositivo, q.texto, q.creado, pf.nombre AS autor FROM preguntas q
+    `SELECT q.id, q.dispositivo, q.texto, q.creado, pf.nombre AS autor, pf.publico_id AS autor_pid FROM preguntas q
        LEFT JOIN perfiles pf ON pf.dispositivo = q.dispositivo WHERE q.id = ? AND q.oculto = 0`
   ).bind(id).first();
   if (!q) return json({ error: 'Esta pregunta ya no está disponible.' }, 404);
   const resp = (await env.DB.prepare(
     `SELECT a.id, a.dispositivo, a.texto, a.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion,
-            COALESCE(pr.precio, v.precio_ref) AS precio, pf.nombre AS autor,
+            COALESCE(pr.precio, v.precio_ref) AS precio, pf.nombre AS autor, pf.publico_id AS autor_pid,
             (SELECT COUNT(*) FROM utiles u WHERE u.respuesta_id = a.id) AS utiles,
             EXISTS (SELECT 1 FROM utiles u WHERE u.respuesta_id = a.id AND u.dispositivo = ?) AS util_mio
        FROM respuestas a JOIN vinos v ON v.id = a.vino_id
@@ -1393,12 +1457,12 @@ async function preguntaVer(env, id, dispositivo, superPedido) {
       ORDER BY utiles DESC, a.creado`
   ).bind(d || '', superId, id).all()).results.map(r => ({
     id: r.id, texto: r.texto || '', creado: r.creado, utiles: r.utiles, util_mio: !!r.util_mio, mia: r.dispositivo === d,
-    autor: autorPublico(r.autor, r.dispositivo, puntos),
+    autor: autorPublico(r.autor, r.dispositivo, puntos, r.autor_pid),
     vino: { id: r.vino_id, nombre: r.nombre, tipo: r.tipo, color: r.color, denominacion: r.denominacion, precio: r.precio }
   }));
   return json({
     id: q.id, texto: q.texto, creado: q.creado, mia: q.dispositivo === d,
-    autor: autorPublico(q.autor, q.dispositivo, puntos), respuestas: resp
+    autor: autorPublico(q.autor, q.dispositivo, puntos, q.autor_pid), respuestas: resp
   });
 }
 
