@@ -216,6 +216,9 @@
   .tk-chips button{flex:0 0 auto;min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--border-hi);background:transparent;color:var(--muted);font-size:14px;cursor:pointer}
   .tk-chips button.on{background:var(--burdeos);color:#fff;border-color:transparent}
   .tk-tipo{font-size:11px;font-weight:600;color:var(--amarillo);border:1px solid rgba(232,184,74,.4);border-radius:10px;padding:1px 8px;margin-left:auto;white-space:nowrap}
+  .lg-ins{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .lg-ins-i{display:flex;flex-direction:column;align-items:center;gap:6px;background:transparent;border:0;color:var(--ink);font-size:12px;text-align:center;cursor:pointer;padding:0}
+  .lg-c{width:64px;height:64px;border-radius:32px;border:1.5px solid rgba(232,184,74,.6);background:rgba(232,184,74,.08);display:flex;align-items:center;justify-content:center}
   .logros{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .logro{padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--border);display:flex;flex-direction:column;gap:6px;align-items:flex-start}
   .logro.on{border-color:rgba(232,184,74,.55);background:rgba(232,184,74,.07)}
@@ -1542,11 +1545,13 @@
         return '<button class="bcard" data-wine="' + esc(v.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(v, 56) + '</span><span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span><span class="s" style="display:block">' + esc([v.tipo, v.denominacion].filter(Boolean).join(' · ')) + '</span></span>' + (v.precio != null ? '<span class="meta"><span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span></span>' : '') + '</button>';
       }).join('') + '</div>' : '<div class="ps-vacio"><span class="c">' + IC.marca + '</span><b>Nada guardado todavía</b><span class="note">Pulsa el marcador en la ficha de un vino para guardarlo aquí.</span></div>';
     } else {
-      var ganados = t.logros.filter(function(l){ return l.conseguido; }).length;
-      h = '<div class="px" style="padding-top:16px"><div class="note" style="margin:0 0 10px">' + ganados + ' de ' + t.logros.length + ' logros</div><div class="logros">' + t.logros.map(function(l){
-        return '<div class="logro' + (l.conseguido ? ' on' : '') + '">' + ICO_LOGRO + '<span class="lg-n">' + esc(l.nombre) + '</span><span class="lg-d">' + esc(l.desc) + '</span>' +
-          (l.conseguido ? '' : '<span class="lg-bar" aria-hidden="true"><i style="width:' + Math.round(100 * l.valor / l.meta) + '%"></i></span><span class="lg-d">' + l.valor + ' de ' + l.meta + '</span>') + '</div>';
-      }).join('') + '</div></div>';
+      var gan = t.logros.filter(function(l){ return l.conseguido; });
+      var prox = t.logros.filter(function(l){ return !l.conseguido; }).sort(function(a, b){ return (b.valor / b.meta) - (a.valor / a.meta); })[0];
+      h = '<div class="px" style="padding-top:16px">' +
+        (gan.length ? '<div class="lg-ins">' + gan.map(function(l){ return '<button class="lg-ins-i" data-logro="' + esc(l.id || l.nombre) + '"><span class="lg-c">' + ICO_LOGRO + '</span><span>' + esc(l.nombre) + '</span></button>'; }).join('') + '</div>' :
+          '<div class="note" style="margin:0 0 12px">' + (yo ? 'Aún no has desbloqueado ningún logro.' : 'Todavía no tiene logros.') + '</div>') +
+        (prox && yo ? '<div class="logro" style="margin-top:14px"><span class="note" style="margin:0">Tu próximo logro</span><span class="lg-n">' + esc(prox.nombre) + '</span><span class="lg-d">' + esc(prox.desc) + '</span><span class="lg-bar" aria-hidden="true"><i style="width:' + Math.round(100 * prox.valor / prox.meta) + '%"></i></span><span class="lg-d">' + prox.valor + ' de ' + prox.meta + '</span></div>' : '') +
+        '</div>';
     }
     panel.innerHTML = h;
     state.tkPid = t.id;
@@ -1657,6 +1662,11 @@
       $('#ps-n-rec').addEventListener('click', function(){ cerrarHoja(); recomendarConFoto(); });
       $('#ps-n-op').addEventListener('click', function(){ cerrarHoja(); escribirOpinion(); });
       return;
+    }
+    var lgb = e.target.closest('[data-logro]');
+    if (lgb && state.psData){
+      var lg = state.psData.t.logros.filter(function(l){ return (l.id || l.nombre) === lgb.getAttribute('data-logro'); })[0];
+      if (lg){ abrirHoja('<h2 id="hoja-t" style="font-size:22px;margin:0">' + esc(lg.nombre) + '</h2><p class="note" style="margin:0">' + esc(lg.desc) + '</p><button class="ghost" data-hoja-cerrar>Cerrar</button>'); return; }
     }
     if (e.target.closest('#tk-recomendar')){ recomendarConFoto(); return; }
     var ft = e.target.closest('[data-feedtipo]');
