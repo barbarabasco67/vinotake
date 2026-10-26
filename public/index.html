@@ -1192,12 +1192,17 @@
     var medidores = '';
     if (RANGO[w.estilo]) medidores += medidorFicha('Intensidad', RANGO[w.estilo], w.estilo.charAt(0).toUpperCase() + w.estilo.slice(1));
     if (w.estilo || w.dulce) medidores += medidorFicha('Dulzor', w.dulce ? 3 : 1, w.dulce ? 'Dulce' : 'Seco');
-    var sab = (w.sabor || w.temperatura || w.va_con.length) ? ('<div class="sec"><h2>Cómo es</h2>' +
+    var comidas = (w.platos || []).map(function(p){ return p.nombre; });
+    var quitaAc = function(t){ return String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
+    w.va_con.forEach(function(t){
+      var k = quitaAc(t).split(' ')[0].replace(/s$/, '');
+      if (!comidas.some(function(c){ return quitaAc(c).indexOf(k) !== -1; })) comidas.push(t);
+    });
+    var sab = (w.sabor || w.temperatura || comidas.length) ? ('<div class="sec"><h2>Cómo es</h2>' +
         (w.sabor ? '<p class="sabor">' + esc(w.sabor) + '</p>' : '') +
         (medidores ? '<div class="meters">' + medidores + '</div>' : '') +
         ((w.temperatura || w.apertura) ? '<div class="grid2" style="gap:10px"><div class="stat2">' + IC.termo + '<div><div class="k">Sírvelo a</div><div class="v">' + esc(w.temperatura || '—') + '</div></div></div><div class="stat2">' + IC.reloj + '<div><div class="k">Ábrelo</div><div class="v">' + esc(w.apertura || '—') + '</div></div></div></div>' : '') +
-        ((w.platos || []).length ? '<div><div class="label" style="margin-bottom:8px">Ideal para</div><div class="tags">' + w.platos.map(function(p){ return '<span class="tg">' + esc(p.nombre) + '</span>'; }).join('') + '</div></div>' : '') +
-        (w.va_con.length ? '<div><div class="label" style="margin-bottom:8px">Va bien con</div><div class="tags">' + w.va_con.map(function(t){ return '<span class="tg w">' + esc(t) + '</span>'; }).join('') + '</div></div>' : '') +
+        (comidas.length ? '<div><div class="label" style="margin-bottom:8px">Va bien con</div><div class="tags">' + comidas.map(function(t){ return '<span class="tg">' + esc(t) + '</span>'; }).join('') + '</div></div>' : '') +
       '</div>') : '';
     var s = w.sugerencias || {};
     var haySug = (s.misma && s.misma.length) || (s.parecidos && s.parecidos.length) || (s.descubrir && s.descubrir.length);
@@ -3125,7 +3130,9 @@
   $('#perfil-super').addEventListener('change', function(){
     var v = $('#perfil-super').value;
     api('/api/perfil', { dispositivo: state.dispositivo, super_id: v || null }).then(function(){
-      if (v){ state.superId = v; store('super', v); document.querySelectorAll('#store1, #store2').forEach(function(o){ o.value = v; }); }
+      state.superId = v || null; store('super', v || '');
+      document.querySelectorAll('#store1, #store2').forEach(function(o){ o.value = v || ''; });
+      if (typeof cargarTop === 'function') cargarTop();
       toast('Guardado');
     }).catch(function(err){ toast(err.message); });
   });
