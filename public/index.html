@@ -548,9 +548,51 @@
   .takers-ic{width:56px;height:56px;border-radius:16px;background:var(--verde);display:flex;align-items:center;justify-content:center}
   .feat{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45;color:var(--ink2)}
   .feat .dot{width:30px;height:30px;border-radius:10px;background:var(--burdeos);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* ---------- Animación de apertura ---------- */
+  .splash{position:fixed;inset:0;z-index:200;background:radial-gradient(120% 80% at 50% 38%,#2a1219 0%,#121011 62%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;pointer-events:none;animation:splashOut .5s ease 1.75s forwards}
+  .splash .sp-copa{width:104px;height:104px;border-radius:30px;background:var(--burdeos);border:1px solid var(--burdeos-line);display:flex;align-items:center;justify-content:center;box-shadow:0 18px 50px rgba(123,30,52,.55);animation:spLogo .8s cubic-bezier(.2,1.3,.4,1) .1s both}
+  .splash .sp-copa svg{width:56px;height:56px;overflow:visible}
+  .splash .sp-copa path{stroke-dasharray:60;stroke-dashoffset:60;animation:spTrazo .9s ease .45s forwards}
+  .splash .sp-nombre{font-family:"Bricolage Grotesque",Inter,sans-serif;font-weight:700;font-size:34px;letter-spacing:-.02em;color:var(--ink);animation:spTexto .7s ease .95s both}
+  .splash .sp-lema{font-size:14px;color:var(--muted);margin-top:-14px;animation:spTexto .7s ease 1.2s both}
+  .splash::after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;border:1px solid rgba(232,184,74,.35);animation:spOnda 1.4s ease-out .5s both}
+  @keyframes spLogo{from{opacity:0;transform:scale(.5) rotate(-12deg)}to{opacity:1;transform:none}}
+  @keyframes spTrazo{to{stroke-dashoffset:0}}
+  @keyframes spTexto{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes spOnda{from{opacity:.9;transform:scale(.4)}to{opacity:0;transform:scale(1.7)}}
+  @keyframes splashOut{to{opacity:0;visibility:hidden;transform:scale(1.04)}}
+
+  /* ---------- Cambio de pantalla ---------- */
+  .screen.active{animation:pantallaIn .36s cubic-bezier(.22,.9,.3,1)}
+  .screen.active.atras{animation:pantallaBack .32s cubic-bezier(.22,.9,.3,1)}
+  @keyframes pantallaIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+  @keyframes pantallaBack{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+  .screen.active>*:nth-child(n+2){animation:itemIn .5s cubic-bezier(.22,.9,.3,1) backwards}
+  .screen.active>*:nth-child(2){animation-delay:.04s}
+  .screen.active>*:nth-child(3){animation-delay:.09s}
+  .screen.active>*:nth-child(4){animation-delay:.14s}
+  .screen.active>*:nth-child(5){animation-delay:.19s}
+  .screen.active>*:nth-child(n+6){animation-delay:.24s}
+  @keyframes itemIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .screen.active .tabbar,.screen.active .dock,.screen.active .fab,.screen.active [id$="-fab"],.screen.active .ps-fab{animation:none}
+
+  /* ---------- Hojas y avisos ---------- */
+  .gate.show{animation:velo .25s ease}
+  .gate.show .sheet{animation:hojaSube .38s cubic-bezier(.2,1,.3,1)}
+  @keyframes velo{from{opacity:0}to{opacity:1}}
+  @keyframes hojaSube{from{transform:translateY(100%)}to{transform:none}}
+
+  /* ---------- Pulsar botones ---------- */
+  button,.tab,.chip,.bcard,.alt,.sug,.row-card,.mini,.store,.cmp-slot,.toggle,.budget{transition:transform .16s cubic-bezier(.3,1.6,.5,1),background-color .18s,border-color .18s,box-shadow .18s,filter .18s}
+  button:not(:disabled):active,.chip:active,.tab:active,.toggle:active,.budget:active{transform:scale(.93)}
+  .bcard:active,.alt:active,.sug:active,.row-card:active,.mini:active,.store:active{transform:scale(.97)}
+  .iconbtn:active,.dock-ic:active{transform:scale(.88)}
+  .cta:not(:disabled):active,.dock-main:active{transform:scale(.95);filter:brightness(.92)}
 </style>
 </head>
 <body>
+<div class="splash" id="splash" aria-hidden="true"><div class="sp-copa"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF7F2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l-1 7a3 3 0 0 1-6 0z"/><path d="M12 12v8"/><path d="M8 22h8"/></svg></div><div class="sp-nombre">Vinotake</div><div class="sp-lema">Tu sommelier del súper</div></div>
 <div class="app">
 
   <!-- 1 · INICIO -->
@@ -984,6 +1026,7 @@
     if (name === 'takers') cargarTakers();
     if (name === 'comparar' && typeof pintarCmp === 'function') pintarCmp();
     if (name === 'catalogo' && typeof cargarCatalogo === 'function') cargarCatalogo();
+    el.classList.toggle('atras', push === false);
     el.classList.add('active');
     window.scrollTo(0, 0);
     if (push !== false) history.pushState({s:name}, '', '#' + name);
@@ -3741,6 +3784,11 @@
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
   }
 })();
+
+  (function(){ var sp = document.getElementById('splash'); if (!sp) return;
+    var quitar = function(){ if (sp.parentNode) sp.parentNode.removeChild(sp); };
+    setTimeout(quitar, 2400);
+  })();
 </script>
 </body>
 </html>
