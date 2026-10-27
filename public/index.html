@@ -1247,7 +1247,7 @@
         if (todosIgual) pie = 'Mismo precio en todos los súper.';
         else pie = (nMin > 1 ? 'Más barato en ' + nMin + ' súper' : 'Más barato en <b>' + esc(cmp[0].super) + '</b>') + ' · hasta <b>' + eur(maxP - minP) + '</b> menos que el más caro.';
       }
-      compBlock = '<div class="comp"><div class="comp-t">Precio en cada súper</div><div class="comp-row">' + cards + '</div>' + (pie ? '<div class="comp-ahorro">' + pie + '</div>' : '') + '</div>';
+      compBlock = '<div class="comp"><div class="comp-row">' + cards + '</div>' + (pie ? '<div class="comp-ahorro">' + pie + '</div>' : '') + '</div>';
     }
     var tiendasBlock = '';
     if (w.tiendas && w.tiendas.length){
