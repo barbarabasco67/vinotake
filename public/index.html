@@ -1494,7 +1494,7 @@
       $('#taker-body').innerHTML = '<div class="px"><div class="empty">' + esc(err.message) + '</div></div>';
     });
   }
-  var IC = {
+  var ICP = {
     grid: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>',
     marca: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v16l-5-4-5 4z"/></svg>',
     medalla: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>',
@@ -1509,16 +1509,16 @@
   function perfilSocial(t, cont){
     state.psData = { t: t, cont: cont };
     var yo = !!t.es_yo;
-    var cmp = '<button class="iconbtn plain" id="ps-compartir" aria-label="Compartir perfil">' + IC.compartir + '</button>';
-    var top = '<div class="ps-top">' + (yo ? '<button class="iconbtn plain" id="ps-editar" aria-label="Editar perfil">' + IC.lapiz + '</button>' : '<button class="iconbtn plain" data-back aria-label="Volver">' + IC.atras + '</button>') +
+    var cmp = '<button class="iconbtn plain" id="ps-compartir" aria-label="Compartir perfil">' + ICP.compartir + '</button>';
+    var top = '<div class="ps-top">' + (yo ? '<button class="iconbtn plain" id="ps-editar" aria-label="Editar perfil">' + ICP.lapiz + '</button>' : '<button class="iconbtn plain" data-back aria-label="Volver">' + IC.atras + '</button>') +
       '<span class="h">' + esc(arrobaDe(t.nombre)) + '</span>' +
-      '<span class="ps-acc">' + (yo ? cmp + '<button class="iconbtn plain" data-go="ajustes" aria-label="Ajustes">' + IC.ajustes + '</button>' : cmp) + '</span></div>';
+      '<span class="ps-acc">' + (yo ? cmp + '<button class="iconbtn plain" data-go="ajustes" aria-label="Ajustes">' + ICP.ajustes + '</button>' : cmp) + '</span></div>';
     if (t.privado){
       cont.innerHTML = top + '<div class="ps-cab">' + avatarTk({ nombre: t.nombre }, 96) + '<h1>' + esc(t.nombre) + ' ' + IC.candado + '</h1></div><div class="ps-vacio"><b>Perfil privado</b><span class="note">Este Taker ha decidido no mostrar su perfil.</span></div>';
       return;
     }
     var st = t.stats, pubs = st.opiniones + st.recomendaciones;
-    var cab = '<div class="ps-cab"><div class="ps-av">' + avatarTk({ nombre: t.nombre }, 112) + '<span class="ps-burbuja">' + IC.medalla.replace('width="24" height="24"', 'width="16" height="16"') + esc(t.nivel) + '</span></div>' +
+    var cab = '<div class="ps-cab"><div class="ps-av">' + avatarTk({ nombre: t.nombre }, 112) + '<span class="ps-burbuja">' + ICP.medalla.replace('width="24" height="24"', 'width="16" height="16"') + esc(t.nivel) + '</span></div>' +
       '<h1>' + esc(t.nombre) + (yo && !t.publico ? ' ' + IC.candado : '') + '</h1></div>' +
       '<div class="ps-stats"><div><b>' + pubs + '</b><span>Publicaciones</span></div><div><b id="tk-n-seg">' + t.seguidores + '</b><span>Seguidores</span></div><div><b>' + t.siguiendo + '</b><span>Seguidos</span></div></div>' +
       '<div class="ps-cab" style="padding-top:12px">' +
@@ -1526,7 +1526,7 @@
         (yo ? (t.publico ? '' : '<span class="note" style="margin:0">Tu perfil está oculto: solo lo ves tú.</span>') :
           '<button class="' + (t.yo_sigo ? 'ghost' : 'cta') + '" id="tk-seguir" data-id="' + esc(t.id) + '" data-sigo="' + (t.yo_sigo ? 1 : 0) + '" style="min-height:46px;width:100%;margin-top:8px">' + (t.yo_sigo ? 'Siguiendo' : 'Seguir') + '</button>') +
       '</div>';
-    var tabs = [['pubs', IC.grid, 'Publicaciones']].concat(yo ? [['guardados', IC.marca, 'Por probar']] : []).concat([['logros', IC.medalla, 'Logros']]);
+    var tabs = [['pubs', ICP.grid, 'Publicaciones']].concat(yo ? [['guardados', ICP.marca, 'Por probar']] : []).concat([['logros', ICP.medalla, 'Logros']]);
     if (!tabs.some(function(x){ return x[0] === state.psTab; })) state.psTab = 'pubs';
     var tb = '<div class="ps-tabs" role="tablist">' + tabs.map(function(x){ return '<button role="tab" data-pstab="' + x[0] + '" aria-label="' + x[2] + '" aria-selected="' + (state.psTab === x[0]) + '" class="' + (state.psTab === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>';
     cont.innerHTML = top + cab + tb + '<div id="ps-panel"></div>';
@@ -1538,7 +1538,7 @@
     if (state.psTab === 'pubs'){
       var items = t.opiniones.map(function(o){ return { k: 'o', x: o }; }).concat(t.recomendaciones.map(function(o){ return { k: 'r', x: o }; }))
         .sort(function(a, b){ return String(b.x.creado).localeCompare(String(a.x.creado)); });
-      if (!items.length) h = '<div class="ps-vacio"><span class="c">' + IC.grid + '</span><b>' + (yo ? 'Aún no has publicado' : 'Aún no ha publicado') + '</b><span class="note">' + (yo ? 'Comparte tu primera recomendación con el botón +. Tus opiniones y fotos aparecerán aquí.' : 'Cuando publique algo, lo verás aquí.') + '</span></div>';
+      if (!items.length) h = '<div class="ps-vacio"><span class="c">' + ICP.grid + '</span><b>' + (yo ? 'Aún no has publicado' : 'Aún no ha publicado') + '</b><span class="note">' + (yo ? 'Comparte tu primera recomendación con el botón +. Tus opiniones y fotos aparecerán aquí.' : 'Cuando publique algo, lo verás aquí.') + '</span></div>';
       else h = '<div class="ps-grid">' + items.map(function(it){
         var o = it.x, tipo = it.k === 'o' ? 'opinion' : 'recomendacion';
         var menu = '<button class="tk-menu ps-menu" data-tk-menu="' + tipo + '" data-id="' + o.id + '"' + (yo ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button>';
@@ -1549,7 +1549,7 @@
       var lista = Object.keys(state.bodega || {}).map(function(k){ return state.bodega[k]; }).filter(function(v){ return v.deseo; });
       h = lista.length ? '<div class="px stack" style="padding-top:12px">' + lista.map(function(v){
         return '<button class="bcard" data-wine="' + esc(v.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(v, 56) + '</span><span style="flex:1;min-width:0"><span class="t" style="display:block">' + esc(v.nombre) + '</span><span class="s" style="display:block">' + esc([v.tipo, v.denominacion].filter(Boolean).join(' · ')) + '</span></span>' + (v.precio != null ? '<span class="meta"><span style="font-weight:600;font-size:14px">' + eur(v.precio) + '</span></span>' : '') + '</button>';
-      }).join('') + '</div>' : '<div class="ps-vacio"><span class="c">' + IC.marca + '</span><b>Nada guardado todavía</b><span class="note">Pulsa el marcador en la ficha de un vino para guardarlo aquí.</span></div>';
+      }).join('') + '</div>' : '<div class="ps-vacio"><span class="c">' + ICP.marca + '</span><b>Nada guardado todavía</b><span class="note">Pulsa el marcador en la ficha de un vino para guardarlo aquí.</span></div>';
     } else {
       var gan = t.logros.filter(function(l){ return l.conseguido; });
       var prox = t.logros.filter(function(l){ return !l.conseguido; }).sort(function(a, b){ return (b.valor / b.meta) - (a.valor / a.meta); })[0];
@@ -1567,8 +1567,8 @@
     return api('/api/perfil?d=' + encodeURIComponent(state.dispositivo)).then(function(p){
       state.miPid = p.publico_id || null;
       if (!p.nombre || !p.publico_id){
-        cont.innerHTML = '<div class="ps-top"><button class="iconbtn plain" data-back aria-label="Volver">' + IC.atras + '</button><span class="h">Tu perfil</span><button class="iconbtn plain" data-go="ajustes" aria-label="Ajustes">' + IC.ajustes + '</button></div>' +
-          '<div class="ps-vacio"><span class="c">' + IC.grid + '</span><b>Crea tu perfil</b><span class="note">Ponte un nombre y tendrás tu página: tus opiniones, recomendaciones con foto y logros. Otros Takers podrán seguirte.</span><button class="cta" data-go="ajustes" style="margin-top:8px">Elegir mi nombre</button></div>';
+        cont.innerHTML = '<div class="ps-top"><button class="iconbtn plain" data-back aria-label="Volver">' + IC.atras + '</button><span class="h">Tu perfil</span><button class="iconbtn plain" data-go="ajustes" aria-label="Ajustes">' + ICP.ajustes + '</button></div>' +
+          '<div class="ps-vacio"><span class="c">' + ICP.grid + '</span><b>Crea tu perfil</b><span class="note">Ponte un nombre y tendrás tu página: tus opiniones, recomendaciones con foto y logros. Otros Takers podrán seguirte.</span><button class="cta" data-go="ajustes" style="margin-top:8px">Elegir mi nombre</button></div>';
         return;
       }
       return api('/api/taker/' + encodeURIComponent(p.publico_id) + '?d=' + encodeURIComponent(state.dispositivo)).then(function(t){ perfilSocial(t, cont); });
