@@ -549,19 +549,37 @@
   .feat{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.45;color:var(--ink2)}
   .feat .dot{width:30px;height:30px;border-radius:10px;background:var(--burdeos);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
-  /* ---------- Animación de apertura ---------- */
-  .splash{position:fixed;inset:0;z-index:200;background:radial-gradient(120% 80% at 50% 38%,#2a1219 0%,#121011 62%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;pointer-events:none;animation:splashOut .5s ease 1.75s forwards}
-  .splash .sp-copa{width:104px;height:104px;border-radius:30px;background:var(--burdeos);border:1px solid var(--burdeos-line);display:flex;align-items:center;justify-content:center;box-shadow:0 18px 50px rgba(123,30,52,.55);animation:spLogo .8s cubic-bezier(.2,1.3,.4,1) .1s both}
-  .splash .sp-copa svg{width:56px;height:56px;overflow:visible}
-  .splash .sp-copa path{stroke-dasharray:60;stroke-dashoffset:60;animation:spTrazo .9s ease .45s forwards}
-  .splash .sp-nombre{font-family:"Bricolage Grotesque",Inter,sans-serif;font-weight:700;font-size:34px;letter-spacing:-.02em;color:var(--ink);animation:spTexto .7s ease .95s both}
-  .splash .sp-lema{font-size:14px;color:var(--muted);margin-top:-14px;animation:spTexto .7s ease 1.2s both}
-  .splash::after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;border:1px solid rgba(232,184,74,.35);animation:spOnda 1.4s ease-out .5s both}
-  @keyframes spLogo{from{opacity:0;transform:scale(.5) rotate(-12deg)}to{opacity:1;transform:none}}
-  @keyframes spTrazo{to{stroke-dashoffset:0}}
-  @keyframes spTexto{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-  @keyframes spOnda{from{opacity:.9;transform:scale(.4)}to{opacity:0;transform:scale(1.7)}}
-  @keyframes splashOut{to{opacity:0;visibility:hidden;transform:scale(1.04)}}
+  /* ---------- Animación de apertura: se sirve una copa de vino ---------- */
+  .splash{position:fixed;inset:0;z-index:200;overflow:hidden;background:radial-gradient(110% 70% at 50% 55%,#26121a 0%,#0f0c0d 70%);animation:spFondo .01s linear 3.6s forwards,spFuera .01s linear 4.7s forwards;cursor:pointer}
+  .splash.fuera{transition:opacity .25s;opacity:0}
+  .sp-scene{position:absolute;inset:0;width:100%;height:100%;animation:spEscena .01s linear 3s forwards}
+  .sp-botella{animation:spBot .55s cubic-bezier(.2,1,.3,1) both,spBotFuera .5s ease-in 1.95s forwards}
+  .sp-chorro{stroke-dasharray:1 1;stroke-dashoffset:1;animation:spChorro 1.9s cubic-bezier(.5,0,.4,1) .4s forwards}
+  .sp-liq{animation:spSube 1.3s cubic-bezier(.3,.6,.3,1) .7s both}
+  .sp-ola{animation:spOla 1s linear infinite}
+  .sp-ring{transform-box:fill-box;transform-origin:center;opacity:0;animation:spRing .7s ease-out .85s 2}
+  .sp-vidrio{animation:spVidrio .6s ease .1s both}
+  .sp-mar{position:absolute;inset:0;background:radial-gradient(90% 60% at 50% 45%,#8c2339 0%,#6a1a2d 55%,#4a0f20 100%);clip-path:circle(0 at 50% 54%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;animation:spLlena .75s cubic-bezier(.6,0,.2,1) 2.2s both,spDrena .9s cubic-bezier(.7,0,.25,1) 3.6s forwards}
+  .sp-borde{position:absolute;left:0;right:0;top:-39px;height:40px;overflow:hidden}
+  .sp-borde svg{width:200%;height:40px;animation:spOla2 1.1s linear infinite}
+  .sp-nombre{font-family:"Bricolage Grotesque",Inter,sans-serif;font-weight:700;font-size:44px;letter-spacing:-.02em;color:#FAF3EE;animation:spTexto .8s cubic-bezier(.2,1,.3,1) 2.75s both}
+  .sp-lema{font-size:15px;color:rgba(250,243,238,.72);animation:spTexto .8s ease 3s both}
+  .sp-linea{width:46px;height:2px;border-radius:2px;background:var(--amarillo);transform-origin:center;animation:spLinea .6s ease 3s both}
+  @keyframes spFondo{to{background:transparent}}
+  @keyframes spFuera{to{visibility:hidden}}
+  @keyframes spEscena{to{opacity:0}}
+  @keyframes spBot{from{transform:translateY(-110px)}to{transform:none}}
+  @keyframes spBotFuera{to{transform:translateY(-130px)}}
+  @keyframes spChorro{0%{stroke-dashoffset:1}22%{stroke-dashoffset:0}78%{stroke-dashoffset:0}100%{stroke-dashoffset:-1}}
+  @keyframes spSube{from{transform:translateY(112px)}to{transform:none}}
+  @keyframes spOla{to{transform:translateX(-80px)}}
+  @keyframes spOla2{to{transform:translateX(-50%)}}
+  @keyframes spRing{0%{opacity:.9;transform:scale(.5)}100%{opacity:0;transform:scale(3.4)}}
+  @keyframes spVidrio{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes spLlena{from{clip-path:circle(0 at 50% 54%)}to{clip-path:circle(160vmax at 50% 54%)}}
+  @keyframes spDrena{to{transform:translateY(105%)}}
+  @keyframes spTexto{from{opacity:0;transform:translateY(14px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+  @keyframes spLinea{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:none}}
 
   /* ---------- Cambio de pantalla ---------- */
   .screen.active{animation:pantallaIn .36s cubic-bezier(.22,.9,.3,1)}
@@ -592,7 +610,22 @@
 </style>
 </head>
 <body>
-<div class="splash" id="splash" aria-hidden="true"><div class="sp-copa"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF7F2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8l-1 7a3 3 0 0 1-6 0z"/><path d="M12 12v8"/><path d="M8 22h8"/></svg></div><div class="sp-nombre">Vinotake</div><div class="sp-lema">Tu sommelier del súper</div></div>
+<div class="splash" id="splash" aria-hidden="true">
+<svg class="sp-scene" viewBox="0 0 390 800" preserveAspectRatio="xMidYMid slice">
+<defs>
+<clipPath id="spBowl"><path d="M140 300 C140 385 160 442 195 450 C230 442 250 385 250 300 Z"/></clipPath>
+<linearGradient id="spVino" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b02a45"/><stop offset="1" stop-color="#4f1022"/></linearGradient>
+</defs>
+<g class="sp-botella"><rect x="181" y="-60" width="28" height="118" rx="6" fill="#1a1517" stroke="rgba(255,255,255,.14)"/><rect x="176" y="54" width="38" height="11" rx="4" fill="#271f22" stroke="rgba(255,255,255,.14)"/></g>
+<path class="sp-chorro" pathLength="1" d="M195 66 V352" fill="none" stroke="#a8263f" stroke-width="5" stroke-linecap="round"/>
+<g clip-path="url(#spBowl)"><g class="sp-liq"><path class="sp-ola" d="M-120 350 q20 -7 40 0 t40 0 q20 -7 40 0 t40 0 q20 -7 40 0 t40 0 q20 -7 40 0 t40 0 q20 -7 40 0 t40 0 q20 -7 40 0 t40 0 q20 -7 40 0 t40 0 q20 -7 40 0 t40 0 V470 H-120 Z" fill="url(#spVino)"/></g></g>
+<ellipse class="sp-ring" cx="195" cy="352" rx="10" ry="3" fill="none" stroke="rgba(255,205,215,.7)" stroke-width="1.5"/>
+<g class="sp-vidrio" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M140 300 C140 385 160 442 195 450 C230 442 250 385 250 300" fill="rgba(255,255,255,.05)"/><ellipse cx="195" cy="300" rx="55" ry="6" stroke="rgba(255,255,255,.4)"/><path d="M195 450 V540"/><path d="M158 548 Q195 534 232 548"/><path d="M152 322 C152 372 160 410 176 432" stroke="rgba(255,255,255,.35)" stroke-width="3"/>
+</g>
+</svg>
+<div class="sp-mar"><div class="sp-borde"><svg viewBox="0 0 700 40" preserveAspectRatio="none"><path d="M0 20 q25 -14 50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 t50 0 V40 H0 Z" fill="#6a1a2d"/></svg></div><div class="sp-nombre">Vinotake</div><div class="sp-linea"></div><div class="sp-lema">Tu sommelier del súper</div></div>
+</div>
 <div class="app">
 
   <!-- 1 · INICIO -->
@@ -3787,7 +3820,8 @@
 
   (function(){ var sp = document.getElementById('splash'); if (!sp) return;
     var quitar = function(){ if (sp.parentNode) sp.parentNode.removeChild(sp); };
-    setTimeout(quitar, 2400);
+    setTimeout(quitar, 4800);
+    sp.addEventListener('click', function(){ sp.classList.add('fuera'); setTimeout(quitar, 260); });
   })();
 </script>
 </body>
