@@ -1231,7 +1231,7 @@
       (w.mas_barato ? '<span class="pbar">Más barato en ' + esc(w.mas_barato.super) + ': <b>' + eur(w.mas_barato.precio) + '</b></span>' : '') + '</div>' +
       '<div class="note" style="margin:6px 0 0;text-align:center">Puede variar según el súper y las ofertas.</div>') : '';
     var compBlock = '';
-    if (w.comparativa && w.comparativa.length >= 2){
+    if (w.comparativa && w.comparativa.length >= 1){
       var cmp = w.comparativa, minP = cmp[0].precio, maxP = cmp[cmp.length - 1].precio;
       var todosIgual = cmp.length > 1 && minP === maxP;
       var nMin = cmp.filter(function(c){ return c.precio === minP; }).length;
