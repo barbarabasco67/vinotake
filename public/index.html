@@ -3188,7 +3188,7 @@
     }
     if (state.tk.tab !== 'inicio') $('#tk-panel').innerHTML = h;
     var ranking = state.tk.tab === 'ranking';
-    $('#tk-yo').style.display = ranking ? '' : 'none'; $('#tk-reto').style.display = ranking ? '' : 'none';
+    $('#tk-yo').style.display = ranking ? '' : 'none'; $('#tk-reto').style.display = state.tk.tab === 'inicio' ? '' : 'none';
     if (state.tk.tab === 'siguiendo') cargarSiguiendo();
   }
 
