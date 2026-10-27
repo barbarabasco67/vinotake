@@ -1627,7 +1627,7 @@
       });
     }).catch(function(){});
   }
-  var FEED_CHIPS = [['todo', 'Todo'], ['recomendaciones', 'Recomendaciones'], ['valoraciones', 'Valoraciones'], ['opiniones', 'Opiniones']];
+  var FEED_CHIPS = [['todo', 'Todo'], ['recomendaciones', 'Recomendaciones'], ['opiniones', 'Opiniones']];
   function cargarFeed(reset){
     var f = state.tk.feed; if (f.cargando) return; f.cargando = true;
     if (reset){ f.items = []; f.antes = null; f.mas = false; }
@@ -1639,7 +1639,7 @@
   function pintarFeed(){
     if (state.tk.tab !== 'inicio') return;
     var f = state.tk.feed;
-    var vacios = { todo: 'Aún no hay publicaciones. ¡Estrena la comunidad con una recomendación!', recomendaciones: 'Todavía nadie ha recomendado un vino. Sé el primero con el botón +.', valoraciones: 'Aún no hay valoraciones.', opiniones: 'Aún no hay opiniones.' };
+    var vacios = { todo: 'Aún no hay publicaciones. ¡Estrena la comunidad con una recomendación!', recomendaciones: 'Todavía nadie ha recomendado ni valorado un vino. Sé el primero con el botón +.', opiniones: 'Aún no hay opiniones.' };
     $('#tk-panel').innerHTML = '<div class="tk-chips" role="tablist" aria-label="Filtrar publicaciones">' + FEED_CHIPS.map(function(c){ return '<button data-feedtipo="' + c[0] + '" class="' + (f.tipo === c[0] ? 'on' : '') + '" aria-selected="' + (f.tipo === c[0]) + '">' + c[1] + '</button>'; }).join('') + '</div>' +
       '<div class="px stack" style="padding-top:12px">' +
         (f.items.length ? f.items.map(function(o){ return o.tipo === 'recomendacion' ? tarjetaRec(o, true) : tarjetaOpinion(o, true); }).join('') : (f.cargando ? '<div class="empty">Cargando…</div>' : '<div class="empty">' + vacios[f.tipo] + '</div>')) +
@@ -3188,7 +3188,8 @@
     }
     if (state.tk.tab !== 'inicio') $('#tk-panel').innerHTML = h;
     var ranking = state.tk.tab === 'ranking';
-    $('#tk-yo').style.display = ranking ? '' : 'none'; $('#tk-reto').style.display = state.tk.tab === 'inicio' ? '' : 'none';
+    var sinNombre = !(state.tk.datos && state.tk.datos.yo && state.tk.datos.yo.nombre);
+    $('#tk-yo').style.display = (ranking || (state.tk.tab === 'inicio' && sinNombre)) ? '' : 'none'; $('#tk-reto').style.display = ranking ? '' : 'none';
     if (state.tk.tab === 'siguiendo') cargarSiguiendo();
   }
 

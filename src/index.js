@@ -1166,8 +1166,8 @@ async function feedTakers(env, dispositivo, tipo, antes) {
   const hasta = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}$/.test(String(antes || '')) ? String(antes).replace('T', ' ') : '9999-12-31 00:00:00';
   const puntos = await mapaPuntos(env);
   const visible = "COALESCE(pf.publico, 1) != 0";
-  const quiereOp = t === 'todo' || t === 'valoraciones' || t === 'opiniones';
-  const filtroTexto = t === 'valoraciones' ? "AND (r.texto IS NULL OR r.texto = '')" : t === 'opiniones' ? "AND r.texto IS NOT NULL AND r.texto != ''" : '';
+  const quiereOp = t !== 'xx';
+  const filtroTexto = (t === 'valoraciones' || t === 'recomendaciones') ? "AND (r.texto IS NULL OR r.texto = '')" : t === 'opiniones' ? "AND r.texto IS NOT NULL AND r.texto != ''" : '';
   const [ops, recs] = await Promise.all([
     quiereOp ? env.DB.prepare(
       `SELECT r.id, r.dispositivo, r.puntuacion, r.texto, r.creado, v.id AS vino_id, v.nombre, v.tipo, v.color, v.denominacion,
