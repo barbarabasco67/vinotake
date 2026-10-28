@@ -1043,10 +1043,15 @@
   function superNombre(id){ for (var i = 0; i < state.supers.length; i++) if (state.supers[i].id === id) return state.supers[i].nombre; return ''; }
   function presuNombre(id){ for (var i = 0; i < state.presupuestos.length; i++) if (state.presupuestos[i].id === id) return state.presupuestos[i].nombre; return ''; }
 
+  // En la app instalada (Capacitor) la web va dentro del móvil y el servidor está en Internet.
+  var WEB_BASE = 'https://vinotake.barbarabasco7.workers.dev';
+  var ES_APP = location.protocol === 'capacitor:' || (location.hostname === 'localhost' && !location.port);
+  var API_BASE = ES_APP ? WEB_BASE : '';
+  function U(p){ return (typeof p === 'string' && p.charAt(0) === '/') ? API_BASE + p : p; }
   function api(path, body){
     var opts = body ? { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body) } : { headers:{} };
     var ses = store('sesion'); if (ses) opts.headers.authorization = 'Bearer ' + ses;
-    return fetch(path, opts).then(function(r){
+    return fetch(U(path), opts).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(d){
         if (!r.ok){ if (d.premium && typeof abrirPaywall === 'function') abrirPaywall(d.error); throw new Error(d.error || 'No hemos podido conectar. Inténtalo de nuevo.'); }
         return d;
@@ -1336,7 +1341,7 @@
     var tiendasBlock = '';
     if (w.tiendas && w.tiendas.length){
       tiendasBlock = '<div class="comp"><div class="comp-t">Comprar online</div><div class="comp-row">' + w.tiendas.map(function(t){
-        return '<a class="comp-c" href="/api/ir/' + encodeURIComponent(t.id) + '/' + encodeURIComponent(w.id) + '?d=' + encodeURIComponent(state.dispositivo) + '" target="_blank" rel="noopener sponsored" style="text-decoration:none;color:inherit"><span class="comp-n">' + esc(t.nombre) + '</span><span class="comp-d">Buscar este vino</span></a>';
+        return '<a class="comp-c" href="' + U('/api/ir/' + encodeURIComponent(t.id) + '/' + encodeURIComponent(w.id) + '?d=' + encodeURIComponent(state.dispositivo)) + '" target="_blank" rel="noopener sponsored" style="text-decoration:none;color:inherit"><span class="comp-n">' + esc(t.nombre) + '</span><span class="comp-d">Buscar este vino</span></a>';
       }).join('') + '</div><div class="comp-ahorro">Enlaces de afiliado: si compras, Vinotake recibe una pequeña comisión. El precio no cambia.</div></div>';
     }
     var notaBadge = '';
@@ -1626,7 +1631,7 @@
       else h = '<div class="ps-grid">' + items.map(function(it){
         var o = it.x, tipo = it.k === 'o' ? 'opinion' : 'recomendacion';
         var menu = '<button class="tk-menu ps-menu" data-tk-menu="' + tipo + '" data-id="' + o.id + '"' + (yo ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button>';
-        if (it.k === 'r' && o.foto) return '<div class="ps-tile"><button class="ps-open" data-wine="' + esc(o.vino.id) + '"><img src="' + esc(o.foto) + '" alt="Foto de ' + esc(o.vino.nombre) + '" loading="lazy"><span class="ps-cap"><b>' + esc(o.vino.nombre) + '</b>' + (o.texto ? esc(o.texto) : '') + '</span></button>' + menu + '</div>';
+        if (it.k === 'r' && o.foto) return '<div class="ps-tile"><button class="ps-open" data-wine="' + esc(o.vino.id) + '"><img src="' + esc(U(o.foto)) + '" alt="Foto de ' + esc(o.vino.nombre) + '" loading="lazy"><span class="ps-cap"><b>' + esc(o.vino.nombre) + '</b>' + (o.texto ? esc(o.texto) : '') + '</span></button>' + menu + '</div>';
         return '<div class="ps-tile"><button class="ps-open" data-wine="' + esc(o.vino.id) + '"><span class="ps-txt"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 52) + '</span>' + (it.k === 'o' ? estrellasTk(o.puntuacion, 13) : '') + '</span><span class="ps-cap"><b>' + esc(o.vino.nombre) + '</b>' + (o.texto ? esc(o.texto) : '') + '</span></button>' + menu + '</div>';
       }).join('') + '</div>';
     } else if (state.psTab === 'guardados'){
@@ -1663,7 +1668,7 @@
     return '<article class="tk-card">' +
       '<div style="display:flex;align-items:center;gap:8px">' + (conAutor && o.autor ? autorTk(o.autor, o.creado) : '<span class="note" style="flex:1;margin:0">' + haceTiempo(o.creado) + '</span>') + (conAutor ? '<span class="tk-tipo">Recomienda</span>' : '') +
         '<button class="tk-menu" data-tk-menu="recomendacion" data-id="' + o.id + '"' + (o.mia ? ' data-mia' : '') + ' aria-label="Más opciones">' + ICON_MAS + '</button></div>' +
-      (o.foto ? '<img class="tk-foto" src="' + esc(o.foto) + '" alt="Foto de ' + esc(o.vino.nombre) + '" loading="lazy">' : '') +
+      (o.foto ? '<img class="tk-foto" src="' + esc(U(o.foto)) + '" alt="Foto de ' + esc(o.vino.nombre) + '" loading="lazy">' : '') +
       '<button class="tk-vino" data-wine="' + esc(o.vino.id) + '"><span class="mini-bot" aria-hidden="true">' + botellaSVG(o.vino, 56) + '</span><span style="min-width:0;flex:1"><span style="display:block;font-weight:600">' + esc(o.vino.nombre) + '</span><span class="note" style="display:block">' + esc(o.vino.denominacion || o.vino.tipo || '') + '</span></span></button>' +
       (o.texto ? '<p class="tk-txt">' + esc(o.texto) + '</p>' : '') + '</article>';
   }
@@ -1760,7 +1765,7 @@
     }
     if (e.target.closest('#ps-compartir')){
       var nm = state.psData && state.psData.t ? state.psData.t.nombre : 'Vinotake';
-      if (navigator.share) navigator.share({ title: nm + ' en Vinotake', text: 'Mira el perfil de ' + nm + ' en Vinotake', url: location.origin }).catch(function(){});
+      if (navigator.share) navigator.share({ title: nm + ' en Vinotake', text: 'Mira el perfil de ' + nm + ' en Vinotake', url: WEB_BASE }).catch(function(){});
       return;
     }
     if (e.target.closest('#tk-recomendar')){ recomendarConFoto(); return; }
@@ -1866,7 +1871,7 @@
   document.addEventListener('click', function(e){
     var b = e.target.closest('[data-paywall],[data-pagar],[data-canjear]'); if (!b) return;
     if (b.hasAttribute('data-paywall')) abrirPaywall();
-    else if (b.hasAttribute('data-pagar')) window.location.href = '/api/premium/pagar?d=' + encodeURIComponent(state.dispositivo) + '&plan=' + encodeURIComponent(b.getAttribute('data-pagar'));
+    else if (b.hasAttribute('data-pagar')) window.location.href = U('/api/premium/pagar?d=' + encodeURIComponent(state.dispositivo) + '&plan=' + encodeURIComponent(b.getAttribute('data-pagar')));
     else {
       var c = $('#pw-codigo'); if (!c || !c.value.trim()){ toast('Escribe el código.'); return; }
       api('/api/premium/canjear', { dispositivo: state.dispositivo, codigo: c.value }).then(function(r){
@@ -2208,8 +2213,8 @@
   }
   function enlaceCompartir(){
     var w = state.tarjeta.w;
-    if (state.tarjeta.tipo === 'combate') return location.origin + '/';
-    return location.origin + '/v?i=' + encodeURIComponent(w.id);
+    if (state.tarjeta.tipo === 'combate') return WEB_BASE + '/';
+    return WEB_BASE + '/v?i=' + encodeURIComponent(w.id);
   }
   function textoCompartir(){
     var w = state.tarjeta.w;
@@ -3821,7 +3826,7 @@
   show('home', false);
   cargarInicio().then(function(){ return Promise.all([cargarPremium(), cargarBodega(), cargarLista(), cargarPrefsInicio(), cargarPerfilInicio(), cargarCuenta()]); }).then(function(){ cargarCata(); return cargarTop(); }).then(function(){ if (enlaceVino && /^[a-z0-9-]+$/.test(enlaceVino)) abrirFicha(enlaceVino); }).catch(function(err){ toast(err.message); });
 
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && !ES_APP) {
     window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
   }
 })();

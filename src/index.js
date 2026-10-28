@@ -15,8 +15,7 @@ const PRESUPUESTOS = {
   'mas10': { nombre: 'Más de 10 €', max: null }
 };
 
-export default {
-  async fetch(request, env) {
+async function manejar(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/v' && request.method === 'GET') return vinoCompartido(request, env, url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
@@ -26,6 +25,20 @@ export default {
       console.error(err);
       return json({ error: 'Algo ha fallado. Inténtalo de nuevo.' }, 500);
     }
+}
+
+export default {
+  async fetch(request, env) {
+    // La app instalada (Capacitor) llama desde capacitor://localhost o https://localhost
+    const origen = request.headers.get('origin') || '';
+    const esApp = origen === 'capacitor://localhost' || origen === 'https://localhost' || origen === 'http://localhost';
+    if (!esApp || !new URL(request.url).pathname.startsWith('/api/')) return manejar(request, env);
+    const cors = { 'access-control-allow-origin': origen, 'access-control-allow-headers': 'content-type, authorization', 'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS', 'access-control-max-age': '86400', 'vary': 'origin' };
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+    const res = await manejar(request, env);
+    const out = new Response(res.body, res);
+    for (const k in cors) out.headers.set(k, cors[k]);
+    return out;
   },
   // Cada 15 minutos busca unas pocas fotos de vinos que aún no tienen (Open Food Facts).
   async scheduled(event, env, ctx) {

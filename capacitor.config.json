@@ -1,0 +1,12 @@
+{
+  "appId": "es.picfy.vinotake",
+  "appName": "Vinotake",
+  "webDir": "public",
+  "backgroundColor": "#121011",
+  "ios": { "contentInset": "never", "backgroundColor": "#121011" },
+  "android": { "backgroundColor": "#121011" },
+  "plugins": {
+    "SplashScreen": { "launchAutoHide": true, "launchShowDuration": 0, "backgroundColor": "#121011" },
+    "StatusBar": { "style": "DARK", "backgroundColor": "#121011" }
+  }
+}
